@@ -325,8 +325,9 @@ function civicrm_initialize( )
             drupal_add_html_head($header);
         }
         require_once 'CRM/Core/BAO/Preferences.php';
-        //fixme - after 3.4 is discontinued remove 3.4 support
-        //As this file may be shared between 3.4 & 4.1 releases use the BAO_Preferences::value legacy function if it exists
+
+        // fixme - after 3.4 is discontinued remove 3.4 support
+        // As this file may be shared between 3.4 & 4.1 releases use the BAO_Preferences::value legacy function if it exists
         // in future only CRM_Core_BAO_Setting::getItem will be required
         $args = explode( '/', $_GET['q'] );
         if (( ! isset( $args[1] ) OR $args[1] != 'upgrade') &&	
@@ -485,16 +486,12 @@ function _civicrm_categories_access( $profile_id ) {
 
 function civicrm_register_data($edit, &$user, $category, $reset, $doNotProcess = false ) 
 {
-    if ( ! civicrm_initialize( ) ) {
-        return FALSE;
-    }
-    
+    // lets suppress key generation for all registration forms
+    civicrm_key_disable( );
+   
     require_once 'CRM/Core/BAO/UFMatch.php';
     require_once 'CRM/Core/BAO/UFGroup.php';
     require_once 'CRM/Core/Action.php';
-
-    // lets suppress key generation for all registration forms
-    civicrm_key_disable( );
 
     $ctype = civicrm_get_ctype( 'Individual' );
     if ( $user->uid ) {
@@ -537,15 +534,11 @@ function civicrm_register_data($edit, &$user, $category, $reset, $doNotProcess =
 }
 
 function civicrm_form_data($edit, &$user, $category, $reset, $doNotProcess = false) {
-    if ( ! civicrm_initialize( ) ) {
-        return;
-    }
+    // lets suppress key generation for all CMS forms
+    civicrm_key_disable( );
 
     require_once 'CRM/Core/BAO/UFMatch.php';
     require_once 'CRM/Core/BAO/UFGroup.php';
-
-    // lets suppress key generation for all CMS forms
-    civicrm_key_disable( );
 
     $output = array( );
 
@@ -610,18 +603,14 @@ function civicrm_form_data($edit, &$user, $category, $reset, $doNotProcess = fal
 }
 
 function civicrm_user_form_validate($form, &$form_state) { 
-    if ( ! civicrm_initialize( ) ) {
-        return;
-    }
+    // lets suppress key generation for all validation also
+    civicrm_key_disable( );
 
     static $validated = false;
 
     if ( $validated ) {
         return;
     }
-
-    // lets suppress key generation for all validation also
-    civicrm_key_disable( );
 
     $validated = true;
 
@@ -669,6 +658,10 @@ function civicrm_cache_disable( ) {
  * qfKey
  */
 function civicrm_key_disable( ) {
+    if ( ! civicrm_initialize( ) ) {
+        return false;
+    }
+ 
     $config = CRM_Core_Config::singleton( );
     $config->keyDisable = true;
 }

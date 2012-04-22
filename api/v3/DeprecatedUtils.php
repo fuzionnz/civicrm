@@ -31,6 +31,8 @@
  * part of the API so are not really part of the api
  * 
  */
+
+require_once 'api/v3/utils.php';
   
 /**
  * take the input parameter list as specified in the data model and
@@ -506,8 +508,8 @@ function _civicrm_api3_deprecated_formatted_param( $params, &$values, $create=fa
             }
 
             //we need to check if oldest payment amount equal to contribution amount
-            require_once 'CRM/Pledge/BAO/Payment.php';
-            $pledgePaymentDetails = CRM_Pledge_BAO_Payment::getOldestPledgePayment( $values['pledge_id'] );
+            require_once 'CRM/Pledge/BAO/PledgePayment.php';
+            $pledgePaymentDetails = CRM_Pledge_BAO_PledgePayment::getOldestPledgePayment( $values['pledge_id'] );
 
             if ( $pledgePaymentDetails['amount'] == $totalAmount ) {
                 $values['pledge_payment_id'] = $pledgePaymentDetails['id'];
@@ -1083,11 +1085,38 @@ function _civicrm_api3_deprecated_membership_format_params( $params, &$values, $
   $fields = CRM_Member_DAO_Membership::fields( );
   _civicrm_api3_store_values( $fields, $params, $values );
   
+  require_once 'CRM/Core/OptionGroup.php';
+  $customFields = CRM_Core_BAO_CustomField::getFields( 'Membership');
+  
   foreach ($params as $key => $value) {
     // ignore empty values or empty arrays etc
     if ( CRM_Utils_System::isNull( $value ) ) {
       continue;
     }
+    
+       //Handling Custom Data
+      if ($customFieldID = CRM_Core_BAO_CustomField::getKeyID($key)) {
+          $values[$key] = $value;
+          $type = $customFields[$customFieldID]['html_type'];
+          if( $type == 'CheckBox' || $type == 'Multi-Select' || $type == 'AdvMulti-Select') {
+                $mulValues = explode( ',' , $value );
+                $customOption = CRM_Core_BAO_CustomOption::getCustomOption($customFieldID, true);
+                $values[$key] = array();
+                foreach( $mulValues as $v1 ) {
+                    foreach($customOption as $customValueID => $customLabel) {
+                        $customValue = $customLabel['value'];
+                        if (( strtolower($customLabel['label']) == strtolower(trim($v1)) ) ||
+                            ( strtolower($customValue) == strtolower(trim($v1)) )) {
+                            if ( $type == 'CheckBox' ) {
+                                $values[$key][$customValue] = 1;
+                            } else {
+                                $values[$key][] = $customValue;
+                            }
+                        }
+                    }
+                }
+          }
+      }
      
     switch ($key) {
       case 'membership_contact_id':

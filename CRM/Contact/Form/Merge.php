@@ -404,17 +404,19 @@ class CRM_Contact_Form_Merge extends CRM_Core_Form
 
             foreach ($group['fields'] as $fid => $field) {
                 if (in_array($fid, $diffs['custom'])) {
+                    $value = null;
                     if (!$foundField) {
                         $rows["custom_group_$gid"]['title'] = $group['title'];
                         $foundField = true;
                     }
-                    if ( is_array( $mainTree[$gid]['fields'][$fid]['customValue'] ) ) {
+                    if ( array_key_exists('customValue', $mainTree[$gid]['fields'][$fid]) && is_array( $mainTree[$gid]['fields'][$fid]['customValue'] ) ) {
                         foreach ( $mainTree[$gid]['fields'][$fid]['customValue'] as $valueId => $values ) {
                             $rows["move_custom_$fid"]['main']  = CRM_Core_BAO_CustomGroup::formatCustomValues( $values,
                                                                                                                $field, true);
+                            $value = $values['data'] ? $values['data'] : $this->_qfZeroBug;
                         }
                     }
-                    if ( is_array( $otherTree[$gid]['fields'][$fid]['customValue'] ) ) {
+                    if ( array_key_exists('customValue', $otherTree[$gid]['fields'][$fid]) && is_array( $otherTree[$gid]['fields'][$fid]['customValue'] ) ) {
                         foreach ( $otherTree[$gid]['fields'][$fid]['customValue'] as $valueId => $values ) {
                             $rows["move_custom_$fid"]['other'] = CRM_Core_BAO_CustomGroup::formatCustomValues( $values,
                                                                                                                $field, true);

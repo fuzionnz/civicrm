@@ -216,7 +216,7 @@ class CRM_Contact_BAO_Relationship extends CRM_Contact_DAO_Relationship
         $relationship->contact_id_b         = $contact_b;
         $relationship->contact_id_a         = $contact_a;
         $relationship->relationship_type_id = $type;
-        $relationship->is_active            = $params['is_active'] ? 1 : 0;
+        $relationship->is_active            = CRM_Utils_Array::value( 'is_active', $params ) ? 1 : 0;
         $relationship->is_permission_a_b    = CRM_Utils_Array::value( 'is_permission_a_b', $params, 0 );
         $relationship->is_permission_b_a    = CRM_Utils_Array::value( 'is_permission_b_a', $params, 0 );
         $relationship->description          = CRM_Utils_Array::value( 'description', $params );
@@ -333,11 +333,11 @@ class CRM_Contact_BAO_Relationship extends CRM_Contact_DAO_Relationship
                  ( ( !$value['contact_sub_type_b'] && !$value['contact_sub_type_a']) && !$onlySubTypeRelationTypes) ) ) ) {
                 $relationshipType[ $key . '_a_b' ] =  $value[ "{$column}_a_b" ];
             } 
-            
+
             if ( ( ( ! $value['contact_type_b'] ) || $value['contact_type_b'] == $contactType ) &&
                  ( ( ! $value['contact_type_a'] ) || ( ! $otherContactType ) || $value['contact_type_a'] == $otherContactType ) &&
-                 ( ( (!$value['contact_sub_type_a'] && !$value['contact_sub_type_b']) && !$onlySubTypeRelationTypes) 
-                   || in_array( $value['contact_sub_type_b'], $contactSubType ) ) ) {
+                 ( ! $contactSubType || ( in_array( $value['contact_sub_type_b'], $contactSubType ) ||
+                 ( ( !$value['contact_sub_type_a'] && !$value['contact_sub_type_b']) && !$onlySubTypeRelationTypes) ) ) ) {
                 $relationshipType[ $key . '_b_a' ] = $value[ "{$column}_b_a" ];
             }
 

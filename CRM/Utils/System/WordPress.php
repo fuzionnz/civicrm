@@ -177,7 +177,7 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
         $config = CRM_Core_Config::singleton( );
         $script = '';
         $separator = $htmlize ? '&amp;' : '&';
- 		$pageID    = '';
+        $pageID    = '';
 
         require_once 'CRM/Utils/String.php';
         $path = CRM_Utils_String::stripPathChars( $path );
@@ -186,18 +186,19 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
             if ( get_option('permalink_structure') != '' ) { 
                 global $post;
                 $script = get_permalink( $post->ID );
-            } else {
-                $script = 'index.php';
             }
             
             // when shortcode is inlcuded in page
-            if ( get_query_var('page_id') ) {
+            // also make sure we have valid query object
+            global $wp_query;
+            if ( method_exists( $wp_query, 'get' ) ) {
+              if ( get_query_var('page_id') ) {
                 $pageID = "{$separator}page_id=" . get_query_var('page_id');
-            } else if ( get_query_var('p') ) {
+              } else if ( get_query_var('p') ) {
                 // when shortcode is inserted in post
                 $pageID = "{$separator}p=" . get_query_var('p');
+              }
             }
- 
         } 
 
         if (isset($fragment)) {
@@ -216,7 +217,7 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
         }
         
         if ( isset( $path ) ) {
-            if ( get_option('permalink_structure') != '' ) { 
+            if ( get_option('permalink_structure') != '' && $pageID ) { 
                 if ( isset( $query ) ) {
                     return $script .'?page=CiviCRM&q=' . $path . $pageID . $separator . $query . $fragment;
                 } else {
@@ -224,9 +225,9 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
                 }	 
             } else {
                 if ( isset( $query ) ) {
-                    return $base . $script .'?page=CiviCRM&q=' . $path . $pageID . $separator . $query . $fragment;
+                    return $script .'?page=CiviCRM&q=' . $path . $pageID . $separator . $query . $fragment;
                 } else {
-                    return $base . $script .'?page=CiviCRM&q=' . $path . $pageID . $fragment;
+                    return $script .'?page=CiviCRM&q=' . $path . $pageID . $fragment;
                 }
             }
         } else {
@@ -357,6 +358,65 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
         }
         
         return ( $valid ) ? $cmsRoot : null; 
+    }
+    
+    function createUser( &$params, $mail )
+    {
+        $user_data = array(
+                           'ID' => '',
+                           'user_pass' => $params['cms_pass'],
+                           'user_login' => $params['cms_name'],
+                           'user_email' => $params[$mail],
+                           'nickname' => $params['cms_name'],
+                           'role' => get_option('default_role')
+                           );
+        if ( isset($params['contactID']) ) {
+            require_once 'CRM/Contact/BAO/Contact.php';
+            $contactType = CRM_Contact_BAO_Contact::getContactType( $params['contactID'] );
+            if ( $contactType == 'Individual' ) {
+                $user_data['first_name'] = CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_Contact',
+                                                                        $params['contactID'], 'first_name' );
+                $user_data['last_name'] = CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_Contact',
+                                                                       $params['contactID'], 'last_name' );
+            }
+        }
+        
+        $uid = wp_insert_user( $user_data );
+        
+        $creds = array( );
+        $creds['user_login'] = $params['cms_name'];
+        $creds['user_password'] = $params['cms_pass'];
+        $creds['remember'] = true;
+        $user = wp_signon( $creds, false );
+                    
+        wp_new_user_notification( $uid, $user_data['user_pass'] );
+        return $uid;
+    }
+    
+    function checkUserNameEmailExists( &$params, &$errors, $emailName = 'email' )
+    {
+        $config  = CRM_Core_Config::singleton( );
+
+        $dao = new CRM_Core_DAO( );
+        $name  = $dao->escape( CRM_Utils_Array::value( 'name', $params ) );
+        $email = $dao->escape( CRM_Utils_Array::value( 'mail', $params ) );
+        
+        if ( CRM_Utils_Array::value('name', $params) ) {
+            if ( ! validate_username( $params['name'] ) ) {
+                $errors['cms_name'] = ts("Your username contains invalid characters");
+            } elseif ( username_exists( sanitize_user( $params['name'] ) ) ) {
+                    $errors['cms_name'] = ts( 'The username %1 is already taken. Please select another username.', array( 1 => $params['name'] ) );
+            }
+        }
+                
+        if ( CRM_Utils_Array::value( 'mail', $params ) ) {
+            if ( ! is_email( $params['mail'] ) ) {
+                $errors[$emailName] = "Your email is invaid";
+            } elseif ( email_exists( $params['mail'] ) ) {
+                $errors[$emailName] = ts( 'This email %1 is already registered. Please select another email.', 
+                                          array( 1 => $params['mail']) );
+            }
+        }
     }
     
     /**

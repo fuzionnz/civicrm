@@ -189,10 +189,10 @@ function civicrm_api3_activity_create( $params ) {
 /*
  * Specify Meta data for create. Note that this data is retrievable via the getfields function 
  * and is used for pre-filling defaults and ensuring mandatory requirements are met.
+ * @param array $params (reference) array of parameters determined by getfields
  */
 function _civicrm_api3_activity_create_spec(&$params){
-    $params['id'] = CRM_Utils_Array::value( 'activity_id', $params );
-    unset ($params['activity_id']);
+    $params['subject']['api.required'] =1;
     $params['assignee_contact_id'] = array('name' => 'assignee_id',
                                            'title' => 'assigned to',
                                            'type' => 1,

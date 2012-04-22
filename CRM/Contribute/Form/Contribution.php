@@ -273,10 +273,6 @@ class CRM_Contribute_Form_Contribution extends CRM_Core_Form
             $this->assign( 'displayName', $this->userDisplayName );
         }
         
-        // Assign pageTitle to be "Contribution - "+ Contributor name
-//      $pageTitle = 'Contribution - '.$this->userDisplayName;
-//    	$this->assign( 'pageTitle', $pageTitle );
-        
         // also check for billing information
         // get the billing location type
         $locationTypes = CRM_Core_PseudoConstant::locationType( );
@@ -1300,9 +1296,11 @@ WHERE  contribution_id = {$this->_id}
             if ( is_a( $result, 'CRM_Core_Error' ) ) {
                 //make sure to cleanup db for recurring case.
                 if ( CRM_Utils_Array::value( 'contributionID', $paymentParams ) ) {
+                    CRM_Core_Error::debug_log_message(CRM_Core_Error::getMessages( $result ) . "contact id={$this->_contactID} (deleting contribution {$paymentParams['contributionID']}" );
                     CRM_Contribute_BAO_Contribution::deleteContribution( $paymentParams['contributionID'] );
                 }
                 if ( CRM_Utils_Array::value( 'contributionRecurID', $paymentParams ) ) {
+                    CRM_Core_Error::debug_log_message(CRM_Core_Error::getMessages( $result ) . "contact id={$this->_contactID} (deleting recurring contribution {$paymentParams['contributionRecurID']}" );
                     CRM_Contribute_BAO_ContributionRecur::deleteRecurContribution( $paymentParams['contributionRecurID'] );
                 }
                 
@@ -1311,6 +1309,9 @@ WHERE  contribution_id = {$this->_id}
                 if ( $this->_mode ) {
                     $urlParams .= "&mode={$this->_mode}";
                 } 
+                if( !empty( $this->_ppID ) ){
+                  $urlParams .= "&context=pledge&ppid={$this->_ppID}";
+                }
                 CRM_Core_Error::displaySessionError( $result );
                 CRM_Utils_System::redirect( CRM_Utils_System::url( 'civicrm/contact/view/contribution', $urlParams ) );
             }

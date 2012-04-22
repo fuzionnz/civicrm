@@ -59,12 +59,15 @@ class civicrm_Cli {
     public function callApi( ) {
         require_once 'api/api.php';
 
-        if( $this->_joblog ) {
+        //  CRM-9822 -'execute' action always goes thru Job api and always writes to log
+        if( $this->_action != 'execute' && $this->_joblog ) {
             require_once 'CRM/Core/JobManager.php';
             $facility = new CRM_Core_JobManager();
             $facility->setSingleRunParams( $this->_entity, $this->_action, $this->_params, 'From Cli.php' );
             $facility->executeJobByAction( $this->_entity, $this->_action );
         } else {
+            // CRM-9822 cli.php calls don't require site-key, so bypass site-key authentication
+            $this->_params['auth'] = false;
             $result = civicrm_api($this->_entity, $this->_action, $this->_params);
         }
 
@@ -140,7 +143,7 @@ class civicrm_Cli {
         // CRM-8917 - check if script name starts with /, if not - prepend it.
         if (ord($_SERVER['SCRIPT_NAME']) != 47) $_SERVER['SCRIPT_NAME'] = '/'. $_SERVER['SCRIPT_NAME']; 
 
-        $civicrm_root = dirname(__DIR__);
+        $civicrm_root = dirname( dirname( __FILE__ ) );
         chdir( $civicrm_root );
         require_once('civicrm.config.php');
 

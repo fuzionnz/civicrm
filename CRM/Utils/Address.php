@@ -205,6 +205,7 @@ class CRM_Utils_Address {
     // the value is not empty, otherwise drop the whole {fooTOKENbar}
     foreach ($replacements as $token => $value) {
       if ($value) {
+        self::mimicSmartyCaseModifiers($token, $value, $formatted);
         $formatted = preg_replace("/{([^{}]*)\b{$token}\b([^{}]*)}/u", "\${1}{$value}\${2}", $formatted);
       }
       else {
@@ -296,6 +297,31 @@ class CRM_Utils_Address {
     $newSequence = array_merge($newSequence, $addressSequence);
     $newSequence = array_unique($newSequence);
     return $newSequence;
+  }
+    
+    /*
+   * As this code is not being passed through smarty this function mimics the 3
+   * smarty modifiers - upper - lower - capitalize
+   * http://www.smarty.net/docsv2/en/language.modifiers.tpl @param string $token
+   * the token being looked at @param string $value the value of the token being
+   * looked at @param string $outputText the text subject to replacements
+   */
+  static function mimicSmartyCaseModifiers(&$token, &$value, $outputText) {
+    $modifier = '';
+    $modmatches = array();
+    if (preg_match("/{$token}\|([^{}]*)}/", $outputText, $modmatches)) {
+      switch ($modmatches[1]) {
+        case 'upper':
+          $value = strtoupper($value);
+          break;
+        case 'lower':
+          $value = strtolower($value);
+          break;
+        case 'capitalize':
+          $value = ucwords($value);
+      }
+      $token .= '\|' . $modmatches[1];
+    }
   }
 }
 

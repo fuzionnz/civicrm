@@ -580,6 +580,7 @@ WHERE   cas.entity_value = $id AND
     require_once 'CRM/Contact/BAO/Contact.php';
     require_once 'CRM/Core/BAO/ActionLog.php';
     require_once 'CRM/Core/BAO/Domain.php';
+    require_once 'CRM/Utils/Address.php';
     $domainValues = CRM_Core_BAO_Domain::getNameAndEmail();
     $fromEmailAddress = "$domainValues[0] <$domainValues[1]>";
 
@@ -619,12 +620,18 @@ INNER JOIN civicrm_option_value ov ON e.activity_type_id = ov.value AND ov.optio
 
       if ($mapping->entity == 'civicrm_participant') {
         $tokenEntity = 'event';
-        $tokenFields = array('event_type', 'title', 'event_id', 'start_date', 'end_date', 'summary', 'description');
-        $extraSelect = ", ov.label as event_type, ev.title, ev.id as event_id, ev.start_date, ev.end_date, ev.summary, ev.description";
-        $extraJoin   = "
+        $tokenFields = array('event_type', 'title', 'event_id', 'start_date', 'end_date', 'summary', 'description', 'location', 'info_url', 'registration_url', 'fee_amount', 'contact_email', 'contact_phone');
+        $extraSelect = ", ov.label as event_type, ev.title, ev.id as event_id, ev.start_date, ev.end_date, ev.summary, ev.description, address.street_address, address.city, address.state_province_id, address.postal_code, email.email as contact_email, phone.phone as contact_phone  ";
+
+        $extraJoin   = "                                                                                                                                                                                   
 INNER JOIN civicrm_event ev ON e.event_id = ev.id
 INNER JOIN civicrm_option_group og ON og.name = 'event_type'
-INNER JOIN civicrm_option_value ov ON ev.event_type_id = ov.value AND ov.option_group_id = og.id";
+INNER JOIN civicrm_option_value ov ON ev.event_type_id = ov.value AND ov.option_group_id = og.id
+LEFT  JOIN civicrm_loc_block lb ON lb.id = ev.loc_block_id                                                                                                                                                 
+LEFT  JOIN civicrm_address address ON address.id = lb.address_id
+LEFT  JOIN civicrm_email email ON email.id = lb.email_id
+LEFT  JOIN civicrm_phone phone ON phone.id = lb.phone_id
+";
       }
 
       $query = "
@@ -634,14 +641,33 @@ INNER JOIN {$mapping->entity} e ON e.id = reminder.entity_id
 {$extraJoin}
 WHERE reminder.action_schedule_id = %1 AND reminder.action_date_time IS NULL
 {$extraWhere}";
+
       $dao = CRM_Core_DAO::executeQuery($query,
         array(1 => array($actionSchedule->id, 'Integer'))
       );
 
       while ($dao->fetch()) {
+
         $entityTokenParams = array();
         foreach ($tokenFields as $field) {
-          $entityTokenParams["{$tokenEntity}." . $field] = $dao->$field;
+          if ($field == 'location') {
+            $loc = array();
+            $stateProvince = CRM_Core_PseudoConstant::stateProvince();
+            $loc['street_address'] = $dao->street_address;
+            $loc['city'] = $dao->city;
+            $loc['state_province'] = CRM_Utils_array::value($dao->state_province_id, $stateProvince);
+            $loc['postal_code'] = $dao->postal_code;
+            $entityTokenParams["{$tokenEntity}." . $field] = CRM_Utils_Address::format($loc);
+          }
+          elseif ($field == 'info_url') {
+            $entityTokenParams["{$tokenEntity}." . $field] = CRM_Utils_System::url('civicrm/event/info', 'reset=1&id=' . $dao->event_id, TRUE, NULL, FALSE);
+          }
+          elseif ($field == 'registration_url') {
+            $entityTokenParams["{$tokenEntity}." . $field] = CRM_Utils_System::url('civicrm/event/register', 'reset=1&id=' . $dao->event_id, TRUE, NULL, FALSE);
+          }
+          else {
+            $entityTokenParams["{$tokenEntity}." . $field] = $dao->$field;
+          }
         }
 
         $isError  = 0;
@@ -654,6 +680,7 @@ WHERE reminder.action_schedule_id = %1 AND reminder.action_date_time IS NULL
             $fromEmailAddress,
             $entityTokenParams
           );
+
           if (!$result || is_a($result, 'PEAR_Error')) {
             // we could not send an email, for now we ignore, CRM-3406
             $isError = 1;
@@ -812,12 +839,11 @@ reminder.action_schedule_id = %1";
       $where[] = "c.is_deleted = 0";
 
       if ($actionSchedule->start_action_date) {
+        $startDateClause   = array();  
         $operator          = ($actionSchedule->start_action_condition == 'before' ? "DATE_SUB" : "DATE_ADD");
-        $op                = ($actionSchedule->start_action_condition == 'before' ? "<=" : ">=");
         $date              = $operator . "({$dateField}, INTERVAL {$actionSchedule->start_action_offset} {$actionSchedule->start_action_unit})";
         $startDateClause[] = "'{$now}' >= {$date}";
-
-        $startDateClause[] = $operator . "({$now}, INTERVAL 1 DAY ) {$op} " . $actionSchedule->start_action_date;
+        $startDateClause[] = "DATE_SUB({$now}, INTERVAL 1 DAY ) <= {$date}";
         $startDate = implode(' AND ', $startDateClause);
       }
       elseif ($actionSchedule->absolute_date) {

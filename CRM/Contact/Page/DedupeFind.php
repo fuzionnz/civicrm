@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,16 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page/Basic.php';
-require_once 'CRM/Dedupe/Finder.php';
-require_once 'CRM/Dedupe/DAO/Rule.php';
-require_once 'CRM/Dedupe/DAO/RuleGroup.php';
-require_once 'CRM/Contact/BAO/Contact/Permission.php';
 class CRM_Contact_Page_DedupeFind extends CRM_Core_Page_Basic {
   protected $_cid = NULL;
   protected $_rgid;
@@ -77,6 +71,67 @@ class CRM_Contact_Page_DedupeFind extends CRM_Core_Page_Basic {
       $this->assign('backURL', $session->readUserContext());
     }
 
+    if ($action & CRM_Core_Action::RENEW) {
+      // empty cache
+      $rgid = CRM_Utils_Request::retrieve('rgid', 'Positive', $this, FALSE, 0);
+
+      if ($rgid) {
+        $contactType = CRM_Core_DAO::getFieldValue('CRM_Dedupe_DAO_RuleGroup', $rgid, 'contact_type');
+        $cacheKeyString = "merge $contactType";
+        $cacheKeyString .= $rgid ? "_{$rgid}" : '_0';
+        $cacheKeyString .= $gid ? "_{$gid}" : '_0';
+        CRM_Core_BAO_PrevNextCache::deleteItem(NULL, $cacheKeyString);
+      }
+      $urlQry = "reset=1&action=update&rgid={$rgid}";
+      if ($gid) {
+        $urlQry .= "&gid={$gid}";
+      }
+      CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/contact/dedupefind', $urlQry));
+    }
+    elseif ($action & CRM_Core_Action::MAP) {
+      // do a batch merge if requested
+      $rgid = CRM_Utils_Request::retrieve('rgid', 'Positive', $this, FALSE, 0);
+      $result = CRM_Dedupe_Merger::batchMerge($rgid, $gid, 'safe', TRUE, TRUE);
+
+      $skippedCount = CRM_Utils_Request::retrieve('skipped', 'Positive', $this, FALSE, 0);
+      $skippedCount = $skippedCount + count($result['skipped']);
+      $mergedCount  = CRM_Utils_Request::retrieve('merged', 'Positive', $this, FALSE, 0);
+      $mergedCount  = $mergedCount + count($result['merged']);
+
+      if (empty($result['merged']) && empty($result['skipped'])) {
+        $message = '';
+        if ($mergedCount >= 1) {
+          $message = ts("%1 pairs of duplicates were merged", array(1 => $mergedCount));
+        }
+        if ($skippedCount >= 1) {
+          $message = $message ? "{$message} and " : '';
+          $message .= ts("%1 pairs of duplicates were skipped due to conflict",
+            array(1 => $skippedCount)
+          );
+        }
+        $message .= ts(" during the batch merge process with safe mode.");
+        CRM_Core_Session::setStatus($message);
+
+        $urlQry = "reset=1&action=update&rgid={$rgid}";
+        if ($gid) {
+          $urlQry .= "&gid={$gid}";
+        }
+        CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/contact/dedupefind', $urlQry));
+      }
+      else {
+        $urlQry = "reset=1&action=map&rgid={$rgid}";
+        if ($gid) {
+          $urlQry .= "&gid={$gid}";
+        }
+        $urlQry .= "&skipped={$skippedCount}&merged={$mergedCount}";
+        CRM_Utils_System::jsRedirect(
+          CRM_Utils_System::url('civicrm/contact/dedupefind', $urlQry),
+          ts('Batch Merge Task in progress'),
+          ts('The batch merge task is still in progress. This page will be refreshed automatically.')
+        );
+      }
+    }
+
     if ($action & CRM_Core_Action::UPDATE ||
       $action & CRM_Core_Action::BROWSE
     ) {
@@ -107,8 +162,7 @@ class CRM_Contact_Page_DedupeFind extends CRM_Core_Page_Basic {
       $cacheKeyString .= $rgid ? "_{$rgid}" : '_0';
       $cacheKeyString .= $gid ? "_{$gid}" : '_0';
 
-      require_once 'CRM/Core/BAO/PrevNextCache.php';
-      $join = "LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND 
+      $join = "LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND
                                                                  pn.entity_id2 = de.contact_id2 )";
       $where = "de.id IS NULL";
       $this->_mainContacts = CRM_Core_BAO_PrevNextCache::retrieve($cacheKeyString, $join, $where);

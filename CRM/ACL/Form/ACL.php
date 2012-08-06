@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,17 +30,15 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
-require_once 'CRM/Admin/Form.php';
-
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -58,7 +58,6 @@ class CRM_ACL_Form_ACL extends CRM_Admin_Form {
       $defaults['object_type'] = 1;
     }
 
-    require_once 'CRM/Core/ShowHideBlocks.php';
     $showHide = new CRM_Core_ShowHideBlocks();
 
     if (isset($defaults['object_table'])) {
@@ -132,7 +131,6 @@ class CRM_ACL_Form_ACL extends CRM_Admin_Form {
 
     $this->add('text', 'name', ts('Description'), CRM_Core_DAO::getAttribute('CRM_ACL_DAO_ACL', 'name'), TRUE);
 
-    require_once 'CRM/ACL/BAO/ACL.php';
     $operations = array('' => ts('- select -')) + CRM_ACL_BAO_ACL::operation();
     $this->add('select',
       'operation',
@@ -157,7 +155,6 @@ class CRM_ACL_Form_ACL extends CRM_Admin_Form {
       '&nbsp;', TRUE
     );
 
-    require_once 'CRM/Core/OptionGroup.php';
 
     $label = ts('Role');
     $role = array('-1' => ts('- select role -'),
@@ -177,7 +174,6 @@ class CRM_ACL_Form_ACL extends CRM_Admin_Form {
       '0' => ts('All Profiles'),
     ) + CRM_Core_PseudoConstant::ufGroup();
 
-    require_once 'CRM/Event/PseudoConstant.php';
     $event = array('-1' => ts('- select -'),
       '0' => ts('All Events'),
     ) + CRM_Event_PseudoConstant::event(NULL, FALSE, "( is_template IS NULL OR is_template != 1 )");
@@ -270,11 +266,9 @@ class CRM_ACL_Form_ACL extends CRM_Admin_Form {
    * @return None
    */
   public function postProcess() {
-    require_once 'CRM/Core/BAO/Cache.php';
     // note this also resets any ACL cache
     CRM_Core_BAO_Cache::deleteGroup('contact fields');
 
-    require_once 'CRM/ACL/BAO/ACL.php';
 
     if ($this->_action & CRM_Core_Action::DELETE) {
       CRM_ACL_BAO_ACL::del($this->_id);

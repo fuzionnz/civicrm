@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,15 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Contribute/PseudoConstant.php';
-require_once 'CRM/Custom/Form/CustomData.php';
-require_once 'CRM/Contribute/Form/AdditionalInfo.php';
 
 /**
  * This class generates form components for processing a pledge
@@ -112,7 +107,6 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
       return;
     }
 
-    require_once 'CRM/Contact/BAO/Contact/Location.php';
     $this->userDisplayName = $this->userEmail = NULL;
     if ($this->_contactID) {
       list($this->userDisplayName,
@@ -127,7 +121,7 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
     }
 
     //build custom data
-    CRM_Custom_Form_Customdata::preProcess($this, NULL, NULL, 1, 'Pledge', $this->_id);
+    CRM_Custom_Form_CustomData::preProcess($this, NULL, NULL, 1, 'Pledge', $this->_id);
 
     $this->_values = array();
     // current pledge id
@@ -137,7 +131,6 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
         $this->_id, 'contribution_id', 'pledge_id'
       );
       $params = array('id' => $this->_id);
-      require_once "CRM/Pledge/BAO/Pledge.php";
       CRM_Pledge_BAO_Pledge::getValues($params, $this->_values);
 
       //get the honorID
@@ -176,10 +169,8 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
     }
 
     //get the pledge frequency units.
-    require_once 'CRM/Core/OptionGroup.php';
-    $this->_freqUnits = CRM_Core_OptionGroup::values("recur_frequency_units");
+    $this->_freqUnits = CRM_Core_OptionGroup::values('recur_frequency_units');
 
-    require_once "CRM/Core/BAO/Email.php";
     $this->_fromEmails = CRM_Core_BAO_Email::getFromEmail();
   }
 
@@ -200,7 +191,7 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
     }
 
     if (CRM_Utils_Array::value('is_test', $defaults)) {
-      $this->assign("is_test", TRUE);
+      $this->assign('is_test', TRUE);
     }
 
     if ($this->_id) {
@@ -215,7 +206,6 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
 
       //check is this pledge pending
       // fix the display of the monetary value, CRM-4038
-      require_once 'CRM/Utils/Money.php';
       if ($this->_isPending) {
         $defaults['eachPaymentAmount'] = $this->_values['amount'] / $this->_values['installments'];
         $defaults['eachPaymentAmount'] = CRM_Utils_Money::format($defaults['eachPaymentAmount'], NULL, '%a');
@@ -263,16 +253,15 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
 
     //honoree contact.
     if ($this->_honorID) {
-      require_once 'CRM/Contact/BAO/Contact.php';
       $honorDefault = array();
       $idParams = array('contact_id' => $this->_honorID);
       CRM_Contact_BAO_Contact::retrieve($idParams, $honorDefault);
       $honorType = CRM_Core_PseudoConstant::honor();
-      $defaults["honor_prefix_id"] = $honorDefault["prefix_id"];
-      $defaults["honor_first_name"] = CRM_Utils_Array::value("first_name", $honorDefault);
-      $defaults["honor_last_name"] = CRM_Utils_Array::value("last_name", $honorDefault);
-      $defaults["honor_email"] = CRM_Utils_Array::value("email", $honorDefault['email'][1]);
-      $defaults["honor_type"] = $honorType[$defaults["honor_type_id"]];
+      $defaults['honor_prefix_id'] = $honorDefault['prefix_id'];
+      $defaults['honor_first_name'] = CRM_Utils_Array::value('first_name', $honorDefault);
+      $defaults['honor_last_name'] = CRM_Utils_Array::value('last_name', $honorDefault);
+      $defaults['honor_email'] = CRM_Utils_Array::value('email', $honorDefault['email'][1]);
+      $defaults['honor_type'] = $honorType[$defaults['honor_type_id']];
     }
 
     if (isset($this->userEmail)) {
@@ -280,7 +269,7 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
     }
 
     // custom data set defaults
-    $defaults += CRM_Custom_Form_Customdata::setDefaultValues($this);
+    $defaults += CRM_Custom_Form_CustomData::setDefaultValues($this);
 
     return $defaults;
   }
@@ -310,7 +299,6 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
     }
 
     if ($this->_context == 'standalone') {
-      require_once 'CRM/Contact/Form/NewContact.php';
       CRM_Contact_Form_NewContact::buildQuickForm($this);
     }
 
@@ -356,6 +344,7 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
 
     //pledge fields.
     $attributes = CRM_Core_DAO::getAttribute('CRM_Pledge_DAO_Pledge');
+
     $this->assign('isPending', $this->_isPending);
 
     $js = array(
@@ -363,10 +352,18 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
       'onkeyup' => "calculatedPaymentAmount( );",
     );
 
-    $element = &$this->add('text', 'amount', ts('Total Pledge Amount'),
-      array_merge($attributes['pledge_amount'], $js), TRUE
+    $currencyFreeze = FALSE;
+    if ($this->_id &&
+      !$this->_isPending
+    ) {
+      $currencyFreeze = TRUE;
+    }
+
+    $element = $this->addMoney('amount', ts('Total Pledge Amount'), TRUE,
+      array_merge($attributes['pledge_amount'], $js), TRUE,
+      'currency', NULL, $currencyFreeze
     );
-    $this->addRule('amount', ts('Please enter a valid monetary amount.'), 'money');
+
     if ($this->_id &&
       !$this->_isPending
     ) {
@@ -384,7 +381,7 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
     }
 
     $element = &$this->add('text', 'frequency_interval', ts('every'),
-      $attributes['frequency_interval'], TRUE
+      $attributes['pledge_frequency_interval'], TRUE
     );
     $this->addRule('frequency_interval', ts('Please enter a number for frequency (e.g. every "3" months).'), 'positiveInteger');
     if ($this->_id &&
@@ -431,8 +428,9 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
       !$this->_isPending
     ) {
       $eachPaymentAmount = $this->_values['original_installment_amount'];
-      $this->assign("eachPaymentAmount", $eachPaymentAmount);
-      $this->assign("hideCalender", TRUE);
+      $this->assign('currency', $this->_values['currency']);
+      $this->assign('eachPaymentAmount', $eachPaymentAmount);
+      $this->assign('hideCalender', TRUE);
     }
 
     if (CRM_Utils_Array::value('status_id', $this->_values) !=
@@ -455,7 +453,6 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
     );
 
     //CRM-7362 --add campaigns.
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     CRM_Campaign_BAO_Campaign::addCampaign($this, CRM_Utils_Array::value('campaign_id', $this->_values));
 
     $pageIds = array();
@@ -472,14 +469,13 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
         '' => ts('- select -')) + $pledgePages
     );
 
-    require_once 'CRM/Core/BAO/Setting.php';
     $mailingInfo = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::MAILING_PREFERENCES_NAME,
       'mailing_backend'
     );
     $this->assign('outBound_option', $mailingInfo['outBound_option']);
 
     //build custom data
-    CRM_Custom_Form_Customdata::buildQuickForm($this);
+    CRM_Custom_Form_CustomData::buildQuickForm($this);
 
     // make this form an upload since we dont know if the custom data injected dynamically
     // is of type file etc $uploadNames = $this->get( 'uploadNames' );
@@ -530,7 +526,7 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
       $errors['contact[1]'] = ts('Please select a contact or create new contact');
     }
 
-    if (isset($fields["honor_type_id"])) {
+    if (isset($fields['honor_type_id'])) {
       if (!((CRM_Utils_Array::value('honor_first_name', $fields) &&
             CRM_Utils_Array::value('honor_last_name', $fields)
           ) ||
@@ -539,20 +535,20 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
         $errors['honor_first_name'] = ts('Honor First Name and Last Name OR an email should be set.');
       }
     }
-    if ($fields["amount"] <= 0) {
+    if ($fields['amount'] <= 0) {
       $errors['amount'] = ts('Total Pledge Amount should be greater than zero.');
     }
-    if ($fields["installments"] <= 0) {
+    if ($fields['installments'] <= 0) {
       $errors['installments'] = ts('Installments should be greater than zero.');
     }
 
-    if ($fields["frequency_unit"] != 'week') {
-      if ($fields["frequency_day"] > 31 || $fields["frequency_day"] == 0) {
+    if ($fields['frequency_unit'] != 'week') {
+      if ($fields['frequency_day'] > 31 || $fields['frequency_day'] == 0) {
         $errors['frequency_day'] = ts('Please enter a valid frequency day ie. 1 through 31.');
       }
     }
-    elseif ($fields["frequency_unit"] == 'week') {
-      if ($fields["frequency_day"] > 7 || $fields["frequency_day"] == 0) {
+    elseif ($fields['frequency_unit'] == 'week') {
+      if ($fields['frequency_day'] > 7 || $fields['frequency_day'] == 0) {
         $errors['frequency_day'] = ts('Please enter a valid frequency day ie. 1 through 7.');
       }
     }
@@ -568,7 +564,6 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
    */
   public function postProcess() {
     if ($this->_action & CRM_Core_Action::DELETE) {
-      require_once 'CRM/Pledge/BAO/Pledge.php';
       CRM_Pledge_BAO_Pledge::deletePledge($this->_id);
       return;
     }
@@ -618,6 +613,7 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
     }
     //format amount
     $params['amount'] = CRM_Utils_Rule::cleanMoney(CRM_Utils_Array::value('amount', $formValues));
+    $params['currency'] = CRM_Utils_Array::value('currency', $formValues);
     $params['original_installment_amount'] = ($params['amount'] / $params['installments']);
 
     $dates = array('create_date', 'start_date', 'acknowledge_date', 'cancel_date');
@@ -640,7 +636,7 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
     }
 
     if (CRM_Utils_Array::value('is_acknowledge', $formValues)) {
-      $params['acknowledge_date'] = date("Y-m-d");
+      $params['acknowledge_date'] = date('Y-m-d');
     }
 
     // assign id only in update mode
@@ -652,17 +648,16 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
 
     //handle Honoree contact.
     if (CRM_Utils_Array::value('honor_type_id', $params)) {
-      require_once 'CRM/Contribute/BAO/Contribution.php';
       if ($this->_honorID) {
         $honorID = CRM_Contribute_BAO_Contribution::createHonorContact($params, $this->_honorID);
       }
       else {
         $honorID = CRM_Contribute_BAO_Contribution::createHonorContact($params);
       }
-      $params["honor_contact_id"] = $honorID;
+      $params['honor_contact_id'] = $honorID;
     }
     else {
-      $params["honor_contact_id"] = 'null';
+      $params['honor_contact_id'] = 'null';
     }
 
     //format custom data
@@ -681,7 +676,6 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
     $params['is_pledge_pending'] = $this->_isPending;
 
     //create pledge record.
-    require_once 'CRM/Pledge/BAO/Pledge.php';
     $pledge = CRM_Pledge_BAO_Pledge::create($params);
 
     $statusMsg = NULL;
@@ -706,13 +700,12 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form {
       $params['id'] = $pledge->id;
       $params['acknowledge_date'] = $pledge->acknowledge_date;
       $params['is_test'] = $pledge->is_test;
-
+      $params['currency'] = $pledge->currency;
       // retrieve 'from email id' for acknowledgement
       $params['from_email_id'] = $formValues['from_email_address'];
 
       $this->paymentId = NULL;
       //send Acknowledgment mail.
-      require_once 'CRM/Pledge/BAO/Pledge.php';
       CRM_Pledge_BAO_Pledge::sendAcknowledgment($this, $params);
 
       if (!isset($this->userEmail)) {

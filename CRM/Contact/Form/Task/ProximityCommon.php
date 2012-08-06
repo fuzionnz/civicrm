@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contact/Form/Task.php';
 
 /**
  * This class provides the functionality to support Proximity Searches
@@ -111,7 +109,6 @@ class CRM_Contact_Form_Task_ProximityCommon extends CRM_Contact_Form_Task {
     // prox_distance_unit
 
     // state country js, CRM-5233
-    require_once 'CRM/Core/BAO/Address.php';
     $stateCountryMap = array();
     $stateCountryMap[] = array(
       'state_province' => 'prox_state_province_id',
@@ -161,9 +158,8 @@ class CRM_Contact_Form_Task_ProximityCommon extends CRM_Contact_Form_Task {
    * @return array the default array reference
    */
   function &setDefaultValues($form) {
-    $defaults = array();
-    require_once 'CRM/Core/Config.php';
-    $config = CRM_Core_Config::singleton();
+    $defaults       = array();
+    $config         = CRM_Core_Config::singleton();
     $countryDefault = $config->defaultContactCountry;
 
     if ($countryDefault) {

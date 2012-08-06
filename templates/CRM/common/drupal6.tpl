@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -34,13 +34,8 @@
     {include file="CRM/common/Navigation.tpl" }
 {/if}
 
-{* temporary hack to fix wysiysg editor failure if js compression is on *}
-{if $defaultWysiwygEditor eq 1}
-    <script type="text/javascript" src="{$config->resourceBase}packages/tinymce/jscripts/tiny_mce/jquery.tinymce.js"></script>
-    <script type="text/javascript" src="{$config->resourceBase}packages/tinymce/jscripts/tiny_mce/tiny_mce.js"></script>
-{elseif $defaultWysiwygEditor eq 2}
-    <script type="text/javascript" src="{$config->resourceBase}packages/ckeditor/ckeditor.js"></script>
-{/if}
+{* include wysiwyg related files*}
+{include file="CRM/common/wysiwyg.tpl"}
 
 {if isset($browserPrint) and $browserPrint}
 {* Javascript window.print link. Used for public pages where we can't do printer-friendly view. *}
@@ -83,6 +78,14 @@
 <script type="text/javascript">
 cj(function() {
    cj().crmtooltip(); 
+});
+
+cj(document).ready(function() {
+  advmultiselectResize();
+});
+
+cj(window).resize(function() {
+  advmultiselectResize();
 });
 </script>
 {/literal}

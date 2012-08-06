@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 
 /**
  * customize the output to meet our specific requirements
@@ -52,7 +50,6 @@ class CRM_Admin_Form_Persistent extends CRM_Core_Form {
   }
 
   public function setDefaultValues() {
-    require_once 'CRM/Core/BAO/Persistent.php';
     $defaults = array();
 
     if ($this->_indexID && ($this->_action & (CRM_Core_Action::UPDATE))) {
@@ -84,7 +81,6 @@ class CRM_Admin_Form_Persistent extends CRM_Core_Form {
   }
 
   public function postProcess() {
-    require_once "CRM/Core/BAO/Persistent.php";
     $params = $ids = array();
     $params = $this->controller->exportValues($this->_name);
 

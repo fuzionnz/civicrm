@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -34,7 +36,7 @@
  *
  * @package CiviCRM_APIv3
  * @subpackage API_File
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id: $
  *
  */
@@ -164,115 +166,3 @@ function civicrm_api3_file_delete($params) {
 
   return $check ? NULL : civicrm_api3_create_error('Error while deleting a file.');
 }
-
-/**
- * Assigns an entity to a file
- *
- * @param object  $file            id of a file
- * @param object  $entity          id of a entity
- * @param string  $entity_table
- *
- * @return array of newly created entity-file object properties
- * @access public
- */
-function civicrm_api3_entity_file_create($params) {
-
-  require_once 'CRM/Core/DAO/EntityFile.php';
-  civicrm_api3_verify_one_mandatory($params, NULL, array('file_id', 'entity_id'));
-
-  if (empty($params['entity_table'])) {
-    $params['entity_table'] = 'civicrm_contact';
-  }
-
-  $entityFileDAO = new CRM_Core_DAO_EntityFile();
-  $entityFileDAO->copyValues($params);
-  $entityFileDAO->save();
-
-  $entityFile = array();
-  _civicrm_api3_object_to_array($entityFileDAO, $entityFile);
-
-  return civicrm_api3_create_success($entityFile, $params, 'entity_file', 'create', $entityFileDAO);
-}
-
-/**
- * Returns all files assigned to a single entity instance.
- *
- * @param object $entityID         id of the supported entity.
- * @param string $entity_table
- *
- * @return array   nested array of entity-file property values.
- * @access public
- */
-function civicrm_api3_files_by_entity_get($params) {
-
-  civicrm_api3_verify_mandatory($params, NULL, array('entity_id'));
-  if (empty($entityTable)) {
-    $entityTable = 'civicrm_contact';
-  }
-
-  require_once 'CRM/Core/DAO/EntityFile.php';
-  require_once 'CRM/Core/DAO/File.php';
-
-  $entityFileDAO = new CRM_Core_DAO_EntityFile();
-  $entityFileDAO->entity_table = $entityTable;
-  $entityFileDAO->entity_id = $params['entity_id'];
-  if ($fileID) {
-    $entityFileDAO->file_id = $params['file_id'];
-  }
-  if ($entityFileDAO->find()) {
-    $entityFile = array();
-    while ($entityFileDAO->fetch()) {
-      _civicrm_api3_object_to_array($entityFileDAO, $entityFile);
-      $files[$entityFileDAO->file_id] = $entityFile;
-
-      if (array_key_exists('file_id', $files[$entityFileDAO->file_id])) {
-        $fileDAO = new CRM_Core_DAO_File();
-        $fileDAO->id = $entityFile['file_id'];
-        $fileDAO->find(TRUE);
-        _civicrm_api3_object_to_array($fileDAO, $files[$entityFileDAO->file_id]);
-      }
-
-      if (CRM_Utils_Array::value('file_type_id', $files[$entityFileDAO->file_id])) {
-        $files[$entityFileDAO->file_id]['file_type'] = CRM_Core_OptionGroup::getLabel('file_type', $files[$entityFileDAO->file_id]['file_type_id']);
-      }
-    }
-  }
-  else {
-    return civicrm_api3_create_error('Exact match not found');
-  }
-
-  return civicrm_api3_create_success($files, $params, 'file', 'get', $entityFileDAO);
-}
-
-/**
- * Deletes an existing entity file assignment.
- * Required parameters : 1.  id of an entity-file
- *                       2.  entity_id and entity_table of an entity-file
- *
- * @param   array $params   an associative array of name/value property values of civicrm_entity_file.
- *
- * @return  null if successfull, object of CRM_Core_Error otherwise
- * @access public
- */
-function civicrm_api3_entity_file_delete($params) {
-
-  civicrm_api3_verify_mandatory($params);
-  require_once 'CRM/Core/DAO/EntityFile.php';
-
-  //if ( ! isset($params['id']) && ( !isset($params['entity_id']) || !isset($params['entity_file']) ) ) {
-  if (!isset($params['id']) && (!isset($params['entity_id']) || !isset($params['entity_table']))) {
-    return civicrm_api3_create_error('Required parameters missing');
-  }
-
-  $entityFileDAO = new CRM_Core_DAO_EntityFile();
-
-  $properties = array('id', 'entity_id', 'entity_table', 'file_id');
-  foreach ($properties as $name) {
-    if (array_key_exists($name, $params)) {
-      $entityFileDAO->$name = $params[$name];
-    }
-  }
-
-  return $entityFileDAO->delete() ? NULL : civicrm_api3_create_error('Error while deleting');
-}
-

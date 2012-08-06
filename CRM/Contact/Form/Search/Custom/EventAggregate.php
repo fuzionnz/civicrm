@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contact/Form/Search/Interface.php';
-require_once 'CRM/Contact/Form/Search/Custom/Base.php';
 class CRM_Contact_Form_Search_Custom_EventAggregate extends CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface {
 
   protected $_formValues; function __construct(&$formValues) {
@@ -73,7 +70,6 @@ class CRM_Contact_Form_Search_Custom_EventAggregate extends CRM_Contact_Form_Sea
     foreach ($event_type as $eventId => $eventName) {
       $form->addElement('checkbox', "event_type_id[$eventId]", 'Event Type', $eventName);
     }
-    require_once "CRM/Event/BAO/Event.php";
     $events = CRM_Event_BAO_Event::getEvents(TRUE);
     $form->add('select', 'event_id', ts('Event Name'), array('' => ts('- select -')) + $events);
 

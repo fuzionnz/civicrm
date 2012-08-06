@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -52,7 +52,6 @@ Class CRM_Core_Form_Date {
 
     $dateOptions = array();
 
-    require_once "CRM/Utils/System.php";
     if (CRM_Utils_System::getClassName($form) == 'CRM_Activity_Import_Form_UploadFile') {
       $dateText = ts('yyyy-mm-dd OR yyyy-mm-dd HH:mm OR yyyymmdd OR yyyymmdd HH:mm (1998-12-25 OR 1998-12-25 15:33 OR 19981225 OR 19981225 10:30 OR ( 2008-9-1 OR 2008-9-1 15:33 OR 20080901 15:33)');
     }
@@ -60,13 +59,13 @@ Class CRM_Core_Form_Date {
       $dateText = ts('yyyy-mm-dd OR yyyymmdd (1998-12-25 OR 19981225) OR (2008-9-1 OR 20080901)');
     }
 
-    $dateOptions[] = HTML_QuickForm::createElement('radio', NULL, NULL, $dateText, self::DATE_yyyy_mm_dd);
+    $dateOptions[] = $form->createElement('radio', NULL, NULL, $dateText, self::DATE_yyyy_mm_dd);
 
-    $dateOptions[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('mm/dd/yy OR mm-dd-yy (12/25/98 OR 12-25-98) OR (9/1/08 OR 9-1-08)'), self::DATE_mm_dd_yy);
-    $dateOptions[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('mm/dd/yyyy OR mm-dd-yyyy (12/25/1998 OR 12-25-1998) OR (9/1/2008 OR 9-1-2008)'), self::DATE_mm_dd_yyyy);
-    $dateOptions[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('Month dd, yyyy (December 12, 1998)'), self::DATE_Month_dd_yyyy);
-    $dateOptions[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('dd-mon-yy OR dd/mm/yy (25-Dec-98 OR 25/12/98)'), self::DATE_dd_mon_yy);
-    $dateOptions[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('dd/mm/yyyy (25/12/1998) OR (1/9/2008)'), self::DATE_dd_mm_yyyy);
+    $dateOptions[] = $form->createElement('radio', NULL, NULL, ts('mm/dd/yy OR mm-dd-yy (12/25/98 OR 12-25-98) OR (9/1/08 OR 9-1-08)'), self::DATE_mm_dd_yy);
+    $dateOptions[] = $form->createElement('radio', NULL, NULL, ts('mm/dd/yyyy OR mm-dd-yyyy (12/25/1998 OR 12-25-1998) OR (9/1/2008 OR 9-1-2008)'), self::DATE_mm_dd_yyyy);
+    $dateOptions[] = $form->createElement('radio', NULL, NULL, ts('Month dd, yyyy (December 12, 1998)'), self::DATE_Month_dd_yyyy);
+    $dateOptions[] = $form->createElement('radio', NULL, NULL, ts('dd-mon-yy OR dd/mm/yy (25-Dec-98 OR 25/12/98)'), self::DATE_dd_mon_yy);
+    $dateOptions[] = $form->createElement('radio', NULL, NULL, ts('dd/mm/yyyy (25/12/1998) OR (1/9/2008)'), self::DATE_dd_mm_yyyy);
     $form->addGroup($dateOptions, 'dateFormats', ts('Date Format'), '<br/>');
     $form->setDefaults(array('dateFormats' => self::DATE_yyyy_mm_dd));
   }
@@ -80,7 +79,7 @@ Class CRM_Core_Form_Date {
    * @access public
    */
   static
-  function buildDateRange(&$form, $fieldName, $count = 1, $required = FALSE, $addReportFilters = TRUE) {
+  function buildDateRange(&$form, $fieldName, $count = 1, $from = '_from', $to = '_to', $fromLabel = 'From:', $required = FALSE, $addReportFilters = TRUE, $dateFormat = 'searchDate') {
     $selector = array(ts('Choose Date Range'),
       'this.year' => ts('This Year'),
       'this.fiscal_year' => ts('This Fiscal Year'),
@@ -96,7 +95,7 @@ Class CRM_Core_Form_Date {
       'previous.day' => ts('Previous Day'),
       'previous_before.year' => ts('Prior to Previous Year'),
       'previous_before.quarter' => ts('Prior to Previous Quarter'),
-      'previous_before.month' => ts('Prior to Previuos Month'),
+      'previous_before.month' => ts('Prior to Previous Month'),
       'previous_before.week' => ts('Prior to Previous Week'),
       'previous_before.day' => ts('Prior to Previous Day'),
       'previous_2.year' => ts('Previous 2 Years'),
@@ -120,7 +119,6 @@ Class CRM_Core_Form_Date {
       'ending.week' => ts('From 1 Week Ago'),
     );
     if ($addReportFilters) {
-      require_once 'CRM/Report/Form.php';
       $selector += CRM_Report_Form::getOperationPair(CRM_Report_FORM::OP_DATE);
     }
     $config = CRM_Core_Config::singleton();
@@ -139,7 +137,7 @@ Class CRM_Core_Form_Date {
       array('onclick' => "showAbsoluteRange(this.value, '{$fieldName}_relative');")
     );
 
-    $form->addDateRange($fieldName);
+    $form->addDateRange($fieldName, $from, $to, $fromLabel, $dateFormat);
   }
 }
 

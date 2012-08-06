@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | Copyright (C) 2011 Marty Wright                                    |
  | Licensed to CiviCRM under the Academic Free License version 3.0.   |
@@ -29,12 +29,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/ActionLog.php';
 
 /**
  * This class contains functions for managing Action Logs
@@ -47,15 +45,13 @@ class CRM_Core_BAO_ActionLog extends CRM_Core_DAO_ActionLog {
    * @return actionLog array
    * @access public
    */
-  static
-  function create($params) {
+  static function create($params) {
     $actionLog = new CRM_Core_DAO_ActionLog();
 
     $params['action_date_time'] = CRM_Utils_Array::value('action_date_time', $params, date('YmdHis'));
 
     $actionLog->copyValues($params);
 
-    require_once 'CRM/Utils/Hook.php';
     $edit = ($actionLog->id) ? TRUE : FALSE;
     if ($edit) {
       CRM_Utils_Hook::pre('edit', 'ActionLog', $actionLog->id, $actionLog);

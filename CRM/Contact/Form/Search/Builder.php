@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contact/Form/Search.php';
-require_once "CRM/Core/BAO/Mapping.php";
 
 /**
  * This class if for search builder processing
@@ -129,17 +126,13 @@ class CRM_Contact_Form_Search_Builder extends CRM_Contact_Form_Search {
    */
   static
   function formRule($values) {
-    //CRM_Core_Error::debug('s', $values);
     if (CRM_Utils_Array::value('addMore', $values) || CRM_Utils_Array::value('addBlock', $values)) {
       return TRUE;
     }
-    require_once 'CRM/Contact/BAO/Contact.php';
     $fields = array();
     $fields = CRM_Contact_BAO_Contact::exportableFields('All', FALSE, TRUE);
 
-    require_once 'CRM/Core/Component.php';
     $compomentFields = CRM_Core_Component::getQueryFields();
-    require_once 'CRM/Activity/BAO/Activity.php';
     $activityFields  = CRM_Activity_BAO_Activity::exportableFields();
     $compomentFields = array_merge($compomentFields, $activityFields);
     $fields          = array_merge($fields, $compomentFields);
@@ -147,18 +140,21 @@ class CRM_Contact_Form_Search_Builder extends CRM_Contact_Form_Search {
     $fld = array();
     $fld = CRM_Core_BAO_Mapping::formattedFields($values, TRUE);
 
-    require_once 'CRM/Utils/Type.php';
     $errorMsg = array();
     foreach ($fld as $k => $v) {
       if (!$v[1]) {
         $errorMsg["operator[$v[3]][$v[4]]"] = ts("Please enter the operator.");
       }
       else {
-        if (in_array($v[1], array(
-          'IS NULL', 'IS NOT NULL')) && $v[2]) {
+        // CRM-10338
+        $v[2] = self::checkArrayKeyEmpty($v[2]);
+
+        if (in_array($v[1], array('IS NULL', 'IS NOT NULL')) &&
+          !empty($v[2])) {
           $errorMsg["value[$v[3]][$v[4]]"] = ts('Please clear your value if you want to use %1 operator.', array(1 => $v[1]));
         }
-        elseif ($v[0] == 'group' || $v[0] == 'tag') {
+        elseif (($v[0] == 'group' || $v[0] == 'tag') &&
+          !empty($v[2])) {
           $grpId = array_keys($v[2]);
           if (!key($v[2])) {
             $errorMsg["value[$v[3]][$v[4]]"] = ts("Please enter the value.");
@@ -223,7 +219,8 @@ class CRM_Contact_Form_Search_Builder extends CRM_Contact_Form_Search {
               $fldName = substr($v[0], 13);
             }
 
-            $fldType = CRM_Utils_Array::value('type', $fields[$fldName]);
+            $fldValue = CRM_Utils_Array::value($fldName, $fields);
+            $fldType = CRM_Utils_Array::value('type', $fldValue);
             $type = CRM_Utils_Type::typeToString($fldType);
             // Check Empty values for Integer Or Boolean Or Date type For operators other than IS NULL and IS NOT NULL.
             if (!in_array($v[1], array(
@@ -321,7 +318,8 @@ class CRM_Contact_Form_Search_Builder extends CRM_Contact_Form_Search {
       }
 
       for ($x = 1; $x <= $this->_blockCount; $x++) {
-        if (CRM_Utils_Array::value($x, $params['addMore'])) {
+        $addMore = CRM_Utils_Array::value('addMore', $params);
+        if (CRM_Utils_Array::value($x, $addMore)) {
           $this->_columnCount[$x] = $this->_columnCount[$x] + 1;
           $this->set('columnCount', $this->_columnCount);
           $this->set('showSearchForm', TRUE);
@@ -339,7 +337,6 @@ class CRM_Contact_Form_Search_Builder extends CRM_Contact_Form_Search {
       }
 
       if (!$checkEmpty) {
-        require_once 'CRM/Utils/System.php';
         CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/contact/search/builder', '_qf_Builder_display=true'));
       }
     }
@@ -374,7 +371,33 @@ class CRM_Contact_Form_Search_Builder extends CRM_Contact_Form_Search {
 
     $this->_params = &$this->convertFormValues($this->_formValues);
     $this->_returnProperties = &$this->returnProperties();
+
+
+    // CRM-10338 check if value is empty array
+    foreach ( $this->_params as $k => $v ) {
+      $this->_params[$k][2] = self::checkArrayKeyEmpty($v[2]);
+    }
+
     parent::postProcess();
+  }
+
+  // CRM-10338
+  // tags and groups use array keys for selection list.
+  // if using IS NULL/NOT NULL, an array with no array key is created
+  // convert that to simple null so processing can proceed
+  function checkArrayKeyEmpty( $val ) {
+    if ( is_array($val) ) {
+      $v2empty = true;
+      foreach ( $val as $vk => $vv ) {
+        if ( !empty($vk) ) {
+          $v2empty = false;
+        }
+      }
+      if ( $v2empty ) {
+        $val = null;
+      }
+    }
+    return $val;
   }
 }
 

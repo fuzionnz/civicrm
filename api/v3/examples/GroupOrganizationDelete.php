@@ -7,7 +7,7 @@
  */
 function group_organization_delete_example(){
 $params = array( 
-  'id' => 4,
+  'id' => 1,
   'version' => 3,
 );
 

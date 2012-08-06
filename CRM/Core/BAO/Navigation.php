@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/Navigation.php';
 class CRM_Core_BAO_Navigation extends CRM_Core_DAO_Navigation {
 
   /**
@@ -70,7 +68,6 @@ class CRM_Core_BAO_Navigation extends CRM_Core_DAO_Navigation {
   function getMenus() {
     $menus = array();
 
-    require_once "CRM/Core/DAO/Menu.php";
     $menu = new CRM_Core_DAO_Menu();
     $menu->domain_id = CRM_Core_Config::domainID();
     $menu->find();
@@ -93,7 +90,6 @@ class CRM_Core_BAO_Navigation extends CRM_Core_DAO_Navigation {
    */
   static
   function add(&$params) {
-    require_once "CRM/Core/DAO/Navigation.php";
     $navigation = new CRM_Core_DAO_Navigation();
 
     $params['is_active'] = CRM_Utils_Array::value('is_active', $params, FALSE);
@@ -197,13 +193,12 @@ class CRM_Core_BAO_Navigation extends CRM_Core_DAO_Navigation {
     $config = CRM_Core_Config::singleton();
 
     // check if we can retrieve from database cache
-    require_once 'CRM/Core/BAO/Cache.php';
     $navigations = CRM_Core_BAO_Cache::getItem('navigation', $cacheKeyString);
 
     if (!$navigations) {
       $domainID = CRM_Core_Config::domainID();
       $query = "
-SELECT id, label, parent_id, weight, is_active, name 
+SELECT id, label, parent_id, weight, is_active, name
 FROM civicrm_navigation WHERE domain_id = $domainID {$whereClause} ORDER BY parent_id, weight ASC";
       $result = CRM_Core_DAO::executeQuery($query);
 
@@ -279,8 +274,8 @@ FROM civicrm_navigation WHERE domain_id = $domainID {$whereClause} ORDER BY pare
 
     // get the list of menus
     $query = "
-SELECT id, label, url, permission, permission_operator, has_separator, parent_id, is_active, name 
-FROM civicrm_navigation 
+SELECT id, label, url, permission, permission_operator, has_separator, parent_id, is_active, name
+FROM civicrm_navigation
 WHERE {$whereClause}
 AND domain_id = $domainID
 ORDER BY parent_id, weight";
@@ -327,7 +322,6 @@ ORDER BY parent_id, weight";
     $navigationString = NULL;
 
     // run the Navigation  through a hook so users can modify it
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::navigationMenu($navigations);
 
     $i18n = CRM_Core_I18n::singleton();
@@ -376,6 +370,7 @@ ORDER BY parent_id, weight";
   /**
    * Recursively check child menus
    */
+  static
   function recurseNavigation(&$value, &$navigationString, $json, $skipMenuItems) {
     if ($json) {
       if (!empty($value['child'])) {
@@ -442,6 +437,7 @@ ORDER BY parent_id, weight";
   /**
    *  Get Menu name
    */
+  static
   function getMenuName(&$value, &$skipMenuItems) {
     // we need to localise the menu labels (CRM-5456) and don’t
     // want to use ts() as it would throw the ts-extractor off
@@ -463,7 +459,6 @@ ORDER BY parent_id, weight";
     }
 
     //we need to check core view/edit or supported acls.
-    require_once 'CRM/Core/Permission.php';
     if (in_array($menuName, array(
       'Search...', 'Contacts'))) {
       if (!CRM_Core_Permission::giveMeAllACLs()) {
@@ -570,7 +565,6 @@ ORDER BY parent_id, weight";
 
     $navParams = array('contact_id' => $contactID);
 
-    require_once 'CRM/Core/BAO/Setting.php';
     $navigation = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::NAVIGATION_NAME,
       'navigation',
       NULL,
@@ -608,7 +602,8 @@ ORDER BY parent_id, weight";
         $homeLabel = ts('Home');
       }
 
-      if (($config->userSystem->is_drupal) &&
+      if (
+        ($config->userSystem->is_drupal) &&
         ((module_exists('toolbar') && user_access('access toolbar')) ||
           module_exists('admin_menu') && user_access('access administration menu')
         )
@@ -627,7 +622,6 @@ ORDER BY parent_id, weight";
 
       // before inserting check if contact id exists in db
       // this is to handle wierd case when contact id is in session but not in db
-      require_once 'CRM/Contact/DAO/Contact.php';
       $contact = new CRM_Contact_DAO_Contact();
       $contact->id = $contactID;
       if ($contact->find(TRUE)) {
@@ -660,7 +654,6 @@ ORDER BY parent_id, weight";
     }
 
     CRM_Core_DAO::executeQuery($query, $params);
-    require_once 'CRM/Core/BAO/Cache.php';
     CRM_Core_BAO_Cache::deleteGroup('navigation');
   }
 
@@ -742,11 +735,11 @@ ORDER BY parent_id, weight";
         if (!$referenceID) {
           $newWeight = $newWeight - 1;
         }
-        $sql[] = "UPDATE civicrm_navigation SET weight = weight - 1 
+        $sql[] = "UPDATE civicrm_navigation SET weight = weight - 1
                     WHERE {$oldParentClause}  AND weight BETWEEN {$oldWeight} + 1 AND {$newWeight}";
       }
       if ($newWeight < $oldWeight) {
-        $sql[] = "UPDATE civicrm_navigation SET weight = weight + 1 
+        $sql[] = "UPDATE civicrm_navigation SET weight = weight + 1
                             WHERE {$oldParentClause} AND weight BETWEEN {$newWeight} AND {$oldWeight} - 1";
       }
     }
@@ -755,7 +748,6 @@ ORDER BY parent_id, weight";
     $sql[] = "UPDATE civicrm_navigation SET weight = {$newWeight}, parent_id = {$newParentID} WHERE id = {$nodeID}";
 
     // now execute all the sql's
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
     foreach ($sql as $query) {

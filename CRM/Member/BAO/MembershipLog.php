@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Member/DAO/MembershipLog.php';
 class CRM_Member_BAO_MembershipLog extends CRM_Member_DAO_MembershipLog {
 
   /**
@@ -47,8 +45,7 @@ class CRM_Member_BAO_MembershipLog extends CRM_Member_DAO_MembershipLog {
    *
    * @return object
    */
-  static
-  function add(&$params, &$ids) {
+  static function add(&$params, &$ids) {
     $membershipLog = new CRM_Member_DAO_MembershipLog();
     $membershipLog->copyValues($params);
 
@@ -65,15 +62,13 @@ class CRM_Member_BAO_MembershipLog extends CRM_Member_DAO_MembershipLog {
    * @static
    */
 
-  static
-  function del($membershipID) {
+  static function del($membershipID) {
     $membershipLog = new CRM_Member_DAO_MembershipLog();
     $membershipLog->membership_id = $membershipID;
     return $membershipLog->delete();
   }
 
-  static
-  function resetModifiedID($contactID) {
+  static function resetModifiedID($contactID) {
     $query = "
 UPDATE civicrm_membership_log
    SET modified_id = null

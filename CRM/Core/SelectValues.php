@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +31,7 @@
  * smart caching scheme on a per domain basis
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -101,7 +101,6 @@ class CRM_Core_SelectValues {
   function &contactType() {
     static $contactType = NULL;
     if (!$contactType) {
-      require_once 'CRM/Contact/BAO/ContactType.php';
       $contactType = array('' => ts('- any contact type -'));
       $contactType = $contactType + CRM_Contact_BAO_ContactType::basicTypePairs();
     }
@@ -296,7 +295,7 @@ class CRM_Core_SelectValues {
     if (!$ufGroupType) {
       $ufGroupType = array(
         'Profile' => ts('Standalone Form or Directory'),
-        'Search Profile' => ts('Search Results'),
+        'Search Profile' => ts('Search Views'),
       );
       $config = CRM_Core_Config::singleton();
       if ($config->userSystem->supports_form_extensions) {
@@ -366,7 +365,6 @@ class CRM_Core_SelectValues {
     }
     else {
       if ($type) {
-        require_once 'CRM/Core/DAO/PreferencesDate.php';
         $dao = new CRM_Core_DAO_PreferencesDate();
         $dao->name = $type;
         if (!$dao->find(TRUE)) {
@@ -568,6 +566,30 @@ class CRM_Core_SelectValues {
   }
 
   /**
+   * different type of Membership Tokens
+   *
+   * @static
+   * return array
+   */
+  static
+  function &membershipTokens() {
+    static $tokens = NULL;
+
+    if (!$tokens) {
+      $tokens = array(
+        '{membership.id}' => ts('Membership ID'),
+        '{membership.status}' => ts('Membership Status'),
+        '{membership.type}' => ts('Membership Type'),
+        '{membership.start_date}' => ts('Membership Start Date'),
+        '{membership.join_date}' => ts('Membership Join Date'),
+        '{membership.end_date}' => ts('Membership End Date'),
+        '{membership.fee}' => ts('Membership Fee'),
+      );
+    }
+    return $tokens;
+  }
+
+  /**
    * different type of Event Tokens
    *
    * @static
@@ -600,6 +622,46 @@ class CRM_Core_SelectValues {
   }
 
   /**
+   * different type of Event Tokens
+   *
+   * @static
+   * return array
+   */
+  static
+  function &contributionTokens() {
+    static $tokens = NULL;
+
+    if (!$tokens) {
+      $tokens = array(
+        '{contribution.contribution_id}' => ts('Contribution ID'),
+        '{contribution.total_amount}' => ts('Total Amount'),
+        '{contribution.fee_amount}' => ts('Fee Amount'),
+        '{contribution.net_amount}' => ts('Net Amount'),
+        '{contribution.non_deductible_amount}' => ts('Non Deductible Amount'),
+        '{contribution.receive_date}' => ts('Contribution Receive Date'),
+        '{contribution.payment_instrument}' => ts('Payment Instrument'),
+        '{contribution.trxn_id}' => ts('Transaction ID'),
+        '{contribution.invoice_id}' => ts('Invoice ID'),
+        '{contribution.currency}' => ts('Currency'),
+        '{contribution.cancel_date}' => ts('Contribution Cancel Date'),
+        '{contribution.cancel_reason}' => ts('Contribution Cancel Reason'),
+        '{contribution.receipt_date}' => ts('Receipt Date'),
+        '{contribution.thankyou_date}' => ts('Thank You Date'),
+        '{contribution.contribution_source}' => ts('Contribution Source'),
+        '{contribution.amount_level}' => ts('Amount Level'),
+        //'{contribution.contribution_recur_id}' => ts('Contribution Recurring ID'),
+        //'{contribution.honor_contact_id}' => ts('Honor Contact ID'),
+        '{contribution.contribution_status_id}' => ts('Contribution Status'),
+        //'{contribution.honor_type_id}' => ts('Honor Type ID'),
+        //'{contribution.address_id}' => ts('Address ID'),
+        '{contribution.check_number}' => ts('Check Number'),
+        '{contribution.campaign}' => ts('Contribution Campaign'),
+      );
+    }
+    return $tokens;
+  }
+
+  /**
    * different type of Contact Tokens
    *
    * @static
@@ -609,8 +671,6 @@ class CRM_Core_SelectValues {
   function &contactTokens() {
     static $tokens = NULL;
     if (!$tokens) {
-      require_once 'CRM/Contact/BAO/Contact.php';
-      require_once 'CRM/Core/BAO/CustomField.php';
       $additionalFields = array('checksum' => array('title' => ts('Checksum')),
         'contact_id' => array('title' => ts('Internal Contact ID')),
       );
@@ -643,7 +703,6 @@ class CRM_Core_SelectValues {
       }
 
       // might as well get all the hook tokens to
-      require_once 'CRM/Utils/Hook.php';
       $hookTokens = array();
       CRM_Utils_Hook::tokens($hookTokens);
       foreach ($hookTokens as $category => $tokenValues) {
@@ -769,6 +828,19 @@ class CRM_Core_SelectValues {
       '2' => ts('24 Hours'),
     );
     return $timeFormats;
+  }
+
+  /**
+   * Function to get numeric options
+   *
+   *
+   * @static
+   */
+  function getNumericOptions( $start = 0, $end = 10 ) {
+    for ($i = $start; $i <= $end; $i++) {
+        $numericOptions[$i] = $i;
+    }
+    return $numericOptions;
   }
 }
 

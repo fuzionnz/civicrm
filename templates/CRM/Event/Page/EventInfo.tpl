@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -86,25 +86,26 @@
 	<div class="event-info">
 	{if $event.summary}
 	    <div class="crm-section event_summary-section">
-        	{if $allowRegistration}
-                <div class="action-link section register_link-section register_link-top">
-                    <a href="{$registerURL}" title="{$registerText}" class="button crm-register-button"><span>{$registerText}</span></a>
-                </div>
-            {/if}
-            {$event.summary}
+        {if $allowRegistration}
+          <div class="action-link section register_link-section register_link-top">
+            <a href="{$registerURL}" title="{$registerText}" class="button crm-register-button"><span>{$registerText}</span></a>
+          </div>
+        {/if}
+        {$event.summary}
 	    </div>
 	{/if}
 	{if $event.description}
 	    <div class="crm-section event_description-section summary">
-            {* Put the top register link to the right of description if no summary *}
+          {* Put the top register link to the right of description if no summary *}
         	{if $allowRegistration && !$event.summary}
-                <div class="action-link section register_link-section register_link-top">
-                    <a href="{$registerURL}" title="{$registerText}" class="button crm-register-button"><span>{$registerText}</span></a>
-                </div>
-            {/if}
+              <div class="action-link section register_link-section register_link-top">
+                <a href="{$registerURL}" title="{$registerText}" class="button crm-register-button"><span>{$registerText}</span></a>
+              </div>
+          {/if}
 	        {$event.description}
 	    </div>
 	{/if}
+  <div class="clear"></div>
 	<div class="crm-section event_date_time-section">
 	    <div class="label"><label>{ts}When{/ts}</label></div>
 	    <div class="content">
@@ -174,7 +175,7 @@
 	        <div class="clear"></div>
 	    </div>
 	{/if}
-
+	
 	{if $event.is_monetary eq 1 && $feeBlock.value}
 	    <div class="crm-section event_fees-section">
 	        <div class="label"><label>{$event.fee_label}</label></div>
@@ -189,7 +190,7 @@
 	                    {/if}
 	                    <tr>
 	                        <td class="{$lClass} crm-event-label">{$feeBlock.label.$idx}</td>
-                          {if !$isPriceSet || ($isPriceSet & $feeBlock.isDisplayAmount.$idx)}
+                          {if $isPriceSet & $feeBlock.isDisplayAmount.$idx}
 	                        <td class="fee_amount-value right">{$feeBlock.value.$idx|crmMoney}</td>
                           {/if}
 	                    </tr>

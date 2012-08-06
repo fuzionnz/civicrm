@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
-require_once 'CRM/Report/Utils/Report.php';
 
 /**
  * Page for invoking report instances
@@ -48,6 +47,8 @@ class CRM_Report_Page_InstanceList extends CRM_Core_Page {
    * @static
    */
   static $_links = NULL;
+
+  static $_exceptions = array( 'logging/contact/detail' );
 
   public static function &info($ovID = NULL, &$title = NULL) {
 
@@ -80,6 +81,10 @@ class CRM_Report_Page_InstanceList extends CRM_Core_Page {
     $rows   = array();
     $url    = 'civicrm/report/instance';
     while ($dao->fetch()) {
+      if (in_array($dao->report_id, self::$_exceptions)) {
+        continue;
+      }
+
       $enabled = in_array("Civi{$dao->compName}", $config->enableComponents);
       if ($dao->compName == 'Contact') {
         $enabled = TRUE;

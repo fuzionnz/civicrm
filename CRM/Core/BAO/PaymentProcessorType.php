@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/PaymentProcessorType.php';
 class CRM_Core_BAO_PaymentProcessorType extends CRM_Core_DAO_PaymentProcessorType {
 
   /**
@@ -119,7 +117,7 @@ class CRM_Core_BAO_PaymentProcessorType extends CRM_Core_DAO_PaymentProcessorTyp
    */
   static
   function del($paymentProcessorTypeId) {
-    $query = "SELECT pp.id processor_id  
+    $query = "SELECT pp.id processor_id
                   FROM civicrm_payment_processor pp, civicrm_payment_processor_type ppt
                   WHERE pp.payment_processor_type = ppt.name AND ppt.id = %1";
 
@@ -133,8 +131,10 @@ class CRM_Core_BAO_PaymentProcessorType extends CRM_Core_DAO_PaymentProcessorTyp
 
     $paymentProcessorType = new CRM_Core_DAO_PaymentProcessorType();
     $paymentProcessorType->id = $paymentProcessorTypeId;
-    $paymentProcessorType->delete();
-    CRM_Core_Session::setStatus(ts('Selected Payment Processor type has been deleted.'));
+    if ($paymentProcessorType->delete()) {
+      CRM_Core_Session::setStatus(ts('Selected Payment Processor type has been deleted.<br>'));
+      return TRUE;
+    }
   }
 }
 

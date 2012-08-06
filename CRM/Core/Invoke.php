@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +31,7 @@
  * Serves as a wrapper between the UserFrameWork and Core CRM
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -53,12 +53,6 @@ class CRM_Core_Invoke {
     }
 
     require_once 'CRM/Core/I18n.php';
-    require_once 'CRM/Utils/Wrapper.php';
-    require_once 'CRM/Core/Action.php';
-    require_once 'CRM/Utils/Request.php';
-    require_once 'CRM/Core/Menu.php';
-    require_once 'CRM/Core/Component.php';
-    require_once 'CRM/Core/Permission.php';
 
     $config = CRM_Core_Config::singleton();
 
@@ -67,16 +61,8 @@ class CRM_Core_Invoke {
     ) {
       // ensure that the user has a good privilege level
       if (CRM_Core_Permission::check('administer CiviCRM')) {
-        CRM_Core_Menu::store();
+        self::rebuildMenuAndCaches();
         CRM_Core_Session::setStatus(ts('Menu has been rebuilt'));
-
-        // also reset navigation
-        require_once 'CRM/Core/BAO/Navigation.php';
-        CRM_Core_BAO_Navigation::resetNavigation();
-
-        // also cleanup all caches
-        $config->cleanupCaches();
-
         return CRM_Utils_System::redirect();
       }
       else {
@@ -86,7 +72,6 @@ class CRM_Core_Invoke {
 
     // first fire up IDS and check for bad stuff
     if ($config->useIDS) {
-      require_once 'CRM/Core/IDS.php';
       $ids = new CRM_Core_IDS();
       $ids->check($args);
     }
@@ -95,10 +80,8 @@ class CRM_Core_Invoke {
     $i18n = CRM_Core_I18n::singleton();
 
     if ($config->userFramework == 'Standalone') {
-      require_once 'CRM/Core/Session.php';
       $session = CRM_Core_Session::singleton();
       if ($session->get('new_install') !== TRUE) {
-        require_once 'CRM/Core/Standalone.php';
         CRM_Core_Standalone::sidebarLeft();
       }
       elseif ($args[1] == 'standalone' && $args[2] == 'register') {
@@ -120,7 +103,6 @@ class CRM_Core_Invoke {
     if ($config->userFramework == 'Joomla' && $item) {
       $config->userFrameworkURLVar = 'task';
 
-      require_once 'CRM/Core/Joomla.php';
       // joomla 1.5RC1 seems to push this in the POST variable, which messes
       // QF and checkboxes
       unset($_POST['option']);
@@ -189,6 +171,7 @@ class CRM_Core_Invoke {
           ));
       }
 
+      // CRM_Core_Error::debug( $item ); exit( );
       $result = NULL;
       if (is_array($item['page_callback'])) {
         $newArgs = explode('/',
@@ -267,7 +250,6 @@ class CRM_Core_Invoke {
     CRM_Utils_System::setUserContext(array('civicrm/contact/search/basic', 'civicrm/contact/view'));
     $wrapper = new CRM_Utils_Wrapper();
 
-    require_once 'CRM/Core/Component.php';
     $properties = CRM_Core_Component::contactSubTypeProperties($contact_sub_type, 'Edit');
     if ($properties) {
       $wrapper->run($properties['class'], ts('New %1', array(1 => $contact_sub_type)), $action, TRUE);
@@ -387,9 +369,29 @@ class CRM_Core_Invoke {
       }
     }
 
-    require_once 'CRM/Profile/Page/Listings.php';
     $page = new CRM_Profile_Page_Listings();
     return $page->run();
+  }
+
+  static
+  function rebuildMenuAndCaches($triggerRebuild = FALSE) {
+    $config = CRM_Core_Config::singleton();
+
+    CRM_Core_Menu::store();
+
+    // also reset navigation
+    CRM_Core_BAO_Navigation::resetNavigation();
+
+    // also cleanup all caches
+    $config->cleanupCaches();
+
+    // also rebuild triggers if requested explicitly
+    if (
+      $triggerRebuild ||
+      CRM_Utils_Request::retrieve('triggerRebuild', 'Boolean', CRM_Core_DAO::$_nullObject, FALSE, 0, 'GET')
+    ) {
+      CRM_Core_DAO::triggerRebuild();
+    }
   }
 }
 

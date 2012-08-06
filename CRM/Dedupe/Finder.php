@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO.php';
-require_once 'CRM/Contact/BAO/Group.php';
-require_once 'CRM/Dedupe/BAO/RuleGroup.php';
 
 /**
  * The CiviCRM duplicate discovery engine is based on an
@@ -52,7 +48,7 @@ class CRM_Dedupe_Finder {
    *
    * @return array  array of (cid1, cid2, weight) dupe triples
    */
-  function dupes($rgid, $cids = array(
+  static function dupes($rgid, $cids = array(
     )) {
     $rgBao             = new CRM_Dedupe_BAO_RuleGroup();
     $rgBao->id         = $rgid;
@@ -91,7 +87,7 @@ class CRM_Dedupe_Finder {
    *
    * @return array  matching contact ids
    */
-  function dupesByParams($params,
+  static function dupesByParams($params,
     $ctype,
     $level       = 'Strict',
     $except      = array(),
@@ -146,7 +142,7 @@ class CRM_Dedupe_Finder {
    *
    * @return array  array of (cid1, cid2, weight) dupe triples
    */
-  function dupesInGroup($rgid, $gid) {
+  static function dupesInGroup($rgid, $gid) {
     $cids = array_keys(CRM_Contact_BAO_Group::getMember($gid));
     return self::dupes($rgid, $cids);
   }
@@ -160,7 +156,7 @@ class CRM_Dedupe_Finder {
    *
    * @return array  array of dupe contact_ids
    */
-  function dupesOfContact($cid, $level = 'Strict', $ctype = NULL) {
+  static function dupesOfContact($cid, $level = 'Strict', $ctype = NULL) {
     // if not provided, fetch the contact type from the database
     if (!$ctype) {
       $dao = new CRM_Contact_DAO_Contact();
@@ -201,7 +197,7 @@ class CRM_Dedupe_Finder {
    *
    * @return array  valid $params array for dedupe
    */
-  function formatParams($fields, $ctype) {
+  static function formatParams($fields, $ctype) {
     $flat = array();
     CRM_Utils_Array::flatten($fields, $flat);
 
@@ -247,7 +243,6 @@ class CRM_Dedupe_Finder {
     }
 
     // handle custom data
-    require_once 'CRM/Core/BAO/CustomGroup.php';
     $tree = CRM_Core_BAO_CustomGroup::getTree($ctype, CRM_Core_DAO::$_nullObject, NULL, -1);
     CRM_Core_BAO_CustomGroup::postProcess($tree, $fields, TRUE);
     foreach ($tree as $key => $cg) {

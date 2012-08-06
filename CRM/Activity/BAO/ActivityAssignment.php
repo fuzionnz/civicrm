@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Activity/DAO/ActivityAssignment.php';
 
 /**
  * This class is for activity assignment functions
@@ -58,8 +56,7 @@ class CRM_Activity_BAO_ActivityAssignment extends CRM_Activity_DAO_ActivityAssig
    * @access public
    *
    */
-  public function create(&$params) {
-    require_once 'CRM/Activity/BAO/ActivityAssignment.php';
+  public static function create(&$params) {
     $assignment = new CRM_Activity_BAO_ActivityAssignment();
 
     $assignment->copyValues($params);
@@ -79,7 +76,6 @@ class CRM_Activity_BAO_ActivityAssignment extends CRM_Activity_DAO_ActivityAssig
   static
   function retrieveAssigneeIdsByActivityId($activity_id) {
     $assigneeArray = array();
-    require_once 'CRM/Utils/Rule.php';
     if (!CRM_Utils_Rule::positiveInteger($activity_id)) {
       return $assigneeArray;
     }

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -36,7 +36,7 @@ class CRM_Core_OptionGroup {
   static $_values = array();
 
   /*
-     * $_domainIDGroups array maintains the list of option groups for whom 
+     * $_domainIDGroups array maintains the list of option groups for whom
      * domainID is to be considered.
      *
      */
@@ -123,7 +123,6 @@ WHERE  v.option_group_id = g.id
     $var = self::valuesCommon($dao, $flip, $grouping, $localize, $valueColumnName);
 
     // call option value hook
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::optionValues($var, $name);
 
     $_cache[$cacheKey] = $var;
@@ -149,9 +148,9 @@ FROM   civicrm_option_value v,
        civicrm_option_group g
 WHERE  v.option_group_id = g.id
   AND  g.id              = %1
-  AND  v.is_active       = 1 
-  AND  g.is_active       = 1 
-  ORDER BY v.weight, v.label; 
+  AND  v.is_active       = 1
+  AND  g.is_active       = 1
+  ORDER BY v.weight, v.label;
 ";
     $p = array(1 => array($id, 'Integer'));
     $dao = CRM_Core_DAO::executeQuery($query, $p);
@@ -188,7 +187,6 @@ WHERE  v.option_group_id = g.id
    */
   static
   function lookupValues(&$params, &$names, $flip = FALSE) {
-    require_once 'CRM/Core/BAO/CustomOption.php';
     foreach ($names as $postName => $value) {
       // See if $params field is in $names array (i.e. is a value that we need to lookup)
       if ($postalName = CRM_Utils_Array::value($postName, $params)) {
@@ -250,11 +248,11 @@ WHERE  v.option_group_id = g.id
 
     $query = "
 SELECT  v.label as label ,v.value as value
-FROM   civicrm_option_value v, 
-       civicrm_option_group g 
-WHERE  v.option_group_id = g.id 
-  AND  g.name            = %1 
-  AND  g.is_active       = 1  
+FROM   civicrm_option_value v,
+       civicrm_option_group g
+WHERE  v.option_group_id = g.id
+  AND  g.name            = %1
+  AND  g.is_active       = 1
   AND  v.value           = %2
 ";
     if ($onlyActiveValue) {
@@ -283,12 +281,12 @@ WHERE  v.option_group_id = g.id
 
     $query = "
 SELECT  v.label as label ,v.{$valueField} as value
-FROM   civicrm_option_value v, 
-       civicrm_option_group g 
-WHERE  v.option_group_id = g.id 
-  AND  g.name            = %1 
-  AND  v.is_active       = 1  
-  AND  g.is_active       = 1  
+FROM   civicrm_option_value v,
+       civicrm_option_group g
+WHERE  v.option_group_id = g.id
+  AND  g.name            = %1
+  AND  v.is_active       = 1
+  AND  g.is_active       = 1
   AND  v.$labelField     = %2
 ";
 
@@ -332,7 +330,6 @@ WHERE  v.option_group_id = g.id
   function createAssoc($groupName, &$values, &$defaultID, $groupTitle = NULL) {
     self::deleteAssoc($groupName);
     if (!empty($values)) {
-      require_once 'CRM/Core/DAO/OptionGroup.php';
       $group              = new CRM_Core_DAO_OptionGroup();
       $group->name        = $groupName;
       $group->title       = empty($groupTitle) ? $groupName : $groupTitle;
@@ -340,7 +337,6 @@ WHERE  v.option_group_id = g.id
       $group->is_active   = 1;
       $group->save();
 
-      require_once 'CRM/Core/DAO/OptionValue.php';
       foreach ($values as $v) {
         $value = new CRM_Core_DAO_OptionValue();
         $value->option_group_id = $group->id;
@@ -440,12 +436,12 @@ SELECT v.label
     $fieldType = 'String', $active = TRUE
   ) {
     $query = "
-SELECT v.id, v.label, v.value, v.name, v.weight, v.description 
-FROM   civicrm_option_value v, 
-       civicrm_option_group g 
-WHERE  v.option_group_id = g.id 
+SELECT v.id, v.label, v.value, v.name, v.weight, v.description
+FROM   civicrm_option_value v,
+       civicrm_option_group g
+WHERE  v.option_group_id = g.id
   AND  g.name            = %1
-  AND  g.is_active       = 1  
+  AND  g.is_active       = 1
   AND  v.$field          = %2
 ";
 

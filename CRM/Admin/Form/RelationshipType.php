@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Admin/Form.php';
 
 /**
  * This class generates form components for Relationship Type
@@ -77,18 +75,17 @@ class CRM_Admin_Form_RelationshipType extends CRM_Admin_Form {
     );
 
 
-    require_once 'CRM/Contact/BAO/ContactType.php';
 
     $contactTypes = CRM_Contact_BAO_ContactType::getSelectElements();
 
     // add select for contact type
     $contactTypeA = &$this->add('select', 'contact_types_a', ts('Contact Type A') . ' ',
       array(
-        '' => ts('- select -')) + $contactTypes
+        '' => ts('All Contacts')) + $contactTypes
     );
     $contactTypeB = &$this->add('select', 'contact_types_b', ts('Contact Type B') . ' ',
       array(
-        '' => ts('- select -')) + $contactTypes
+        '' => ts('All Contacts')) + $contactTypes
     );
 
     $isActive = &$this->add('checkbox', 'is_active', ts('Enabled?'));
@@ -114,9 +111,7 @@ class CRM_Admin_Form_RelationshipType extends CRM_Admin_Form {
     ) {
       $defaults = $params = array();
       $params = array('id' => $this->_id);
-      require_once (str_replace('_', DIRECTORY_SEPARATOR, $this->_BAOName) . ".php");
       eval($this->_BAOName . '::retrieve( $params, $defaults );');
-
       $defaults['contact_types_a'] = $defaults['contact_type_a'];
       if (CRM_Utils_Array::value('contact_sub_type_a', $defaults)) {
         $defaults['contact_types_a'] .= CRM_Core_DAO::VALUE_SEPARATOR . $defaults['contact_sub_type_a'];

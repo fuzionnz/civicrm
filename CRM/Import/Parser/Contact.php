@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,11 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
-require_once 'CRM/Import/Parser.php';
 //@todo calling api functions directly is not supported
 require_once 'api/v3/utils.php';
 require_once 'api/v3/Contact.php';
@@ -102,10 +101,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
 
   /**
    * class constructor
-   */ function __construct(&$mapperKeys, $mapperLocType = NULL, $mapperPhoneType = NULL,
-    $mapperImProvider = NULL, $mapperRelated = NULL, $mapperRelatedContactType = NULL,
-    $mapperRelatedContactDetails = NULL, $mapperRelatedContactLocType = NULL,
-    $mapperRelatedContactPhoneType = NULL, $mapperRelatedContactImProvider = NULL,
+   */ function __construct(&$mapperKeys, $mapperLocType = NULL, $mapperPhoneType = NULL, $mapperImProvider = NULL, $mapperRelated = NULL, $mapperRelatedContactType = NULL, $mapperRelatedContactDetails = NULL, $mapperRelatedContactLocType = NULL, $mapperRelatedContactPhoneType = NULL, $mapperRelatedContactImProvider = NULL,
     $mapperWebsiteType = NULL, $mapperRelatedContactWebsiteType = NULL
   ) {
     parent::__construct();
@@ -132,8 +128,6 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
    * @access public
    */
   function init() {
-    require_once 'CRM/Contact/BAO/Contact.php';
-    require_once 'CRM/Core/BAO/Address.php';
     $contactFields = CRM_Contact_BAO_Contact::importableFields($this->_contactType);
     // exclude the address options disabled in the Address Settings
     $fields = CRM_Core_BAO_Address::validateAddressOptions($contactFields);
@@ -153,9 +147,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
     }
 
     //Relationship importables
-    $this->_relationships = $relations = CRM_Contact_BAO_Relationship::getContactRelationshipType(NULL, NULL, NULL, $this->_contactType,
-      FALSE, 'label', TRUE, $this->_contactSubType
-    );
+    $this->_relationships = $relations = CRM_Contact_BAO_Relationship::getContactRelationshipType(NULL, NULL, NULL, $this->_contactType, FALSE, 'label', TRUE, $this->_contactSubType);
     asort($relations);
 
     foreach ($relations as $key => $var) {
@@ -168,20 +160,15 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
     }
 
     if (!empty($relationshipType)) {
-      $fields = array_merge($fields,
-        array('related' => array('title' => ts('- related contact info -'))),
-        $relationshipType
-      );
+      $fields = array_merge($fields, array(
+          'related' => array(
+            'title' => ts('- related contact info -'),
+          ),
+        ), $relationshipType);
     }
 
     foreach ($fields as $name => $field) {
-      $this->addField($name,
-        $field['title'],
-        CRM_Utils_Array::value('type', $field),
-        CRM_Utils_Array::value('headerPattern', $field),
-        CRM_Utils_Array::value('dataPattern', $field),
-        CRM_Utils_Array::value('hasLocationType', $field)
-      );
+      $this->addField($name, $field['title'], CRM_Utils_Array::value('type', $field), CRM_Utils_Array::value('headerPattern', $field), CRM_Utils_Array::value('dataPattern', $field), CRM_Utils_Array::value('hasLocationType', $field));
     }
 
     $this->_newContacts = array();
@@ -241,21 +228,14 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
     }
 
     $this->_updateWithId = FALSE;
-    if (in_array('id', $this->_mapperKeys) ||
-      ($this->_externalIdentifierIndex >= 0 &&
-        in_array($this->_onDuplicate, array(CRM_Import_Parser::DUPLICATE_UPDATE, CRM_Import_Parser::DUPLICATE_FILL))
-      )
-    ) {
+    if (in_array('id', $this->_mapperKeys) || ($this->_externalIdentifierIndex >= 0 && in_array($this->_onDuplicate, array(
+            CRM_Import_Parser::DUPLICATE_UPDATE,
+            CRM_Import_Parser::DUPLICATE_FILL,
+          )))) {
       $this->_updateWithId = TRUE;
     }
 
-    require_once 'CRM/Core/BAO/Setting.php';
-    $this->_parseStreetAddress = CRM_Utils_Array::value('street_address_parsing',
-      CRM_Core_BAO_Setting::valueOptions(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
-        'address_options'
-      ),
-      FALSE
-    );
+    $this->_parseStreetAddress = CRM_Utils_Array::value('street_address_parsing', CRM_Core_BAO_Setting::valueOptions(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'address_options'), FALSE);
   }
 
   /**
@@ -298,15 +278,11 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
     switch ($this->_contactType) {
       case 'Individual':
         $missingNames = array();
-        if ($this->_firstNameIndex < 0 ||
-          !CRM_Utils_Array::value($this->_firstNameIndex, $values)
-        ) {
+        if ($this->_firstNameIndex < 0 || !CRM_Utils_Array::value($this->_firstNameIndex, $values)) {
           $errorRequired = TRUE;
           $missingNames[] = ts('First Name');
         }
-        if ($this->_lastNameIndex < 0 ||
-          !CRM_Utils_Array::value($this->_lastNameIndex, $values)
-        ) {
+        if ($this->_lastNameIndex < 0 || !CRM_Utils_Array::value($this->_lastNameIndex, $values)) {
           $errorRequired = TRUE;
           $missingNames[] = ts('Last Name');
         }
@@ -317,18 +293,14 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         break;
 
       case 'Household':
-        if ($this->_householdNameIndex < 0 ||
-          !CRM_Utils_Array::value($this->_householdNameIndex, $values)
-        ) {
+        if ($this->_householdNameIndex < 0 || !CRM_Utils_Array::value($this->_householdNameIndex, $values)) {
           $errorRequired = TRUE;
           $errorMessage = ts('Missing required fields:') . ' ' . ts('Household Name');
         }
         break;
 
       case 'Organization':
-        if ($this->_organizationNameIndex < 0 ||
-          !CRM_Utils_Array::value($this->_organizationNameIndex, $values)
-        ) {
+        if ($this->_organizationNameIndex < 0 || !CRM_Utils_Array::value($this->_organizationNameIndex, $values)) {
           $errorRequired = TRUE;
           $errorMessage = ts('Missing required fields:') . ' ' . ts('Organization Name');
         }
@@ -349,7 +321,10 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
             $errorMessage = ts('Missing required field:') . ' ' . ts('Email Address');
           }
           array_unshift($values, $errorMessage);
-          $importRecordParams = array($statusFieldName => 'ERROR', "${statusFieldName}Msg" => $errorMessage);
+          $importRecordParams = array(
+            $statusFieldName => 'ERROR',
+            "${statusFieldName}Msg" => $errorMessage,
+          );
           $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
 
           return CRM_Import_Parser::ERROR;
@@ -363,7 +338,10 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         if (!CRM_Utils_Rule::email($email)) {
           $errorMessage = ts('Invalid Email address');
           array_unshift($values, $errorMessage);
-          $importRecordParams = array($statusFieldName => 'ERROR', "${statusFieldName}Msg" => $errorMessage);
+          $importRecordParams = array(
+            $statusFieldName => 'ERROR',
+            "${statusFieldName}Msg" => $errorMessage,
+          );
           $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
 
           return CRM_Import_Parser::ERROR;
@@ -382,7 +360,10 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         $errorMessage = ts('Missing required field:') . ' ' . ts('Email Address');
       }
       array_unshift($values, $errorMessage);
-      $importRecordParams = array($statusFieldName => 'ERROR', "${statusFieldName}Msg" => $errorMessage);
+      $importRecordParams = array(
+        $statusFieldName => 'ERROR',
+        "${statusFieldName}Msg" => $errorMessage,
+      );
       $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
 
       return CRM_Import_Parser::ERROR;
@@ -393,12 +374,15 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
     if ($externalID) {
       /* If it's a dupe,external Identifier  */
 
-      if ($externalDupe = CRM_Utils_Array::value($externalID,
-          $this->_allExternalIdentifiers
-        )) {
-        $errorMessage = ts('External Identifier conflicts with record %1', array(1 => $externalDupe));
+      if ($externalDupe = CRM_Utils_Array::value($externalID, $this->_allExternalIdentifiers)) {
+        $errorMessage = ts('External Identifier conflicts with record %1', array(
+            1 => $externalDupe,
+          ));
         array_unshift($values, $errorMessage);
-        $importRecordParams = array($statusFieldName => 'ERROR', "${statusFieldName}Msg" => $errorMessage);
+        $importRecordParams = array(
+          $statusFieldName => 'ERROR',
+          "${statusFieldName}Msg" => $errorMessage,
+        );
         $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
         return CRM_Import_Parser::ERROR;
       }
@@ -411,9 +395,11 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
     $params['contact_type'] = $this->_contactType;
     //date-format part ends
 
+
     $errorMessage = NULL;
 
     //checking error in custom data
+
 
     $this->isErrorInCustomData($params, $errorMessage);
 
@@ -422,7 +408,10 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
     if ($errorMessage) {
       $tempMsg = "Invalid value for field(s) : $errorMessage";
       // put the error message in the import record in the DB
-      $importRecordParams = array($statusFieldName => 'ERROR', "${statusFieldName}Msg" => $tempMsg);
+      $importRecordParams = array(
+        $statusFieldName => 'ERROR',
+        "${statusFieldName}Msg" => $tempMsg,
+      );
       $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
       array_unshift($values, $tempMsg);
       $errorMessage = NULL;
@@ -432,7 +421,9 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
     //if user correcting errors by walking back
     //need to reset status ERROR msg to null
     //now currently we are having valid data.
-    $importRecordParams = array($statusFieldName => 'NEW');
+    $importRecordParams = array(
+      $statusFieldName => 'NEW',
+    );
     $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
 
     return CRM_Import_Parser::VALID;
@@ -462,37 +453,38 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
     $statusFieldName = $this->_statusFieldName;
 
     if ($response != CRM_Import_Parser::VALID) {
-      $importRecordParams = array($statusFieldName => 'INVALID', "${statusFieldName}Msg" => "Invalid (Error Code: $response)");
+      $importRecordParams = array(
+        $statusFieldName => 'INVALID',
+        "${statusFieldName}Msg" => "Invalid (Error Code: $response)",
+      );
       $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
       return $response;
     }
 
     $params = &$this->getActiveFieldParams();
-    $formatted = array('contact_type' => $this->_contactType);
+    $formatted = array(
+      'contact_type' => $this->_contactType,
+    );
 
     static $contactFields = NULL;
     if ($contactFields == NULL) {
-      require_once "CRM/Contact/DAO/Contact.php";
       $contactFields = CRM_Contact_DAO_Contact::import();
     }
 
     //check if external identifier exists in database
-    if (CRM_Utils_Array::value('external_identifier', $params) &&
-      (CRM_Utils_Array::value('id', $params) ||
-        in_array($onDuplicate, array(CRM_Import_Parser::DUPLICATE_SKIP, CRM_Import_Parser::DUPLICATE_NOCHECK))
-      )
-    ) {
+    if (CRM_Utils_Array::value('external_identifier', $params) && (CRM_Utils_Array::value('id', $params) || in_array($onDuplicate, array(
+            CRM_Import_Parser::DUPLICATE_SKIP,
+            CRM_Import_Parser::DUPLICATE_NOCHECK,
+          )))) {
 
-      require_once "CRM/Contact/BAO/Contact.php";
-      if ($internalCid = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
-          $params['external_identifier'],
-          'id',
-          'external_identifier'
-        )) {
+      if ($internalCid = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $params['external_identifier'], 'id', 'external_identifier')) {
         if ($internalCid != CRM_Utils_Array::value('id', $params)) {
           $errorMessage = ts('External Identifier already exists in database.');
           array_unshift($values, $errorMessage);
-          $importRecordParams = array($statusFieldName => 'ERROR', "${statusFieldName}Msg" => $errorMessage);
+          $importRecordParams = array(
+            $statusFieldName => 'ERROR',
+            "${statusFieldName}Msg" => $errorMessage,
+          );
           $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
           return CRM_Import_Parser::DUPLICATE;
         }
@@ -517,14 +509,8 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
 
     //get contact id to format common data in update/fill mode,
     //if external identifier is present, CRM-4423
-    if ($this->_updateWithId &&
-      !CRM_Utils_Array::value('id', $params) &&
-      CRM_Utils_Array::value('external_identifier', $params)
-    ) {
-      if ($cid = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
-          $params['external_identifier'], 'id',
-          'external_identifier'
-        )) {
+    if ($this->_updateWithId && !CRM_Utils_Array::value('id', $params) && CRM_Utils_Array::value('external_identifier', $params)) {
+      if ($cid = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $params['external_identifier'], 'id', 'external_identifier')) {
         $formatted['id'] = $cid;
       }
     }
@@ -537,9 +523,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
     // Support Match and Update Via Contact ID
     if ($this->_updateWithId) {
       $createNewContact = FALSE;
-      if (!CRM_Utils_Array::value('id', $params) &&
-        CRM_Utils_Array::value('external_identifier', $params)
-      ) {
+      if (!CRM_Utils_Array::value('id', $params) && CRM_Utils_Array::value('external_identifier', $params)) {
         if ($cid) {
           $params['id'] = $cid;
         }
@@ -576,27 +560,17 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
           $updateflag = TRUE;
           foreach ($matchedIDs as $contactId) {
             if ($params['id'] == $contactId) {
-              $contactType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
-                $params['id'],
-                'contact_type'
-              );
+              $contactType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $params['id'], 'contact_type');
 
               if ($formatted['contact_type'] == $contactType) {
                 //validation of subtype for update mode
                 //CRM-5125
                 $contactSubType = NULL;
                 if (CRM_Utils_Array::value('contact_sub_type', $params)) {
-                  $contactSubType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
-                    $params['id'],
-                    'contact_sub_type'
-                  );
+                  $contactSubType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $params['id'], 'contact_sub_type');
                 }
 
-                if (!empty($contactSubType) &&
-                  (!CRM_Contact_BAO_ContactType::isAllowEdit($params['id'], $contactSubType) &&
-                    $contactSubType != CRM_Utils_Array::value('contact_sub_type', $formatted)
-                  )
-                ) {
+                if (!empty($contactSubType) && (!CRM_Contact_BAO_ContactType::isAllowEdit($params['id'], $contactSubType) && $contactSubType != CRM_Utils_Array::value('contact_sub_type', $formatted))) {
 
                   $message = "Mismatched contact SubTypes :";
                   array_unshift($values, $message);
@@ -604,11 +578,8 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
                   $this->_retCode = CRM_Import_Parser::NO_MATCH;
                 }
                 else {
-                  $newContact = $this->createContact($formatted, $contactFields,
-                    $onDuplicate, $contactId, FALSE,
-                    $this->_dedupeRuleGroupID
-                  );
-                  $updateflag = FALSE;
+                  $newContact     = $this->createContact($formatted, $contactFields, $onDuplicate, $contactId, FALSE, $this->_dedupeRuleGroupID);
+                  $updateflag     = FALSE;
                   $this->_retCode = CRM_Import_Parser::VALID;
                 }
               }
@@ -630,37 +601,24 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
       else {
         $contactType = NULL;
         if (CRM_Utils_Array::value('id', $params)) {
-          $contactType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
-            $params['id'],
-            'contact_type'
-          );
+          $contactType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $params['id'], 'contact_type');
           if ($contactType) {
             if ($formatted['contact_type'] == $contactType) {
               //validation of subtype for update mode
               //CRM-5125
               $contactSubType = NULL;
               if (CRM_Utils_Array::value('contact_sub_type', $params)) {
-                $contactSubType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
-                  $params['id'],
-                  'contact_sub_type'
-                );
+                $contactSubType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $params['id'], 'contact_sub_type');
               }
 
-              if (!empty($contactSubType) &&
-                (!CRM_Contact_BAO_ContactType::isAllowEdit($params['id'], $contactSubType) &&
-                  $contactSubType != CRM_Utils_Array::value('contact_sub_type', $formatted)
-                )
-              ) {
+              if (!empty($contactSubType) && (!CRM_Contact_BAO_ContactType::isAllowEdit($params['id'], $contactSubType) && $contactSubType != CRM_Utils_Array::value('contact_sub_type', $formatted))) {
 
                 $message = "Mismatched contact SubTypes :";
                 array_unshift($values, $message);
                 $this->_retCode = CRM_Import_Parser::NO_MATCH;
               }
               else {
-                $newContact = $this->createContact($formatted, $contactFields,
-                  $onDuplicate, $params['id'], FALSE,
-                  $this->_dedupeRuleGroupID
-                );
+                $newContact = $this->createContact($formatted, $contactFields, $onDuplicate, $params['id'], FALSE, $this->_dedupeRuleGroupID);
 
                 $this->_retCode = CRM_Import_Parser::VALID;
               }
@@ -703,24 +661,24 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
 
       //CRM-4430, don't carry if not submitted.
       foreach (array(
-        'prefix', 'suffix', 'gender') as $name) {
+          'prefix',
+          'suffix',
+          'gender',
+        ) as $name) {
         if (array_key_exists($name, $formatted)) {
           if (in_array($name, array(
-            'prefix', 'suffix'))) {
+                'prefix',
+                'suffix',
+              ))) {
             $formattedName = "individual_{$name}";
-            $formatted[$formattedName] = CRM_Core_OptionGroup::getValue($formattedName, (string)$formatted[$name]);
+            $formatted[$formattedName] = CRM_Core_OptionGroup::getValue($formattedName, (string) $formatted[$name]);
           }
           else {
-            $formatted[$name] = CRM_Core_OptionGroup::getValue($name, (string)$formatted[$name]);
+            $formatted[$name] = CRM_Core_OptionGroup::getValue($name, (string) $formatted[$name]);
           }
         }
       }
-      $newContact = $this->createContact($formatted,
-        $contactFields,
-        $onDuplicate,
-        NULL, TRUE,
-        $this->_dedupeRuleGroupID
-      );
+      $newContact = $this->createContact($formatted, $contactFields, $onDuplicate, NULL, TRUE, $this->_dedupeRuleGroupID);
     }
 
     $contactID = NULL;
@@ -740,21 +698,31 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
       if ($onDuplicate == CRM_Import_Parser::DUPLICATE_SKIP) {
         $errorMessage = "Skipping duplicate record";
         array_unshift($values, $errorMessage);
-        $importRecordParams = array($statusFieldName => 'DUPLICATE', "${statusFieldName}Msg" => $errorMessage);
+        $importRecordParams = array(
+          $statusFieldName => 'DUPLICATE',
+          "${statusFieldName}Msg" => $errorMessage,
+        );
         $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
         return CRM_Import_Parser::DUPLICATE;
       }
 
       $relationship = TRUE;
-      $contactID = $newContact['error_message']['params'][0];
-      if (!in_array($contactID, $this->_newContacts)) {
-        $this->_newContacts[] = $contactID;
+      # see CRM-10433 - might return comma separate list of all dupes
+      $dupeContactIDs = explode(',',$newContact['error_message']['params'][0]);
+      $dupeCount = count($dupeContactIDs);
+      $contactID = array_pop($dupeContactIDs);
+      // check to see if we had more than one duplicate contact id.
+      // if we have more than one, the record will be rejected below
+      if($dupeCount == 1) {
+        // there was only one dupe, we will continue normally...
+        if (!in_array($contactID, $this->_newContacts)) {
+          $this->_newContacts[] = $contactID;
+        }
       }
     }
 
     if ($contactID) {
       // call import hook
-      require_once 'CRM/Utils/Hook.php';
       $currentImportID = end($values);
 
       $hookParams = array(
@@ -765,11 +733,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         'fields' => $this->_activeFields,
       );
 
-      CRM_Utils_Hook::import('Contact',
-        'process',
-        $this,
-        $hookParams
-      );
+      CRM_Utils_Hook::import('Contact', 'process', $this, $hookParams);
     }
 
     if ($relationship) {
@@ -783,9 +747,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         $primaryContactId = $newContact->id;
       }
 
-      if ((CRM_Core_Error::isAPIError($newContact, CRM_Core_ERROR::DUPLICATE_CONTACT) || is_a($newContact, 'CRM_Contact_BAO_Contact'))
-        && $primaryContactId
-      ) {
+      if ((CRM_Core_Error::isAPIError($newContact, CRM_Core_ERROR::DUPLICATE_CONTACT) || is_a($newContact, 'CRM_Contact_BAO_Contact')) && $primaryContactId) {
 
         //relationship contact insert
         foreach ($params as $key => $field) {
@@ -799,14 +761,14 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
           $relationType->find(TRUE);
           $direction = "contact_sub_type_$second";
 
-          $formatting = array('contact_type' => $params[$key]['contact_type']);
+          $formatting = array(
+            'contact_type' => $params[$key]['contact_type'],
+          );
 
           //set subtype for related contact CRM-5125
           if (isset($relationType->$direction)) {
             //validation of related contact subtype for update mode
-            if ($relCsType = CRM_Utils_Array::value('contact_sub_type', $params[$key])
-              && $relCsType != $relationType->$direction
-            ) {
+            if ($relCsType = CRM_Utils_Array::value('contact_sub_type', $params[$key]) && $relCsType != $relationType->$direction) {
               $errorMessage = ts("Mismatched or Invalid contact subtype found for this related contact");
               array_unshift($values, $errorMessage);
               return CRM_Import_Parser::NO_MATCH;
@@ -822,26 +784,18 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
 
           //Relation on the basis of External Identifier.
           if (!CRM_Utils_Array::value('id', $params[$key]) && !empty($params[$key]['external_identifier'])) {
-            $params[$key]['id'] = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
-              $params[$key]['external_identifier'], 'id',
-              'external_identifier'
-            );
+            $params[$key]['id'] = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $params[$key]['external_identifier'], 'id', 'external_identifier');
           }
           // check for valid related contact id in update/fill mode, CRM-4424
-          if (in_array($onDuplicate,
-              array(
+          if (in_array($onDuplicate, array(
                 CRM_Import_Parser::DUPLICATE_UPDATE,
                 CRM_Import_Parser::DUPLICATE_FILL,
-              )
-            ) &&
-            CRM_Utils_Array::value('id', $params[$key])
-          ) {
-            $relatedContactType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
-              $params[$key]['id'],
-              'contact_type'
-            );
+              )) && CRM_Utils_Array::value('id', $params[$key])) {
+            $relatedContactType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $params[$key]['id'], 'contact_type');
             if (!$relatedContactType) {
-              $errorMessage = ts("No contact found for this related contact ID: %1", array(1 => $params[$key]['id']));
+              $errorMessage = ts("No contact found for this related contact ID: %1", array(
+                  1 => $params[$key]['id'],
+                ));
               array_unshift($values, $errorMessage);
               return CRM_Import_Parser::NO_MATCH;
             }
@@ -850,18 +804,13 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
               //CRM-5125
               $relatedCsType = NULL;
               if (CRM_Utils_Array::value('contact_sub_type', $formatting)) {
-                $relatedCsType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
-                  $params[$key]['id'],
-                  'contact_sub_type'
-                );
+                $relatedCsType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $params[$key]['id'], 'contact_sub_type');
               }
 
-              if (!empty($relatedCsType) &&
-                (!CRM_Contact_BAO_ContactType::isAllowEdit($params[$key]['id'], $relatedCsType) &&
-                  $relatedCsType != CRM_Utils_Array::value('contact_sub_type', $formatting)
-                )
-              ) {
-                $errorMessage = ts("Mismatched or Invalid contact subtype found for this related contact ID: %1", array(1 => $params[$key]['id']));
+              if (!empty($relatedCsType) && (!CRM_Contact_BAO_ContactType::isAllowEdit($params[$key]['id'], $relatedCsType) && $relatedCsType != CRM_Utils_Array::value('contact_sub_type', $formatting))) {
+                $errorMessage = ts("Mismatched or Invalid contact subtype found for this related contact ID: %1", array(
+                    1 => $params[$key]['id'],
+                  ));
                 array_unshift($values, $errorMessage);
                 return CRM_Import_Parser::NO_MATCH;
               }
@@ -887,14 +836,14 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
 
           //fixed for CRM-4148
           if (CRM_Utils_Array::value('id', $params[$key])) {
-            $contact           = array('contact_id' => $params[$key]['id']);
-            $defaults          = array();
+            $contact = array(
+              'contact_id' => $params[$key]['id'],
+            );
+            $defaults = array();
             $relatedNewContact = CRM_Contact_BAO_Contact::retrieve($contact, $defaults);
           }
           else {
-            $relatedNewContact = $this->createContact($formatting, $contactFields,
-              $onDuplicate, NULL, FALSE
-            );
+            $relatedNewContact = $this->createContact($formatting, $contactFields, $onDuplicate, NULL, FALSE);
           }
 
           if (is_object($relatedNewContact) || ($relatedNewContact instanceof CRM_Contact_BAO_Contact)) {
@@ -911,7 +860,10 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
             else {
               $errorMessage = $relatedNewContact['error_message'];
               array_unshift($values, $errorMessage);
-              $importRecordParams = array($statusFieldName => 'ERROR', "${statusFieldName}Msg" => $errorMessage);
+              $importRecordParams = array(
+                $statusFieldName => 'ERROR',
+                "${statusFieldName}Msg" => $errorMessage,
+              );
               $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
               return CRM_Import_Parser::ERROR;
             }
@@ -921,22 +873,17 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
           }
           // update/fill related contact after getting matching Contact Ids, CRM-4424
           if (in_array($onDuplicate, array(
-            CRM_Import_Parser::DUPLICATE_UPDATE, CRM_Import_Parser::DUPLICATE_FILL))) {
+                CRM_Import_Parser::DUPLICATE_UPDATE,
+                CRM_Import_Parser::DUPLICATE_FILL,
+              ))) {
             //validation of related contact subtype for update mode
             //CRM-5125
             $relatedCsType = NULL;
             if (CRM_Utils_Array::value('contact_sub_type', $formatting)) {
-              $relatedCsType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
-                $matchedIDs[0],
-                'contact_sub_type'
-              );
+              $relatedCsType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $matchedIDs[0], 'contact_sub_type');
             }
 
-            if (!empty($relatedCsType) &&
-              (!CRM_Contact_BAO_ContactType::isAllowEdit($matchedIDs[0], $relatedCsType) &&
-                $relatedCsType != CRM_Utils_Array::value('contact_sub_type', $formatting)
-              )
-            ) {
+            if (!empty($relatedCsType) && (!CRM_Contact_BAO_ContactType::isAllowEdit($matchedIDs[0], $relatedCsType) && $relatedCsType != CRM_Utils_Array::value('contact_sub_type', $formatting))) {
               $errorMessage = ts("Mismatched or Invalid contact subtype found for this related contact.");
               array_unshift($values, $errorMessage);
               return CRM_Import_Parser::NO_MATCH;
@@ -968,9 +915,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
             $this->_newRelatedContacts[] = $relativeContact[] = $relContactId;
           }
 
-          if (CRM_Core_Error::isAPIError($relatedNewContact, CRM_Core_ERROR::DUPLICATE_CONTACT) ||
-            ($relatedNewContact instanceof CRM_Contact_BAO_Contact)
-          ) {
+          if (CRM_Core_Error::isAPIError($relatedNewContact, CRM_Core_ERROR::DUPLICATE_CONTACT) || ($relatedNewContact instanceof CRM_Contact_BAO_Contact)) {
             //fix for CRM-1993.Checks for duplicate related contacts
             if (count($matchedIDs) >= 1) {
               //if more than one duplicate contact
@@ -979,34 +924,39 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
               $relationParams = array();
               $relationParams = array(
                 'relationship_type_id' => $key,
-                'contact_check' => array($relContactId => 1),
+                'contact_check' => array(
+                  $relContactId => 1,
+                ),
                 'is_active' => 1,
                 'skipRecentView' => TRUE,
               );
 
               // we only handle related contact success, we ignore failures for now
               // at some point wold be nice to have related counts as separate
-              $relationIds = array('contact' => $primaryContactId);
+              $relationIds = array(
+                'contact' => $primaryContactId,
+              );
 
               list($valid, $invalid, $duplicate, $saved, $relationshipIds) = CRM_Contact_BAO_Relationship::create($relationParams, $relationIds);
 
               if ($valid || $duplicate) {
                 $relationIds['contactTarget'] = $relContactId;
                 $action = ($duplicate) ? CRM_Core_Action::UPDATE : CRM_Core_Action::ADD;
-                CRM_Contact_BAO_Relationship::relatedMemberships($primaryContactId,
-                  $relationParams,
-                  $relationIds,
-                  $action
-                );
+                CRM_Contact_BAO_Relationship::relatedMemberships($primaryContactId, $relationParams, $relationIds, $action);
               }
 
               //handle current employer, CRM-3532
               if ($valid) {
-                require_once 'CRM/Core/PseudoConstant.php';
-                $allRelationships   = CRM_Core_PseudoConstant::relationshipType('name');
-                $relationshipTypeId = str_replace(array('_a_b', '_b_a'), array('', ''), $key);
-                $relationshipType   = str_replace($relationshipTypeId . '_', '', $key);
-                $orgId              = $individualId = NULL;
+                $allRelationships = CRM_Core_PseudoConstant::relationshipType('name');
+                $relationshipTypeId = str_replace(array(
+                    '_a_b',
+                    '_b_a',
+                  ), array(
+                    '',
+                    '',
+                  ), $key);
+                $relationshipType = str_replace($relationshipTypeId . '_', '', $key);
+                $orgId = $individualId = NULL;
                 if ($allRelationships[$relationshipTypeId]["name_{$relationshipType}"] == 'Employee of') {
                   $orgId = $relContactId;
                   $individualId = $primaryContactId;
@@ -1017,7 +967,6 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
                 }
                 if ($orgId && $individualId) {
                   $currentEmpParams[$individualId] = $orgId;
-                  require_once 'CRM/Contact/BAO/Contact/Utils.php';
                   CRM_Contact_BAO_Contact_Utils::setCurrentEmployer($currentEmpParams);
                 }
               }
@@ -1034,9 +983,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
     if (is_array($newContact) && civicrm_error($newContact)) {
       $code = NULL;
 
-      if (($code = CRM_Utils_Array::value('code', $newContact['error_message'])) &&
-        ($code == CRM_Core_Error::DUPLICATE_CONTACT)
-      ) {
+      if (($code = CRM_Utils_Array::value('code', $newContact['error_message'])) && ($code == CRM_Core_Error::DUPLICATE_CONTACT)) {
         $urls = array();
         // need to fix at some stage and decide if the error will return an
         // array or string, crude hack for now
@@ -1048,9 +995,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         }
 
         foreach ($cids as $cid) {
-          $urls[] = CRM_Utils_System::url('civicrm/contact/view',
-            'reset=1&cid=' . $cid, TRUE
-          );
+          $urls[] = CRM_Utils_System::url('civicrm/contact/view', 'reset=1&cid=' . $cid, TRUE);
         }
 
         $url_string = implode("\n", $urls);
@@ -1058,7 +1003,10 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         // If we duplicate more than one record, skip no matter what
         if (count($cids) > 1) {
           $errorMessage = ts('Record duplicates multiple contacts');
-          $importRecordParams = array($statusFieldName => 'ERROR', "${statusFieldName}Msg" => $errorMessage);
+          $importRecordParams = array(
+            $statusFieldName => 'ERROR',
+            "${statusFieldName}Msg" => $errorMessage,
+          );
 
           //combine error msg to avoid mismatch between error file columns.
           $errorMessage .= "\n" . $url_string;
@@ -1071,14 +1019,13 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         $contactId = array_shift($cids);
         $cid = NULL;
 
-        $vals = array('contact_id' => $contactId);
+        $vals = array(
+          'contact_id' => $contactId,
+        );
 
         if ($onDuplicate == CRM_Import_Parser::DUPLICATE_REPLACE) {
           civicrm_api('contact', 'delete', $vals);
-          $cid = CRM_Contact_BAO_Contact::createProfileContact($formatted, $contactFields,
-            $contactId, NULL, NULL,
-            $formatted['contact_type']
-          );
+          $cid = CRM_Contact_BAO_Contact::createProfileContact($formatted, $contactFields, $contactId, NULL, NULL, $formatted['contact_type']);
         }
         elseif ($onDuplicate == CRM_Import_Parser::DUPLICATE_UPDATE) {
           $newContact = $this->createContact($formatted, $contactFields, $onDuplicate, $contactId);
@@ -1088,9 +1035,12 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         }
         // else skip does nothing and just returns an error code.
 
+
         if ($cid) {
-          $contact    = array('contact_id' => $cid);
-          $defaults   = array();
+          $contact = array(
+            'contact_id' => $cid,
+          );
+          $defaults = array();
           $newContact = CRM_Contact_BAO_Contact::retrieve($contact, $defaults);
         }
 
@@ -1103,12 +1053,17 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         //CRM-262 No Duplicate Checking
         if ($onDuplicate == CRM_Import_Parser::DUPLICATE_SKIP) {
           array_unshift($values, $url_string);
-          $importRecordParams = array($statusFieldName => 'DUPLICATE', "${statusFieldName}Msg" => "Skipping duplicate record");
+          $importRecordParams = array(
+            $statusFieldName => 'DUPLICATE',
+            "${statusFieldName}Msg" => "Skipping duplicate record",
+          );
           $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
           return CRM_Import_Parser::DUPLICATE;
         }
 
-        $importRecordParams = array($statusFieldName => 'IMPORTED');
+        $importRecordParams = array(
+          $statusFieldName => 'IMPORTED',
+        );
         $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
         //return warning if street address is not parsed, CRM-5886
         return $this->processMessage($values, $statusFieldName, CRM_Import_Parser::VALID);
@@ -1117,7 +1072,10 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         // Not a dupe, so we had an error
         $errorMessage = $newContact['error_message'];
         array_unshift($values, $errorMessage);
-        $importRecordParams = array($statusFieldName => 'ERROR', "${statusFieldName}Msg" => $errorMessage);
+        $importRecordParams = array(
+          $statusFieldName => 'ERROR',
+          "${statusFieldName}Msg" => $errorMessage,
+        );
         $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
         return CRM_Import_Parser::ERROR;
       }
@@ -1155,11 +1113,11 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
   function fini() {}
 
   /**
-   *  function to check if an error in custom data
+   * function to check if an error in custom data
    *
-   *  @param String   $errorMessage   A string containing all the error-fields.
+   * @param String   $errorMessage   A string containing all the error-fields.
    *
-   *  @access public
+   * @access public
    */
   function isErrorInCustomData($params, &$errorMessage) {
     $session = CRM_Core_Session::singleton();
@@ -1213,13 +1171,15 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
           }
           // need not check for label filed import
           $htmlType = array(
-            'CheckBox', 'Multi-Select', 'AdvMulti-Select', 'Select',
-            'Radio', 'Multi-Select State/Province', 'Multi-Select Country',
+            'CheckBox',
+            'Multi-Select',
+            'AdvMulti-Select',
+            'Select',
+            'Radio',
+            'Multi-Select State/Province',
+            'Multi-Select Country',
           );
-          if (!in_array($customFields[$customFieldID]['html_type'], $htmlType) ||
-            $customFields[$customFieldID]['data_type'] == 'Boolean' ||
-            $customFields[$customFieldID]['data_type'] == 'ContactReference'
-          ) {
+          if (!in_array($customFields[$customFieldID]['html_type'], $htmlType) || $customFields[$customFieldID]['data_type'] == 'Boolean' || $customFields[$customFieldID]['data_type'] == 'ContactReference') {
             $valid = CRM_Core_BAO_CustomValue::typecheck($customFields[$customFieldID]['data_type'], $value);
             if (!$valid) {
               self::addToErrorMsg($customFields[$customFieldID]['label'], $errorMessage);
@@ -1227,10 +1187,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
           }
 
           // check for values for custom fields for checkboxes and multiselect
-          if ($customFields[$customFieldID]['html_type'] == 'CheckBox' ||
-            $customFields[$customFieldID]['html_type'] == 'AdvMulti-Select' ||
-            $customFields[$customFieldID]['html_type'] == 'Multi-Select'
-          ) {
+          if ($customFields[$customFieldID]['html_type'] == 'CheckBox' || $customFields[$customFieldID]['html_type'] == 'AdvMulti-Select' || $customFields[$customFieldID]['html_type'] == 'Multi-Select') {
             $value        = trim($value);
             $value        = str_replace('|', ',', $value);
             $mulValues    = explode(',', $value);
@@ -1242,9 +1199,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
 
               $flag = FALSE;
               foreach ($customOption as $v2) {
-                if ((strtolower(trim($v2['label'])) == strtolower(trim($v1))) ||
-                  (strtolower(trim($v2['value'])) == strtolower(trim($v1)))
-                ) {
+                if ((strtolower(trim($v2['label'])) == strtolower(trim($v1))) || (strtolower(trim($v2['value'])) == strtolower(trim($v1)))) {
                   $flag = TRUE;
                 }
               }
@@ -1254,17 +1209,11 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
               }
             }
           }
-          elseif ($customFields[$customFieldID]['html_type'] == 'Select' ||
-            ($customFields[$customFieldID]['html_type'] == 'Radio' &&
-              $customFields[$customFieldID]['data_type'] != 'Boolean'
-            )
-          ) {
+          elseif ($customFields[$customFieldID]['html_type'] == 'Select' || ($customFields[$customFieldID]['html_type'] == 'Radio' && $customFields[$customFieldID]['data_type'] != 'Boolean')) {
             $customOption = CRM_Core_BAO_CustomOption::getCustomOption($customFieldID, TRUE);
             $flag = FALSE;
             foreach ($customOption as $v2) {
-              if ((strtolower(trim($v2['label'])) == strtolower(trim($value))) ||
-                (strtolower(trim($v2['value'])) == strtolower(trim($value)))
-              ) {
+              if ((strtolower(trim($v2['label'])) == strtolower(trim($value))) || (strtolower(trim($v2['value'])) == strtolower(trim($value)))) {
                 $flag = TRUE;
               }
             }
@@ -1276,9 +1225,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
             $mulValues = explode(',', $value);
             foreach ($mulValues as $stateValue) {
               if ($stateValue) {
-                if (self::in_value(trim($stateValue), CRM_Core_PseudoConstant::stateProvinceAbbreviation())
-                  || self::in_value(trim($stateValue), CRM_Core_PseudoConstant::stateProvince())
-                ) {
+                if (self::in_value(trim($stateValue), CRM_Core_PseudoConstant::stateProvinceAbbreviation()) || self::in_value(trim($stateValue), CRM_Core_PseudoConstant::stateProvince())) {
                   continue;
                 }
                 else {
@@ -1292,21 +1239,19 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
             foreach ($mulValues as $countryValue) {
               if ($countryValue) {
 
-                CRM_Core_PseudoConstant::populate($countryNames, 'CRM_Core_DAO_Country',
-                  TRUE, 'name', 'is_active'
-                );
+                CRM_Core_PseudoConstant::populate($countryNames, 'CRM_Core_DAO_Country', TRUE, 'name', 'is_active');
 
-                CRM_Core_PseudoConstant::populate($countryIsoCodes,
-                  'CRM_Core_DAO_Country', TRUE,
-                  'iso_code'
-                );
+                CRM_Core_PseudoConstant::populate($countryIsoCodes, 'CRM_Core_DAO_Country', TRUE, 'iso_code');
 
                 $config = CRM_Core_Config::singleton();
                 $limitCodes = $config->countryLimit();
 
                 $error = TRUE;
                 foreach (array(
-                  $countryNames, $countryIsoCodes, $limitCodes) as $values) {
+                    $countryNames,
+                    $countryIsoCodes,
+                    $limitCodes,
+                  ) as $values) {
                   if (in_array(trim($countryValue), $values)) {
                     $error = FALSE;
                     break;
@@ -1321,9 +1266,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
           }
         }
       }
-      elseif (is_array($params[$key]) &&
-        isset($params[$key]["contact_type"])
-      ) {
+      elseif (is_array($params[$key]) && isset($params[$key]["contact_type"])) {
         //CRM-5125
         //supporting custom data of related contact subtypes
         if (array_key_exists($key, $this->_relationships)) {
@@ -1335,7 +1278,6 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         if (!empty($relation)) {
           list($id, $first, $second) = CRM_Utils_System::explode('_', $relation, 3);
           $direction = "contact_sub_type_$second";
-          require_once 'CRM/Contact/BAO/RelationshipType.php';
           $relationshipType = new CRM_Contact_BAO_RelationshipType();
           $relationshipType->id = $id;
           if ($relationshipType->find(TRUE)) {
@@ -1352,15 +1294,15 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
   }
 
   /**
-   *  Check if value present in all genders or
-   *  as a substring of any gender value, if yes than return corresponding gender.
-   *  eg value might be  m/M, ma/MA, mal/MAL, male return 'Male'
-   *  but if value is 'maleabc' than return false
+   * Check if value present in all genders or
+   * as a substring of any gender value, if yes than return corresponding gender.
+   * eg value might be  m/M, ma/MA, mal/MAL, male return 'Male'
+   * but if value is 'maleabc' than return false
    *
-   *  @param string $gender check this value across gender values.
+   * @param string $gender check this value across gender values.
    *
-   *  retunr gender value / false
-   *  @access public
+   * retunr gender value / false
+   * @access public
    */
   public function checkGender($gender) {
     $gender = trim($gender, '.');
@@ -1392,7 +1334,6 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
    * @access public
    */
   function isErrorInCoreData($params, &$errorMessage) {
-    require_once 'CRM/Core/OptionGroup.php';
     foreach ($params as $key => $value) {
       if ($value) {
         $session = CRM_Core_Session::singleton();
@@ -1465,9 +1406,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
             if (!empty($value)) {
               foreach ($value as $stateValue) {
                 if ($stateValue['state_province']) {
-                  if (self::in_value($stateValue['state_province'], CRM_Core_PseudoConstant::stateProvinceAbbreviation())
-                    || self::in_value($stateValue['state_province'], CRM_Core_PseudoConstant::stateProvince())
-                  ) {
+                  if (self::in_value($stateValue['state_province'], CRM_Core_PseudoConstant::stateProvinceAbbreviation()) || self::in_value($stateValue['state_province'], CRM_Core_PseudoConstant::stateProvince())) {
                     continue;
                   }
                   else {
@@ -1482,13 +1421,8 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
             if (!empty($value)) {
               foreach ($value as $stateValue) {
                 if ($stateValue['country']) {
-                  CRM_Core_PseudoConstant::populate($countryNames, 'CRM_Core_DAO_Country',
-                    TRUE, 'name', 'is_active'
-                  );
-                  CRM_Core_PseudoConstant::populate($countryIsoCodes,
-                    'CRM_Core_DAO_Country', TRUE,
-                    'iso_code'
-                  );
+                  CRM_Core_PseudoConstant::populate($countryNames, 'CRM_Core_DAO_Country', TRUE, 'name', 'is_active');
+                  CRM_Core_PseudoConstant::populate($countryIsoCodes, 'CRM_Core_DAO_Country', TRUE, 'iso_code');
                   $config = CRM_Core_Config::singleton();
                   $limitCodes = $config->countryLimit();
                   //If no country is selected in
@@ -1590,9 +1524,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
 
           case 'email_greeting_custom':
             if (array_key_exists('email_greeting', $params)) {
-              $emailGreetingLabel = key(CRM_Core_OptionGroup::values('email_greeting', TRUE, NULL,
-                  NULL, 'AND v.name = "Customized"'
-                ));
+              $emailGreetingLabel = key(CRM_Core_OptionGroup::values('email_greeting', TRUE, NULL, NULL, 'AND v.name = "Customized"'));
               if (CRM_Utils_Array::value('email_greeting', $params) != $emailGreetingLabel) {
                 self::addToErrorMsg(ts('Email Greeting - Custom'), $errorMessage);
               }
@@ -1601,9 +1533,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
 
           case 'postal_greeting_custom':
             if (array_key_exists('postal_greeting', $params)) {
-              $postalGreetingLabel = key(CRM_Core_OptionGroup::values('postal_greeting', TRUE,
-                  NULL, NULL, 'AND v.name = "Customized"'
-                ));
+              $postalGreetingLabel = key(CRM_Core_OptionGroup::values('postal_greeting', TRUE, NULL, NULL, 'AND v.name = "Customized"'));
               if (CRM_Utils_Array::value('postal_greeting', $params) != $postalGreetingLabel) {
                 self::addToErrorMsg(ts('Postal Greeting - Custom'), $errorMessage);
               }
@@ -1612,9 +1542,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
 
           case 'addressee_custom':
             if (array_key_exists('addressee', $params)) {
-              $addresseeLabel = key(CRM_Core_OptionGroup::values('addressee', TRUE, NULL, NULL,
-                  'AND v.name = "Customized"'
-                ));
+              $addresseeLabel = key(CRM_Core_OptionGroup::values('addressee', TRUE, NULL, NULL, 'AND v.name = "Customized"'));
               if (CRM_Utils_Array::value('addressee', $params) != $addresseeLabel) {
                 self::addToErrorMsg(ts('Addressee - Custom'), $errorMessage);
               }
@@ -1624,9 +1552,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
           case 'url':
             if (is_array($value)) {
               foreach ($value as $values) {
-                if (CRM_Utils_Array::value('url', $values) &&
-                  !CRM_Utils_Rule::url($values['url'])
-                ) {
+                if (CRM_Utils_Array::value('url', $values) && !CRM_Utils_Rule::url($values['url'])) {
                   self::addToErrorMsg(ts('Website'), $errorMessage);
                   break;
                 }
@@ -1648,9 +1574,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
           case 'email':
             if (is_array($value)) {
               foreach ($value as $values) {
-                if (CRM_Utils_Array::value('email', $values) &&
-                  !CRM_Utils_Rule::email($values['email'])
-                ) {
+                if (CRM_Utils_Array::value('email', $values) && !CRM_Utils_Rule::email($values['email'])) {
                   self::addToErrorMsg($key, $errorMessage);
                   break;
                 }
@@ -1659,9 +1583,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
             break;
 
           default:
-            if (is_array($params[$key]) &&
-              isset($params[$key]["contact_type"])
-            ) {
+            if (is_array($params[$key]) && isset($params[$key]["contact_type"])) {
               //check for any relationship data ,FIX ME
               self::isErrorInCoreData($params[$key], $errorMessage);
             }
@@ -1696,8 +1618,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
    * @static
    * @access public
    */
-  static
-  function addToErrorMsg($errorName, &$errorMessage) {
+  static function addToErrorMsg($errorName, &$errorMessage) {
     if ($errorMessage) {
       $errorMessage .= "; $errorName";
     }
@@ -1711,13 +1632,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
    *
    *
    */
-  function createContact(&$formatted,
-    &$contactFields,
-    $onDuplicate,
-    $contactId         = NULL,
-    $requiredCheck     = TRUE,
-    $dedupeRuleGroupID = NULL
-  ) {
+  function createContact(&$formatted, &$contactFields, $onDuplicate, $contactId = NULL, $requiredCheck = TRUE, $dedupeRuleGroupID = NULL) {
     $dupeCheck = FALSE;
 
     $newContact = NULL;
@@ -1733,16 +1648,9 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
     //@todo direct call to API function not supported.
     // setting required check to false, CRM-2839
     // plus we do our own required check in import
-    $error = _civicrm_api3_contact_check_params($formatted,
-      $dupeCheck,
-      TRUE,
-      FALSE,
-      $dedupeRuleGroupID
-    );
+    $error = _civicrm_api3_deprecated_contact_check_params($formatted, $dupeCheck, TRUE, FALSE, $dedupeRuleGroupID);
 
-    if ((is_null($error)) &&
-      (civicrm_error(_civicrm_api3_deprecated_validate_formatted_contact($formatted)))
-    ) {
+    if ((is_null($error)) && (civicrm_error(_civicrm_api3_deprecated_validate_formatted_contact($formatted)))) {
 
       $error = _civicrm_api3_deprecated_validate_formatted_contact($formatted);
     }
@@ -1751,19 +1659,18 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
 
     if (is_null($error)) {
       if ($contactId) {
-        $this->formatParams($formatted, $onDuplicate, (int)$contactId);
+        $this->formatParams($formatted, $onDuplicate, (int) $contactId);
       }
 
       // pass doNotResetCache flag since resetting and rebuilding cache could be expensive.
       $config = CRM_Core_Config::singleton();
       $config->doNotResetCache = 1;
-      $cid = CRM_Contact_BAO_Contact::createProfileContact($formatted, $contactFields,
-        $contactId, NULL, NULL,
-        $formatted['contact_type']
-      );
+      $cid = CRM_Contact_BAO_Contact::createProfileContact($formatted, $contactFields, $contactId, NULL, NULL, $formatted['contact_type']);
       $config->doNotResetCache = 0;
 
-      $contact = array('contact_id' => $cid);
+      $contact = array(
+        'contact_id' => $cid,
+      );
 
       $defaults = array();
       $newContact = CRM_Contact_BAO_Contact::retrieve($contact, $defaults);
@@ -1772,11 +1679,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
     //get the id of the contact whose street address is not parsable, CRM-5886
     if ($this->_parseStreetAddress && $newContact->address) {
       foreach ($newContact->address as $address) {
-        if ($address['street_address'] &&
-          (!CRM_Utils_Array::value('street_number', $address) ||
-            !CRM_Utils_Array::value('street_name', $address)
-          )
-        ) {
+        if ($address['street_address'] && (!CRM_Utils_Array::value('street_number', $address) || !CRM_Utils_Array::value('street_name', $address))) {
           $this->_unparsedStreetAddressContacts[] = array(
             'id' => $newContact->id,
             'streetAddress' => $address['street_address'],
@@ -1791,7 +1694,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
    * format params for update and fill mode
    *
    * @param $params       array  referance to an array containg all the
-   *                             values for import
+   * values for import
    * @param $onDuplicate  int
    * @param $cid          int    contact id
    */
@@ -1800,7 +1703,9 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
       return;
     }
 
-    $contactParams = array('contact_id' => $cid);
+    $contactParams = array(
+      'contact_id' => $cid,
+    );
 
     $defaults = array();
     $contactObj = CRM_Contact_BAO_Contact::retrieve($contactParams, $defaults);
@@ -1815,10 +1720,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
       $modeFill = TRUE;
     }
 
-    require_once 'CRM/Core/BAO/CustomGroup.php';
-    $groupTree = CRM_Core_BAO_CustomGroup::getTree($params['contact_type'], CRM_Core_DAO::$_nullObject,
-      $cid, 0, NULL
-    );
+    $groupTree = CRM_Core_BAO_CustomGroup::getTree($params['contact_type'], CRM_Core_DAO::$_nullObject, $cid, 0, NULL);
     CRM_Core_BAO_CustomGroup::setDefaults($groupTree, $defaults, FALSE, FALSE);
 
     $locationFields = array(
@@ -1840,7 +1742,10 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         continue;
       }
       elseif (in_array($key, array(
-        'email_greeting', 'postal_greeting', 'addressee'))) {
+            'email_greeting',
+            'postal_greeting',
+            'addressee',
+          ))) {
         // CRM-4575, need to null custom
         if ($params["{$key}_id"] != 4) {
           $params["{$key}_custom"] = 'null';
@@ -1873,16 +1778,12 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
             if (isset($getValue)) {
               foreach ($getValue as $cnt => $values) {
                 if ($locKeys == 'website') {
-                  if (($getValue[$cnt]['website_type_id'] ==
-                      $params[$locKeys][$key]['website_type_id']
-                    )) {
+                  if (($getValue[$cnt]['website_type_id'] == $params[$locKeys][$key]['website_type_id'])) {
                     unset($params[$locKeys][$key]);
                   }
                 }
                 else {
-                  if ($getValue[$cnt]['location_type_id']
-                    == $params[$locKeys][$key]['location_type_id']
-                  ) {
+                  if ($getValue[$cnt]['location_type_id'] == $params[$locKeys][$key]['location_type_id']) {
                     unset($params[$locKeys][$key]);
                   }
                 }
@@ -1921,7 +1822,9 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
    * @static
    */
   function formatCommonData($params, &$formatted, &$contactFields) {
-    $csType = array(CRM_Utils_Array::value('contact_type', $formatted));
+    $csType = array(
+      CRM_Utils_Array::value('contact_type', $formatted),
+    );
 
     //CRM-5125
     //add custom fields for contact sub type
@@ -1962,8 +1865,8 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         }
         elseif ($customFields[$customFieldID]['data_type'] == 'Boolean') {
           $params[$key] = CRM_Utils_String::strtoboolstr($val);
+          }
         }
-      }
 
       if ($key == 'birth_date' && $val) {
         CRM_Utils_Date::convertToDefaultDate($params, $dateType, $key);
@@ -1997,9 +1900,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
                 break;
               }
               // check if $value does not contain IM provider or phoneType
-              if (($name !== 'phone_type_id' || $name !== 'provider_id')
-                && ($testForEmpty === '' || $testForEmpty == NULL)
-              ) {
+              if (($name !== 'phone_type_id' || $name !== 'provider_id') && ($testForEmpty === '' || $testForEmpty == NULL)) {
                 $break = TRUE;
                 break;
               }
@@ -2019,11 +1920,11 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         }
       }
 
-      $formatValues = array($key => $field);
+      $formatValues = array(
+        $key => $field,
+      );
 
-      if (($key !== 'preferred_communication_method') &&
-        (array_key_exists($key, $contactFields))
-      ) {
+      if (($key !== 'preferred_communication_method') && (array_key_exists($key, $contactFields))) {
         // due to merging of individual table and
         // contact table, we need to avoid
         // preferred_communication_method forcefully
@@ -2037,40 +1938,36 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
       _civicrm_api3_deprecated_add_formatted_param($formatValues, $formatted);
 
       //Handling Custom Data
-      if (($customFieldID = CRM_Core_BAO_CustomField::getKeyID($key))
-        && array_key_exists($customFieldID, $customFields)
-      ) {
+      if (($customFieldID = CRM_Core_BAO_CustomField::getKeyID($key)) && array_key_exists($customFieldID, $customFields)) {
 
         $extends = CRM_Utils_Array::value('extends', $customFields[$customFieldID]);
-        $htmlType = CRM_Utils_Array::value('html_type', $customFields[$customFieldID]);
-        switch ($htmlType) {
-          case 'CheckBox':
-          case 'AdvMulti-Select':
-          case 'Multi-Select':
+                $htmlType = CRM_Utils_Array::value( 'html_type', $customFields[$customFieldID] );
+                switch ( $htmlType ) {
+                case 'CheckBox':
+                case 'AdvMulti-Select':
+                case 'Multi-Select':
 
-            if (CRM_Utils_Array::value($key, $formatted) && CRM_Utils_Array::value($key, $params)) {
-              $mulValues       = explode(',', $formatted[$key]);
-              $customOption    = CRM_Core_BAO_CustomOption::getCustomOption($customFieldID, TRUE);
-              $formatted[$key] = array();
-              $params[$key]    = array();
-              foreach ($mulValues as $v1) {
-                foreach ($customOption as $v2) {
-                  if ((strtolower($v2['label']) == strtolower(trim($v1))) ||
-                    (strtolower($v2['value']) == strtolower(trim($v1)))
-                  ) {
-                    if ($htmlType == 'CheckBox') {
-                      $params[$key][$v2['value']] = $formatted[$key][$v2['value']] = 1;
+                    if ( CRM_Utils_Array::value( $key, $formatted ) && CRM_Utils_Array::value( $key, $params ) ) {
+                        $mulValues       = explode( ',', $formatted[$key] );
+                        $customOption    = CRM_Core_BAO_CustomOption::getCustomOption( $customFieldID, true );
+                        $formatted[$key] = array( );
+                        $params[$key]    = array( );
+                        foreach ( $mulValues as $v1 ) {
+                            foreach ( $customOption as $v2 ) {
+                                if ( ( strtolower( $v2['label'] ) == strtolower( trim( $v1 ) ) ) || 
+                                     ( strtolower( $v2['value'] ) == strtolower( trim( $v1 ) ) ) ) { 
+                                    if ( $htmlType == 'CheckBox' ) {
+                                        $params[$key][$v2['value']] = $formatted[$key][$v2['value']] = 1;
+                                    } else {
+                                        $params[$key][] = $formatted[$key][] = $v2['value'];
+                                    }
+                                }
+                            }
+                        }
                     }
-                    else {
-                      $params[$key][] = $formatted[$key][] = $v2['value'];
-                    }
-                  }
+                break;
                 }
-              }
-            }
-            break;
-        }
-
+                
         //@todo calling api functions directly is not supported
         _civicrm_api3_custom_format_params($params, $formatted, $extends);
       }
@@ -2088,7 +1985,6 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
 
     // parse street address, CRM-5450
     if ($this->_parseStreetAddress) {
-      require_once 'CRM/Core/BAO/Address.php';
       if (array_key_exists('address', $formatted) && is_array($formatted['address'])) {
         foreach ($formatted['address'] as $instance => & $address) {
           $streetAddress = CRM_Utils_Array::value('street_address', $address);
@@ -2096,14 +1992,13 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
             continue;
           }
 
+
           // parse address field.
           $parsedFields = CRM_Core_BAO_Address::parseStreetAddress($streetAddress);
 
           //street address consider to be parsed properly,
           //If we get street_name and street_number.
-          if (!CRM_Utils_Array::value('street_name', $parsedFields) ||
-            !CRM_Utils_Array::value('street_number', $parsedFields)
-          ) {
+          if (!CRM_Utils_Array::value('street_name', $parsedFields) || !CRM_Utils_Array::value('street_number', $parsedFields)) {
             $parsedFields = array_fill_keys(array_keys($parsedFields), '');
           }
 
@@ -2124,7 +2019,9 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
    */
   function processMessage(&$values, $statusFieldName, $returnCode) {
     if (empty($this->_unparsedStreetAddressContacts)) {
-      $importRecordParams = array($statusFieldName => 'IMPORTED');
+      $importRecordParams = array(
+        $statusFieldName => 'IMPORTED',
+      );
     }
     else {
       $errorMessage = ts("Record imported successfully but unable to parse the street address: ");
@@ -2133,7 +2030,10 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         $errorMessage .= "\n Contact ID:" . $contactValue['id'] . " <a href=\"$contactUrl\"> " . $contactValue['streetAddress'] . "</a>";
       }
       array_unshift($values, $errorMessage);
-      $importRecordParams = array($statusFieldName => 'ERROR', "${statusFieldName}Msg" => $errorMessage);
+      $importRecordParams = array(
+        $statusFieldName => 'ERROR',
+        "${statusFieldName}Msg" => $errorMessage,
+      );
       $returnCode = CRM_Import_Parser::UNPARSED_ADDRESS_WARNING;
     }
     $this->updateImportRecord($values[count($values) - 1], $importRecordParams);
@@ -2151,7 +2051,8 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser {
         if (!$name) {
           continue;
         }
-        if (!is_array($relatedContactFields[$name])) {
+
+        if ( CRM_Utils_Array::value($name, $relatedContactFields) && !is_array($relatedContactFields[$name])) {
           $relatedContactFields[$name] = array();
         }
         $fldName = CRM_Utils_Array::value($key, $this->_mapperRelatedContactDetails);

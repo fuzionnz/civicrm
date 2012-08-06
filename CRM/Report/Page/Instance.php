@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,21 +30,15 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
-require_once 'CRM/Report/Utils/Report.php';
-require_once 'CRM/Report/BAO/Instance.php';
-require_once 'CRM/Utils/Wrapper.php';
 
 /**
  * Page for invoking report instances
  */
 class CRM_Report_Page_Instance extends CRM_Core_Page {
-
   /**
    * run this page (figure out the action needed and perform it).
    *
@@ -59,10 +55,8 @@ class CRM_Report_Page_Instance extends CRM_Core_Page {
 
     if ($action & CRM_Core_Action::DELETE) {
       if (!CRM_Core_Permission::check('administer Reports')) {
-        $statusMessage = ts('Your do not have permission to Delete Report.');
-        CRM_Core_Error::statusBounce($statusMessage,
-          $reportUrl
-        );
+        $statusMessage = ts('You do not have permission to Delete Report.');
+        CRM_Core_Error::statusBounce($statusMessage, $reportUrl);
       }
 
       $navId = CRM_Core_DAO::getFieldValue('CRM_Report_DAO_Instance', $instanceId, 'navigation_id', 'id');
@@ -70,7 +64,6 @@ class CRM_Report_Page_Instance extends CRM_Core_Page {
 
       //delete navigation if exists
       if ($navId) {
-        require_once 'CRM/Core/BAO/Navigation.php';
         CRM_Core_BAO_Navigation::processDelete($navId);
         CRM_Core_BAO_Navigation::resetNavigation();
       }
@@ -78,20 +71,17 @@ class CRM_Report_Page_Instance extends CRM_Core_Page {
       CRM_Core_Session::setStatus(ts('Selected Instance has been deleted.'));
     }
     else {
-      require_once 'CRM/Core/OptionGroup.php';
       $templateInfo = CRM_Core_OptionGroup::getRowValues('report_template', "{$optionVal}", 'value');
       if (empty($templateInfo)) {
         CRM_Core_Session::setStatus(ts('Could not find template for the instance.'));
         return;
       }
 
-
       $extKey = strpos($templateInfo['name'], '.');
 
       $reportClass = NULL;
 
       if ($extKey !== FALSE) {
-        require_once ('CRM/Core/Extensions.php');
         $ext = new CRM_Core_Extensions();
         $reportClass = $ext->keyToClass($templateInfo['name'], 'report');
         $templateInfo['name'] = $reportClass;

@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 4.1                                                |
+| CiviCRM version 4.2                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2012                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -183,11 +183,11 @@ class CRM_Event_DAO_Event extends CRM_Core_DAO
      */
     public $contribution_type_id;
     /**
-     * Payment Processor for this Event (if is_monetary is true)
+     * Payment Processors configured for this Event (if is_monetary is true)
      *
-     * @var int unsigned
+     * @var string
      */
-    public $payment_processor_id;
+    public $payment_processor;
     /**
      * Include a map block on the Event Information page when geocode info is available and a mapping provider has been specified?
      *
@@ -441,6 +441,7 @@ class CRM_Event_DAO_Event extends CRM_Core_DAO
      */
     function __construct()
     {
+        $this->__table = 'civicrm_event';
         parent::__construct();
     }
     /**
@@ -449,11 +450,10 @@ class CRM_Event_DAO_Event extends CRM_Core_DAO
      * @access public
      * @return array
      */
-    function &links()
+    function links()
     {
         if (!(self::$_links)) {
             self::$_links = array(
-                'payment_processor_id' => 'civicrm_payment_processor:id',
                 'loc_block_id' => 'civicrm_loc_block:id',
                 'created_id' => 'civicrm_contact:id',
                 'campaign_id' => 'civicrm_campaign:id',
@@ -467,7 +467,7 @@ class CRM_Event_DAO_Event extends CRM_Core_DAO
      * @access public
      * @return array
      */
-    function &fields()
+    static function &fields()
     {
         if (!(self::$_fields)) {
             self::$_fields = array(
@@ -581,10 +581,12 @@ class CRM_Event_DAO_Event extends CRM_Core_DAO
                     'name' => 'contribution_type_id',
                     'type' => CRM_Utils_Type::T_INT,
                 ) ,
-                'payment_processor_id' => array(
-                    'name' => 'payment_processor_id',
-                    'type' => CRM_Utils_Type::T_INT,
-                    'FKClassName' => 'CRM_Core_DAO_PaymentProcessor',
+                'payment_processor' => array(
+                    'name' => 'payment_processor',
+                    'type' => CRM_Utils_Type::T_STRING,
+                    'title' => ts('Payment Processor') ,
+                    'maxlength' => 128,
+                    'size' => CRM_Utils_Type::HUGE,
                 ) ,
                 'is_map' => array(
                     'name' => 'is_map',
@@ -853,9 +855,10 @@ class CRM_Event_DAO_Event extends CRM_Core_DAO
      * returns the names of this table
      *
      * @access public
+     * @static
      * @return string
      */
-    function getTableName()
+    static function getTableName()
     {
         return CRM_Core_DAO::getLocaleTableName(self::$_tableName);
     }
@@ -874,8 +877,9 @@ class CRM_Event_DAO_Event extends CRM_Core_DAO
      *
      * @access public
      * return array
+     * @static
      */
-    function &import($prefix = false)
+    static function &import($prefix = false)
     {
         if (!(self::$_import)) {
             self::$_import = array();
@@ -897,8 +901,9 @@ class CRM_Event_DAO_Event extends CRM_Core_DAO
      *
      * @access public
      * return array
+     * @static
      */
-    function &export($prefix = false)
+    static function &export($prefix = false)
     {
         if (!(self::$_export)) {
             self::$_export = array();

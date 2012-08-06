@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -85,7 +85,7 @@
         {/if} {help id="id-contribution_type"}
         </td></tr>
 	
-	{if $action eq 2 and $lineItem}
+	{if $action eq 2 and $lineItem and !$defaultContribution}
 	    <tr>
             <td class="label">{ts}Contribution Amount{/ts}</td>
             <td>{include file="CRM/Price/Page/LineItem.tpl" context="Contribution"}</td>
@@ -292,6 +292,9 @@ function loadPanes( id ) {
     {/literal}
         {if $contributionMode}
             url = url + "&mode={$contributionMode}";
+        {/if}
+	{if $qfKey}
+            url = url + "&qfKey={$qfKey}";
         {/if}
     {literal}
    if ( ! cj('div.'+id).html() ) {

@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1		                         				  |
+ | CiviCRM version 4.2		                         				  |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011							      |
+ | Copyright CiviCRM LLC (c) 2004-2012							      |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.								      |
  |																      |
@@ -28,15 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
-require_once 'CRM/Event/PseudoConstant.php';
-require_once 'CRM/Core/OptionGroup.php';
-require_once 'CRM/Event/BAO/Participant.php';
 class CRM_Report_Form_Event_ParticipantListCount extends CRM_Report_Form {
 
   protected $_summary = NULL;
@@ -87,7 +84,18 @@ class CRM_Report_Form_Event_ParticipantListCount extends CRM_Report_Form {
           ),
         ),
       ),
-      'civicrm_address' =>
+     'civicrm_phone' =>
+     array( 
+       'dao' => 'CRM_Core_DAO_Phone',
+       'grouping' => 'contact-fields',
+       'fields' => array( 
+         'phone' => array(
+           'title' => ts( 'Phone No' ),
+           'default' => true,
+         ),
+       ), 
+     ),
+     'civicrm_address' =>
       array(
         'dao' => 'CRM_Core_DAO_Address',
         'fields' =>
@@ -287,7 +295,7 @@ class CRM_Report_Form_Event_ParticipantListCount extends CRM_Report_Form {
     $this->_columnHeaders = array();
 
     //add blank column at the Start
-    if (CRM_Utils_Array::value('blank_column_begin', $this->_params['options'])) {
+    if (array_key_exists('options', $this->_params) && CRM_Utils_Array::value('blank_column_begin', $this->_params['options'])) {
       $select[] = " '' as blankColumnBegin";
       $this->_columnHeaders['blankColumnBegin']['title'] = '_ _ _ _';
     }
@@ -348,6 +356,9 @@ class CRM_Report_Form_Event_ParticipantListCount extends CRM_Report_Form {
 				 LEFT JOIN	civicrm_email {$this->_aliases['civicrm_email']} 
 						  ON ({$this->_aliases['civicrm_contact']}.id = {$this->_aliases['civicrm_email']}.contact_id AND
 							  {$this->_aliases['civicrm_email']}.is_primary = 1) 
+         LEFT  JOIN civicrm_phone  {$this->_aliases['civicrm_phone']} 
+              ON {$this->_aliases['civicrm_contact']}.id = {$this->_aliases['civicrm_phone']}.contact_id AND
+                {$this->_aliases['civicrm_phone']}.is_primary = 1
 				 LEFT JOIN civicrm_line_item {$this->_aliases['civicrm_line_item']}
 						  ON {$this->_aliases['civicrm_participant']}.id ={$this->_aliases['civicrm_line_item']}.entity_id AND {$this->_aliases['civicrm_line_item']}.entity_table = 'civicrm_participant'";
   }

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 class CRM_Admin_Form_WordReplacements extends CRM_Core_Form {
   protected $_numStrings = 10;
 
@@ -237,7 +235,6 @@ class CRM_Admin_Form_WordReplacements extends CRM_Core_Form {
 
     $config = CRM_Core_Config::singleton();
 
-    require_once 'CRM/Core/DAO/Domain.php';
     $domain = new CRM_Core_DAO_Domain();
     $domain->find(TRUE);
 
@@ -255,12 +252,10 @@ class CRM_Admin_Form_WordReplacements extends CRM_Core_Form {
     $params = array('locale_custom_strings' => $stringOverride);
     $id = CRM_Core_Config::domainID();
 
-    require_once 'CRM/Core/BAO/Domain.php';
     $wordReplacementSettings = CRM_Core_BAO_Domain::edit($params, $id);
 
     if ($wordReplacementSettings) {
       //reset navigation
-      require_once 'CRM/Core/BAO/Navigation.php';
       CRM_Core_BAO_Navigation::resetNavigation();
 
       CRM_Core_Session::setStatus("Your Settings have been saved");

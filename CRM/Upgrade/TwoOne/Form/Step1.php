@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,18 +28,15 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Upgrade/Form.php';
 class CRM_Upgrade_TwoOne_Form_Step1 extends CRM_Upgrade_Form {
   function verifyPreDBState(&$errorMessage) {
     $config = CRM_Core_Config::singleton();
 
     // Let's first update the config defaults
-    require_once "CRM/Core/DAO/Domain.php";
     $domain = new CRM_Core_DAO_Domain();
     $domain->selectAdd();
     $domain->selectAdd('config_backend');
@@ -68,7 +65,6 @@ class CRM_Upgrade_TwoOne_Form_Step1 extends CRM_Upgrade_Form {
         }
       }
       // serialise settings
-      require_once "CRM/Core/BAO/ConfigSetting.php";
       CRM_Core_BAO_ConfigSetting::add($defaults);
 
       $config = CRM_Core_Config::singleton();

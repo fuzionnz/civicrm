@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 4.1                                                |
+| CiviCRM version 4.2                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2012                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -99,7 +99,7 @@ class CRM_Core_DAO_Discount extends CRM_Core_DAO
      */
     public $entity_id;
     /**
-     * FK to civicrm_option_group
+     * FK to civicrm_price_set
      *
      * @var int unsigned
      */
@@ -124,6 +124,7 @@ class CRM_Core_DAO_Discount extends CRM_Core_DAO
      */
     function __construct()
     {
+        $this->__table = 'civicrm_discount';
         parent::__construct();
     }
     /**
@@ -132,11 +133,11 @@ class CRM_Core_DAO_Discount extends CRM_Core_DAO
      * @access public
      * @return array
      */
-    function &links()
+    function links()
     {
         if (!(self::$_links)) {
             self::$_links = array(
-                'option_group_id' => 'civicrm_option_group:id',
+                'option_group_id' => 'civicrm_price_set:id',
             );
         }
         return self::$_links;
@@ -147,7 +148,7 @@ class CRM_Core_DAO_Discount extends CRM_Core_DAO
      * @access public
      * @return array
      */
-    function &fields()
+    static function &fields()
     {
         if (!(self::$_fields)) {
             self::$_fields = array(
@@ -177,7 +178,7 @@ class CRM_Core_DAO_Discount extends CRM_Core_DAO
                     'where' => 'civicrm_discount.option_group_id',
                     'headerPattern' => '',
                     'dataPattern' => '',
-                    'FKClassName' => 'CRM_Core_DAO_OptionGroup',
+                    'FKClassName' => 'CRM_Price_DAO_Set',
                 ) ,
                 'start_date' => array(
                     'name' => 'start_date',
@@ -197,9 +198,10 @@ class CRM_Core_DAO_Discount extends CRM_Core_DAO
      * returns the names of this table
      *
      * @access public
+     * @static
      * @return string
      */
-    function getTableName()
+    static function getTableName()
     {
         return self::$_tableName;
     }
@@ -218,8 +220,9 @@ class CRM_Core_DAO_Discount extends CRM_Core_DAO
      *
      * @access public
      * return array
+     * @static
      */
-    function &import($prefix = false)
+    static function &import($prefix = false)
     {
         if (!(self::$_import)) {
             self::$_import = array();
@@ -241,8 +244,9 @@ class CRM_Core_DAO_Discount extends CRM_Core_DAO
      *
      * @access public
      * return array
+     * @static
      */
-    function &export($prefix = false)
+    static function &export($prefix = false)
     {
         if (!(self::$_export)) {
             self::$_export = array();

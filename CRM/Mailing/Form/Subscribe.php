@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,13 +29,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Mailing/Event/BAO/Subscribe.php';
 class CRM_Mailing_Form_Subscribe extends CRM_Core_Form {
   protected $_groupID = NULL; function preProcess() {
     parent::preProcess();
@@ -49,7 +46,6 @@ class CRM_Mailing_Form_Subscribe extends CRM_Core_Form {
       $this->controller->setDestination(NULL, TRUE);
     }
 
-    require_once 'CRM/Contact/BAO/Group.php';
 
     if ($this->_groupID) {
       $groupTypeCondition = CRM_Contact_BAO_Group::groupTypeCondition('Mailing');
@@ -153,7 +149,6 @@ ORDER BY title";
 
     if ($addCaptcha) {
       // add captcha
-      require_once 'CRM/Utils/ReCAPTCHA.php';
       $captcha = CRM_Utils_ReCAPTCHA::singleton();
       $captcha->add($this);
     }

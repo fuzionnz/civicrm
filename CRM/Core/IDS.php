@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -59,7 +59,7 @@ class CRM_Core_IDS {
   public function check(&$args) {
 
     // lets bypass a few civicrm urls from this check
-    static $skip = array('civicrm/ajax', 'civicrm/admin/setting/updateConfigBackend', 'civicrm/admin/messageTemplates');
+    static $skip = array('civicrm/admin/setting/updateConfigBackend', 'civicrm/admin/messageTemplates');
     $path = implode('/', $args);
     if (in_array($path, $skip)) {
       return;
@@ -122,24 +122,27 @@ class CRM_Core_IDS {
     exceptions[]        = report_footer
     exceptions[]        = data
     exceptions[]        = instructions
+    exceptions[]        = suggested_message
+    exceptions[]        = page_text
+    exceptions[]        = activity_include
+    exceptions[]        = activity_exclude
 ";
       if (file_put_contents($configFile, $contents) === FALSE) {
-        require_once 'CRM/Core/Error.php';
         CRM_Core_Error::movedSiteError($configFile);
       }
 
 
       // also create the .htaccess file so we prevent the reading of the log and ini files
       // via a browser, CRM-3875
-      require_once 'CRM/Utils/File.php';
       CRM_Utils_File::restrictAccess($config->configAndLogDir);
     }
 
-    $init   = IDS_Init::init($configFile);
-    $ids    = new IDS_Monitor($_REQUEST, $init);
-    $result = $ids->run();
+    $init = IDS_Init::init($configFile);
 
+    $ids = new IDS_Monitor($_REQUEST, $init);
+    $result = $ids->run();
     if (!$result->isEmpty()) {
+
       $this->react($result);
     }
 
@@ -232,6 +235,21 @@ class CRM_Core_IDS {
     $session = CRM_Core_Session::singleton();
     $session->reset(2);
 
+    $path = implode('/', $args);
+    if ($path == in_array("civicrm/ajax/rest", "civicrm/api/json")) {
+      require ("api/v3/utils.php");
+      $error = civicrm_api3_create_error(ts('There is a validation error with your HTML input. Your activity is a bit suspicious, hence aborting'),
+        array(
+          'IP' => $_SERVER['REMOTE_ADDR'],
+          'error_code' => 'IDS_KICK',
+          'level' => 'security',
+          'referer' => $_SERVER['HTTP_REFERER'],
+          'reason' => 'XSS suspected',
+        )
+      );
+      echo json_encode($error);
+      CRM_Utils_System::civiExit();
+    }
     CRM_Core_Error::fatal(ts('There is a validation error with your HTML input. Your activity is a bit suspicious, hence aborting'));
   }
 }

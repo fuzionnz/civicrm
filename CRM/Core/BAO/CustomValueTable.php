@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,13 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 class CRM_Core_BAO_CustomValueTable {
-  function create(&$customParams) {
+
+  static function create(&$customParams) {
     if (empty($customParams) ||
       !is_array($customParams)
     ) {
@@ -154,7 +155,6 @@ class CRM_Core_BAO_CustomValueTable {
               }
 
               // need to add/update civicrm_entity_file
-              require_once 'CRM/Core/DAO/EntityFile.php';
               $entityFileDAO = new CRM_Core_DAO_EntityFile();
               $entityFileDAO->file_id = $field['file_id'];
               $entityFileDAO->find(TRUE);
@@ -235,7 +235,6 @@ class CRM_Core_BAO_CustomValueTable {
           }
           $dao = CRM_Core_DAO::executeQuery($query, $params);
 
-          require_once 'CRM/Utils/Hook.php';
           CRM_Utils_Hook::custom($hookOP,
             $hookID,
             $entityID,
@@ -301,7 +300,7 @@ class CRM_Core_BAO_CustomValueTable {
     }
   }
 
-  function store(&$params, $entityTable, $entityID) {
+  static function store(&$params, $entityTable, $entityID) {
     $cvParams = array();
     foreach ($params as $fieldID => $param) {
       foreach ($param as $index => $customValue) {
@@ -342,8 +341,7 @@ class CRM_Core_BAO_CustomValueTable {
     }
   }
 
-  function postProcess(&$params, &$customFields, $entityTable, $entityID, $customFieldExtends) {
-    require_once "CRM/Core/BAO/CustomField.php";
+  static function postProcess(&$params, &$customFields, $entityTable, $entityID, $customFieldExtends) {
     $customData = CRM_Core_BAO_CustomField::postProcess($params,
       $customFields,
       $entityID,
@@ -454,9 +452,7 @@ AND    $cond
    * @return array
    * @static
    */
-  static
-  function setValues(&$params) {
-    require_once 'CRM/Utils/Type.php';
+  static function setValues(&$params) {
 
     if (!isset($params['entityID']) ||
       CRM_Utils_Type::escape($params['entityID'],
@@ -470,7 +466,6 @@ AND    $cond
     // custom_X => value or custom_X_VALUEID => value (for multiple values), VALUEID == -1, -2 etc for new insertions
     $values = array();
     $fieldValues = array();
-    require_once 'CRM/Core/BAO/CustomField.php';
     foreach ($params as $n => $v) {
       if ($customFieldInfo = CRM_Core_BAO_CustomField::getKeyID($n, TRUE)) {
         $fieldID = (int ) $customFieldInfo[0];
@@ -546,7 +541,7 @@ AND    cf.id IN ( $fieldIDList )
           return CRM_Core_Error::createAPIError(ts('value: %1 is not of the right field data type: %2',
               array(
                 1 => $fieldValue['value'],
-                2 => $dao->data_type,
+                2 => $dao->data_type
               )
             ));
         }
@@ -579,7 +574,7 @@ AND    cf.id IN ( $fieldIDList )
 
     if (!empty($cvParams)) {
       self::create($cvParams);
-      return CRM_Core_Error::createAPISuccess();
+      return array('is_error' => 0, 'result' => 1);
     }
 
     return CRM_Core_Error::createAPIError(ts('Unknown error'));
@@ -601,8 +596,7 @@ AND    cf.id IN ( $fieldIDList )
    * @return array
    * @static
    */
-  static
-  function &getValues(&$params) {
+  static function &getValues(&$params) {
     if (empty($params)) {
       return NULL;
     }
@@ -639,7 +633,6 @@ AND    cf.id IN ( $fieldIDList )
       $type = NULL;
     }
     else {
-      require_once 'CRM/Core/SelectValues.php';
       $entities = CRM_Core_SelectValues::customGroupExtends();
       if (!array_key_exists($type, $entities)) {
         if (in_array($type, $entities)) {
@@ -659,7 +652,14 @@ AND    cf.id IN ( $fieldIDList )
       $fieldIDs
     );
     if (empty($values)) {
-      return CRM_Core_Error::createAPIError(ts('No values found for the specified entity ID and custom field(s).'));
+      // note that this behaviour is undesirable from an API point of view - it should return an empty array
+      // since this is also called by the merger code & not sure the consequences of changing
+      // are just handling undoing this in the api layer. ie. converting the error back into a success
+      $result = array(
+        'is_error' => 1,
+        'error_message' => 'No values found for the specified entity ID and custom field(s).',
+      );
+      return $result;
     }
     else {
       $result = array(

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -82,7 +82,7 @@ class CRM_Utils_PagerAToZ {
       $result = $query;
     }
     else {
-      $result = &$query->alphabetQuery();
+      $result = $query->alphabetQuery();
     }
     if (!$result) {
       return NULL;
@@ -105,6 +105,7 @@ class CRM_Utils_PagerAToZ {
    * @access private
    * @static
    */
+  static
   function createLinks(&$query, $sortByCharacter, $isDAO) {
     $AToZBar = self::getStaticCharacters();
     $dynamicAlphabets = self::getDynamicCharacters($query, $isDAO);
@@ -120,7 +121,10 @@ class CRM_Utils_PagerAToZ {
     //get the current path
     $path = CRM_Utils_System::currentPath();
 
-    $qfKey = CRM_Utils_Array::value('qfKey', $query->_formValues);
+    $qfKey = null;
+    if (isset($query->_formValues)) {
+      $qfKey = CRM_Utils_Array::value('qfKey', $query->_formValues);
+    }
     if (empty($qfKey)) {
       $qfKey = CRM_Utils_Request::retrieve('qfKey', 'String', $this, FALSE, NULL, $_REQUEST);
     }

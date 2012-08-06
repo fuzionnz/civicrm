@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,24 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contribute/DAO/ContributionRecur.php';
 class CRM_Contribute_BAO_ContributionRecur extends CRM_Contribute_DAO_ContributionRecur {
+
+  /**
+   * funtion to create recurring contribution
+   *
+   * @param array  $params           (reference ) an assoc array of name/value pairs
+   *
+   * @return object activity contact object
+   * @access public
+   *
+   */
+  static function create(&$params) {
+    return self::add($params);
+  }
 
   /**
    * takes an associative array and creates a contribution object
@@ -49,11 +60,9 @@ class CRM_Contribute_BAO_ContributionRecur extends CRM_Contribute_DAO_Contributi
    * @return object CRM_Contribute_BAO_Contribution object
    * @access public
    * @static
+   * @todo move hook calls / extended logic to create - requires changing calls to call create not add
    */
-  static
-  function add(&$params, &$ids) {
-
-    require_once 'CRM/Utils/Hook.php';
+  static function add(&$params) {
     if (CRM_Utils_Array::value('id', $params)) {
       CRM_Utils_Hook::pre('edit', 'ContributionRecur', $params['id'], $params);
     }
@@ -61,6 +70,8 @@ class CRM_Contribute_BAO_ContributionRecur extends CRM_Contribute_DAO_Contributi
       CRM_Utils_Hook::pre('create', 'ContributionRecur', NULL, $params);
     }
 
+    // make sure we're not creating a new recurring contribution with the same transaction ID
+    // or invoice ID as an existing recurring contribution
     $duplicates = array();
     if (self::checkDuplicate($params, $duplicates)) {
       $error = CRM_Core_Error::singleton();
@@ -68,14 +79,14 @@ class CRM_Contribute_BAO_ContributionRecur extends CRM_Contribute_DAO_Contributi
       $error->push(CRM_Core_Error::DUPLICATE_CONTRIBUTION,
         'Fatal',
         array($d),
-        "Found matching contribution(s): $d"
+        "Found matching recurring contribution(s): $d"
       );
       return $error;
     }
 
     $recurring = new CRM_Contribute_BAO_ContributionRecur();
     $recurring->copyValues($params);
-    $recurring->id = CRM_Utils_Array::value('contribution', $ids);
+    $recurring->id = CRM_Utils_Array::value('id', $params);
 
     // set currency for CRM-1496
     if (!isset($recurring->currency)) {
@@ -95,7 +106,7 @@ class CRM_Contribute_BAO_ContributionRecur extends CRM_Contribute_DAO_Contributi
   }
 
   /**
-   * Check if there is a contribution with the same trxn_id or invoice_id
+   * Check if there is a recurring contribution with the same trxn_id or invoice_id
    *
    * @param array  $params (reference ) an assoc array of name/value pairs
    * @param array  $duplicates (reference ) store ids of duplicate contribs
@@ -104,8 +115,7 @@ class CRM_Contribute_BAO_ContributionRecur extends CRM_Contribute_DAO_Contributi
    * @access public
    * static
    */
-  static
-  function checkDuplicate($params, &$duplicates) {
+  static function checkDuplicate($params, &$duplicates) {
     $id         = CRM_Utils_Array::value('id', $params);
     $trxn_id    = CRM_Utils_Array::value('trxn_id', $params);
     $invoice_id = CRM_Utils_Array::value('invoice_id', $params);
@@ -143,17 +153,12 @@ class CRM_Contribute_BAO_ContributionRecur extends CRM_Contribute_DAO_Contributi
     return $result;
   }
 
-  static
-  function getPaymentProcessor($id, $mode) {
+  static function getPaymentProcessor($id, $mode) {
+    //FIX ME:
     $sql = "
-SELECT p.payment_processor_id
-  FROM civicrm_contribution c,
-       civicrm_contribution_recur r,
-       civicrm_contribution_page  p
- WHERE c.contribution_recur_id = %1
-   AND c.contribution_page_id  = p.id
-   AND p.payment_processor_id is not null
- LIMIT 1";
+SELECT r.payment_processor_id
+  FROM civicrm_contribution_recur r
+ WHERE r.id = %1";
     $params = array(1 => array($id, 'Integer'));
     $paymentProcessorID = &CRM_Core_DAO::singleValueQuery($sql,
       $params
@@ -162,7 +167,6 @@ SELECT p.payment_processor_id
       return NULL;
     }
 
-    require_once 'CRM/Core/BAO/PaymentProcessor.php';
     return CRM_Core_BAO_PaymentProcessor::getPayment($paymentProcessorID, $mode);
   }
 
@@ -175,8 +179,7 @@ SELECT p.payment_processor_id
    * @access public
    * static
    */
-  static
-  function getCount(&$ids) {
+  static function getCount(&$ids) {
     $recurID = implode(',', $ids);
     $totalCount = array();
 
@@ -201,8 +204,7 @@ SELECT p.payment_processor_id
    * @access public
    * @static
    */
-  static
-  function deleteRecurContribution($recurId) {
+  static function deleteRecurContribution($recurId) {
     $result = FALSE;
     if (!$recurId) {
       return $result;
@@ -226,13 +228,11 @@ SELECT p.payment_processor_id
    * @access public
    * @static
    */
-  static
-  function cancelRecurContribution($recurId, $objects) {
+  static function cancelRecurContribution($recurId, $objects, $activityParams = array()) {
     if (!$recurId) {
       return FALSE;
     }
 
-    require_once 'CRM/Contribute/PseudoConstant.php';
     $contributionStatus = CRM_Contribute_PseudoConstant::contributionStatus(NULL, 'name');
     $canceledId         = array_search('Cancelled', $contributionStatus);
     $recur              = new CRM_Contribute_DAO_ContributionRecur();
@@ -240,7 +240,6 @@ SELECT p.payment_processor_id
     $recur->whereAdd("contribution_status_id != $canceledId");
 
     if ($recur->find(TRUE)) {
-      require_once 'CRM/Core/Transaction.php';
       $transaction = new CRM_Core_Transaction();
       $recur->contribution_status_id = $canceledId;
       $recur->start_date = CRM_Utils_Date::isoToMysql($recur->start_date);
@@ -249,14 +248,65 @@ SELECT p.payment_processor_id
       $recur->cancel_date = date('YmdHis');
       $recur->save();
 
+      $dao = CRM_Contribute_BAO_ContributionRecur::getSubscriptionDetails($recurId);
+      if ($dao->recur_id) {
+        $details = CRM_Utils_Array::value('details', $activityParams);
+        if ($dao->auto_renew && $dao->membership_id) {
+          // its auto-renewal membership mode
+          $membershipTypes = CRM_Member_PseudoConstant::membershipType();
+          $membershipType  = CRM_Core_DAO::getFieldValue('CRM_Member_DAO_Membership', $dao->membership_id, 'membership_type_id');
+          $membershipType  = CRM_Utils_Array::value($membershipType, $membershipTypes);
+          $details .= '
+<br/>' . ts('Automatic renewal of %1 membership cancelled.', array(1 => $membershipType));
+        }
+        else {
+          $details .= '
+<br/>' . ts('The recurring contribution of %1, every %2 %3 has been cancelled.', array(
+  1 => $dao->amount,
+              2 => $dao->frequency_interval,
+              3 => $dao->frequency_unit,
+            ));
+        }
+        $activityParams = array(
+          'source_contact_id' => $dao->contact_id,
+          'source_record_id' => CRM_Utils_Array::value('source_record_id', $activityParams),
+          'activity_type_id' => CRM_Core_OptionGroup::getValue('activity_type',
+            'Cancel Recurring Contribution',
+            'name'
+          ),
+          'subject' => CRM_Utils_Array::value('subject', $activityParams, ts('Recurring contribution cancelled')),
+          'details' => $details,
+          'activity_date_time' => date('YmdHis'),
+          'status_id' => CRM_Core_OptionGroup::getValue('activity_status',
+            'Completed',
+            'name'
+          ),
+        );
+        $session = CRM_Core_Session::singleton();
+        $cid = $session->get('userID');
+        if ($cid) {
+          $activityParams['target_contact_id'][] = $activityParams['source_contact_id'];
+          $activityParams['source_contact_id'] = $cid;
+        }
+        CRM_Activity_BAO_Activity::create($activityParams);
+      }
+
+      // if there are associated objects, cancel them as well
       if ($objects == CRM_Core_DAO::$_nullObject) {
         $transaction->commit();
         return TRUE;
       }
       else {
-        require_once 'CRM/Core/Payment/BaseIPN.php';
         $baseIPN = new CRM_Core_Payment_BaseIPN();
         return $baseIPN->cancelled($objects, $transaction);
+      }
+    }
+    else {
+      // if already cancelled, return true
+      $recur->whereAdd();
+      $recur->whereAdd("contribution_status_id = $canceledId");
+      if ($recur->find(TRUE)) {
+        return TRUE;
       }
     }
 
@@ -273,14 +323,11 @@ SELECT p.payment_processor_id
    * @access public
    * @static
    */
-  static
-  function getRecurContributions($contactId) {
+  static function getRecurContributions($contactId) {
     $params = array();
-    require_once 'CRM/Contribute/DAO/ContributionRecur.php';
     $recurDAO = new CRM_Contribute_DAO_ContributionRecur();
     $recurDAO->contact_id = $contactId;
     $recurDAO->find();
-    require_once 'CRM/Contribute/PseudoConstant.php';
     $contributionStatus = CRM_Contribute_PseudoConstant::contributionStatus();
 
     while ($recurDAO->fetch()) {
@@ -290,6 +337,7 @@ SELECT p.payment_processor_id
       $params[$recurDAO->id]['end_date'] = $recurDAO->end_date;
       $params[$recurDAO->id]['next_sched_contribution'] = $recurDAO->next_sched_contribution;
       $params[$recurDAO->id]['amount'] = $recurDAO->amount;
+      $params[$recurDAO->id]['currency'] = $recurDAO->currency;
       $params[$recurDAO->id]['frequency_unit'] = $recurDAO->frequency_unit;
       $params[$recurDAO->id]['frequency_interval'] = $recurDAO->frequency_interval;
       $params[$recurDAO->id]['installments'] = $recurDAO->installments;
@@ -311,12 +359,103 @@ SELECT p.payment_processor_id
    * @return Object             DAO object on sucess, null otherwise
    * @static
    */
-  static
-  function setIsActive($id, $is_active) {
+  static function setIsActive($id, $is_active) {
     if (!$is_active) {
       return self::cancelRecurContribution($id, CRM_Core_DAO::$_nullObject);
     }
     return FALSE;
+  }
+
+  static function getSubscriptionDetails($entityID, $entity = 'recur') {
+    $sql = "
+SELECT rec.id                   as recur_id, 
+       rec.processor_id         as subscription_id, 
+       rec.frequency_interval,
+       rec.installments,
+       rec.frequency_unit,
+       rec.amount,
+       rec.is_test,
+       rec.auto_renew,
+       rec.currency,
+       con.id                   as contribution_id, 
+       con.contribution_page_id,
+       con.contact_id,
+       mp.membership_id";
+
+    if ($entity == 'recur') {
+      $sql .= "
+      FROM civicrm_contribution_recur rec 
+INNER JOIN civicrm_contribution       con ON ( con.contribution_recur_id = rec.id )
+LEFT  JOIN civicrm_membership_payment mp  ON ( mp.contribution_id = con.id )
+     WHERE rec.id = %1
+  GROUP BY rec.id";
+    }
+    elseif ($entity == 'contribution') {
+      $sql .= "
+      FROM civicrm_contribution       con
+INNER JOIN civicrm_contribution_recur rec 
+LEFT  JOIN civicrm_membership_payment mp  ON ( mp.contribution_id = con.id )
+     WHERE con.id = %1";
+    }
+    elseif ($entity == 'membership') {
+      $sql .= "
+      FROM civicrm_membership_payment mp 
+INNER JOIN civicrm_membership         mem ON ( mp.membership_id = mem.id ) 
+INNER JOIN civicrm_contribution_recur rec ON ( mem.contribution_recur_id = rec.id )
+INNER JOIN civicrm_contribution       con ON ( con.id = mp.contribution_id )
+     WHERE mp.membership_id = %1";
+    }
+
+    $dao = CRM_Core_DAO::executeQuery($sql, array(1 => array($entityID, 'Integer')));
+    if ($dao->fetch()) {
+      return $dao;
+    }
+    else return CRM_Core_DAO::$_nullObject;
+  }
+
+  static function setSubscriptionContext() {
+    // handle context redirection for subscription url
+    $session = CRM_Core_Session::singleton();
+    if ($session->get('userID')) {
+      $url     = FALSE;
+      $cid     = CRM_Utils_Request::retrieve('cid', 'Integer', $this, FALSE);
+      $mid     = CRM_Utils_Request::retrieve('mid', 'Integer', $this, FALSE);
+      $qfkey   = CRM_Utils_Request::retrieve('key', 'String', $this, FALSE);
+      $context = CRM_Utils_Request::retrieve('context', 'String', $this, FALSE);
+      if ($cid) {
+        switch ($context) {
+          case 'contribution':
+            $url = CRM_Utils_System::url('civicrm/contact/view',
+              "reset=1&selectedChild=contribute&cid={$cid}"
+            );
+            break;
+
+          case 'membership':
+            $url = CRM_Utils_System::url('civicrm/contact/view',
+              "reset=1&selectedChild=member&cid={$cid}"
+            );
+            break;
+
+          case 'dashboard':
+            $url = CRM_Utils_System::url('civicrm/user', "reset=1&id={$cid}");
+            break;
+        }
+      }
+      if ($mid) {
+        switch ($context) {
+          case 'dashboard':
+            $url = CRM_Utils_System::url('civicrm/member', "force=1&context={$context}&key={$qfkey}");
+            break;
+
+          case 'search':
+            $url = CRM_Utils_System::url('civicrm/member/search', "force=1&context={$context}&key={$qfkey}");
+            break;
+        }
+      }
+      if ($url) {
+        $session->pushUserContext($url);
+      }
+    }
   }
 }
 

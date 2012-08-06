@@ -33,7 +33,6 @@
   */
 
 
-require_once 'CRM/Core/Payment/BaseIPN.php';
 
 define('GOOGLE_DEBUG_PP', 0);
 class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
@@ -118,7 +117,11 @@ class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
       $ids['contributionRecur'] = self::retrieve('contributionRecurID', 'Integer', $privateData, FALSE);
     }
 
-    if (!$this->validateData($input, $ids, $objects)) {
+    $paymentProcessorID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_PaymentProcessorType',
+      'Google_Checkout', 'id', 'name'
+    );
+
+    if (!$this->validateData($input, $ids, $objects, TRUE, $paymentProcessorID)) {
       return FALSE;
     }
 
@@ -131,7 +134,6 @@ class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
         return;
       }
       else {
-        require_once 'CRM/Core/Transaction.php';
         $transaction = new CRM_Core_Transaction();
 
         CRM_Core_Error::debug_log_message("New order for an installment received.");
@@ -193,7 +195,6 @@ class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
       return FALSE;
     }
 
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
     // check if contribution is already completed, if so we ignore this ipn
@@ -202,7 +203,7 @@ class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
       return;
     }
     else {
-      /* Since trxn_id hasn't got any use here, 
+      /* Since trxn_id hasn't got any use here,
              * lets make use of it by passing the eventID/membershipTypeID to next level.
              * And change trxn_id to google-order-number before finishing db update */
 
@@ -238,8 +239,7 @@ class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
     $serial = $dataRoot['serial-number'];
     $orderNo = $dataRoot['google-order-number']['VALUE'];
 
-    require_once 'CRM/Contribute/DAO/Contribution.php';
-    $contribution = new CRM_Contribute_DAO_Contribution();
+    $contribution = new CRM_Contribute_BAO_Contribution();
     $contribution->invoice_id = $orderNo;
 
     if (!$contribution->find(TRUE)) {
@@ -282,9 +282,12 @@ class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
       }
     }
 
-    $this->loadObjects($input, $ids, $objects, TRUE);
+    $paymentProcessorID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_PaymentProcessorType',
+      'Google_Checkout', 'id', 'name'
+    );
 
-    require_once 'CRM/Core/Transaction.php';
+    $this->loadObjects($input, $ids, $objects, TRUE, $paymentProcessorID);
+
     $transaction = new CRM_Core_Transaction();
 
     // CRM_Core_Error::debug_var( 'c', $contribution );
@@ -301,18 +304,26 @@ class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
     $input['trxn_id']    = $ids['contributionRecur'] ? $serial : $dataRoot['google-order-number']['VALUE'];
     $input['is_test']    = $contribution->is_test;
 
-    $this->completeTransaction($input, $ids, $objects, $transaction);
+    $recur = NULL;
+    if ($ids['contributionRecur']) {
+      $recur = $objects['contributionRecur'];
+    }
+    $this->completeTransaction($input, $ids, $objects, $transaction, $recur);
 
     $this->completeRecur($input, $ids, $objects);
   }
 
   function completeRecur($input, $ids, $objects) {
     if ($ids['contributionRecur']) {
-      $recur = &$objects['contributionRecur'];
-      $contributionCount = CRM_Core_DAO::singleValueQuery("SELECT count(*) FROM civicrm_contribution WHERE contribution_recur_id = {$ids['contributionRecur']}");
+      $recur               = &$objects['contributionRecur'];
+      $contributionCount   = CRM_Core_DAO::singleValueQuery("SELECT count(*) FROM civicrm_contribution WHERE contribution_recur_id = {$ids['contributionRecur']}");
+      $autoRenewMembership = FALSE;
+      if ($recur->id &&
+        isset($ids['membership']) && $ids['membership']
+      ) {
+        $autoRenewMembership = TRUE;
+      }
       if ($recur->installments && ($contributionCount >= $recur->installments)) {
-        require_once 'CRM/Core/Payment.php';
-        require_once 'CRM/Contribute/PseudoConstant.php';
         $contributionStatus = CRM_Contribute_PseudoConstant::contributionStatus(NULL, 'name');
 
         $recur->create_date = CRM_Utils_Date::isoToMysql($recur->create_date);
@@ -324,15 +335,16 @@ class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
         $recur->trnx_id = $dataRoot['google-order-number']['VALUE'];
         $recur->save();
 
-        $autoRenewMembership = FALSE;
-        if ($recur->id &&
-          isset($ids['membership']) && $ids['membership']
-        ) {
-          $autoRenewMembership = TRUE;
-        }
-
         //send recurring Notification email for user
-        CRM_Contribute_BAO_ContributionPage::recurringNofify(CRM_Core_Payment::RECURRING_PAYMENT_END,
+        CRM_Contribute_BAO_ContributionPage::recurringNotify(CRM_Core_Payment::RECURRING_PAYMENT_END,
+          $ids['contact'],
+          $ids['contributionPage'],
+          $recur,
+          $autoRenewMembership
+        );
+      }
+      elseif ($contributionCount == 1) {
+        CRM_Contribute_BAO_ContributionPage::recurringNotify(CRM_Core_Payment::RECURRING_PAYMENT_START,
           $ids['contact'],
           $ids['contributionPage'],
           $recur,
@@ -367,7 +379,6 @@ class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
    * @access public
    */
   function getAmount($orderNo) {
-    require_once 'CRM/Contribute/DAO/Contribution.php';
     $contribution = new CRM_Contribute_DAO_Contribution();
     $contribution->invoice_id = $orderNo;
     if (!$contribution->find(TRUE)) {
@@ -390,7 +401,6 @@ class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
    * @static
    */
   function getContext($privateData, $orderNo, $root, $response, $serial) {
-    require_once 'CRM/Contribute/DAO/Contribution.php';
 
     $contributionID = $privateData['contributionID'];
     $contribution = new CRM_Contribute_DAO_Contribution();
@@ -436,7 +446,11 @@ class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
       }
     }
 
-    $this->loadObjects($input, $ids, $objects, FALSE);
+    $paymentProcessorID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_PaymentProcessorType',
+      'Google_Checkout', 'id', 'name'
+    );
+
+    $this->loadObjects($input, $ids, $objects, FALSE, $paymentProcessorID);
 
     if (!$ids['paymentProcessor']) {
       CRM_Core_Error::debug_log_message("Payment processor could not be retrieved.");
@@ -467,7 +481,6 @@ class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
       $xml_response = stripslashes($xml_response);
     }
 
-    require_once 'CRM/Utils/System.php';
     $headers = CRM_Utils_System::getAllHeaders();
 
     if (GOOGLE_DEBUG_PP) {
@@ -488,11 +501,10 @@ class CRM_Core_Payment_GoogleIPN extends CRM_Core_Payment_BaseIPN {
     $serial      = $data[$root]['serial-number'];
 
     // a dummy object to call get context and a parent function inside it.
-    $ipn = new CRM_Core_Payment_GoogleIPN($mode, $dummyProcessor);
+    $ipn = new CRM_Core_Payment_GoogleIPN('live', $dummyProcessor);
     list($mode, $module, $paymentProcessorID) = $ipn->getContext($privateData, $orderNo, $root, $response, $serial);
     $mode = $mode ? 'test' : 'live';
 
-    require_once 'CRM/Core/BAO/PaymentProcessor.php';
     $paymentProcessor = CRM_Core_BAO_PaymentProcessor::getPayment($paymentProcessorID,
       $mode
     );

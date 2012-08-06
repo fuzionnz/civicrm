@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 
 /**
  * This class generates form components generic to CiviCRM settings
@@ -59,13 +57,10 @@ class CRM_Admin_Form_Setting extends CRM_Core_Form {
         $formMode = TRUE;
       }
 
-      require_once "CRM/Core/BAO/ConfigSetting.php";
       CRM_Core_BAO_ConfigSetting::retrieve($this->_defaults);
 
-      require_once "CRM/Core/Config/Defaults.php";
       CRM_Core_Config_Defaults::setValues($this->_defaults, $formMode);
 
-      require_once "CRM/Core/OptionGroup.php";
       $list = array_flip(CRM_Core_OptionGroup::values('contact_autocomplete_options',
           FALSE, FALSE, TRUE, NULL, 'name'
         ));
@@ -74,7 +69,6 @@ class CRM_Admin_Form_Setting extends CRM_Core_Form {
           FALSE, FALSE, TRUE, NULL, 'name'
         ));
 
-      require_once "CRM/Core/BAO/Setting.php";
       $listEnabled = CRM_Core_BAO_Setting::valueOptions(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
         'contact_autocomplete_options'
       );
@@ -97,7 +91,19 @@ class CRM_Admin_Form_Setting extends CRM_Core_Form {
         '1' => 1) + $autoSearchFields;
       $this->_defaults['autocompleteContactReference'] = array(
         '1' => 1) + $cRSearchFields;
+      $this->_defaults['enableSSL'] = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'enableSSL', NULL, 0);
+      $this->_defaults['verifySSL'] = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'verifySSL', NULL, 1);
+
+      $sql = "
+SELECT time_format
+FROM   civicrm_preferences_date
+WHERE  time_format IS NOT NULL
+AND    time_format <> ''
+LIMIT  1
+";
+      $this->_defaults['timeInputFormat'] = CRM_Core_DAO::singleValueQuery($sql);
     }
+
     return $this->_defaults;
   }
 
@@ -107,9 +113,11 @@ class CRM_Admin_Form_Setting extends CRM_Core_Form {
    * @return None
    * @access public
    */
-  public function buildQuickForm($check = FALSE) {
+  public function buildQuickForm() {
     $session = CRM_Core_Session::singleton();
     $session->pushUserContext(CRM_Utils_System::url('civicrm/admin', 'reset=1'));
+    $args = func_get_args();
+    $check = reset($args);
     $this->addButtons(array(
         array(
           'type' => 'next',
@@ -146,7 +154,6 @@ class CRM_Admin_Form_Setting extends CRM_Core_Form {
         array_keys($params['autocompleteContactSearch'])
       ) . CRM_Core_DAO::VALUE_SEPARATOR;
 
-      require_once 'CRM/Core/BAO/Setting.php';
       CRM_Core_BAO_Setting::setItem($value,
         CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
         'contact_autocomplete_options'
@@ -161,7 +168,6 @@ class CRM_Admin_Form_Setting extends CRM_Core_Form {
         array_keys($params['autocompleteContactReference'])
       ) . CRM_Core_DAO::VALUE_SEPARATOR;
 
-      require_once 'CRM/Core/BAO/Setting.php';
       CRM_Core_BAO_Setting::setItem($value,
         CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
         'contact_reference_options'
@@ -172,7 +178,6 @@ class CRM_Admin_Form_Setting extends CRM_Core_Form {
 
     // save checksum timeout
     if (CRM_Utils_Array::value('checksumTimeout', $params)) {
-      require_once 'CRM/Core/BAO/Setting.php';
       CRM_Core_BAO_Setting::setItem($params['checksumTimeout'],
         CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
         'checksum_timeout'
@@ -182,9 +187,9 @@ class CRM_Admin_Form_Setting extends CRM_Core_Form {
     // update time for date formats when global time is changed
     if (CRM_Utils_Array::value('timeInputFormat', $params)) {
       $query = "
-UPDATE civicrm_preferences_date 
+UPDATE civicrm_preferences_date
 SET    time_format = %1
-WHERE  time_format IS NOT NULL 
+WHERE  time_format IS NOT NULL
 AND    time_format <> ''
 ";
       $sqlParams = array(1 => array($params['timeInputFormat'], 'String'));
@@ -193,7 +198,24 @@ AND    time_format <> ''
       unset($params['timeInputFormat']);
     }
 
-    require_once "CRM/Core/BAO/ConfigSetting.php";
+    // verify ssl peer option
+    if (isset($params['verifySSL'])) {
+      CRM_Core_BAO_Setting::setItem($params['verifySSL'],
+        CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
+        'verifySSL'
+      );
+      unset($params['verifySSL']);
+    }
+
+    // force secure URLs
+    if (isset($params['enableSSL'])) {
+      CRM_Core_BAO_Setting::setItem($params['enableSSL'],
+        CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
+        'enableSSL'
+      );
+      unset($params['enableSSL']);
+    }
+
     CRM_Core_BAO_ConfigSetting::add($params);
 
     // also delete the CRM_Core_Config key from the database
@@ -208,7 +230,6 @@ AND    time_format <> ''
     $config = CRM_Core_Config::singleton(TRUE, TRUE);
 
     // rebuild menu items
-    require_once 'CRM/Core/Menu.php';
     CRM_Core_Menu::store();
 
     // also delete the IDS file so we can write a new correct one on next load

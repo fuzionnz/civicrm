@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
  *  Class to print labels in Avery or custom formats
  * functionality and smarts to the base PDF_Label.
  *
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  *
  *
  */
@@ -99,7 +99,6 @@ class CRM_Utils_PDF_Label extends TCPDF {
     }
     else {
       // Saved format
-      require_once "CRM/Core/BAO/LabelFormat.php";
       $tFormat = CRM_Core_BAO_LabelFormat::getByName($format);
     }
 
@@ -129,7 +128,6 @@ class CRM_Utils_PDF_Label extends TCPDF {
       $metric = $this->defaults['metric'];
     }
     if ($convert) {
-      require_once "CRM/Utils/PDF/Utils.php";
       $value = CRM_Utils_PDF_Utils::convertMetric($value, $metric, $this->metricDoc);
     }
     return $value;
@@ -139,27 +137,25 @@ class CRM_Utils_PDF_Label extends TCPDF {
      * Function to initialize label format settings
      */
   function LabelSetFormat(&$format, $unit) {
-    require_once "CRM/Core/BAO/LabelFormat.php";
-    $this->defaults    = CRM_Core_BAO_LabelFormat::getDefaultValues();
-    $this->format      = &$format;
-    $this->formatName  = $this->getFormatValue('name');
-    $this->paperSize   = $this->getFormatValue('paper-size');
+    $this->defaults = CRM_Core_BAO_LabelFormat::getDefaultValues();
+    $this->format = &$format;
+    $this->formatName = $this->getFormatValue('name');
+    $this->paperSize = $this->getFormatValue('paper-size');
     $this->orientation = $this->getFormatValue('orientation');
-    $this->fontName    = $this->getFormatValue('font-name');
-    $this->charSize    = $this->getFormatValue('font-size');
-    $this->fontStyle   = $this->getFormatValue('font-style');
-    $this->xNumber     = $this->getFormatValue('NX');
-    $this->yNumber     = $this->getFormatValue('NY');
-    $this->metricDoc   = $unit;
-    $this->marginLeft  = $this->getFormatValue('lMargin', TRUE);
-    $this->marginTop   = $this->getFormatValue('tMargin', TRUE);
-    $this->xSpace      = $this->getFormatValue('SpaceX', TRUE);
-    $this->ySpace      = $this->getFormatValue('SpaceY', TRUE);
-    $this->width       = $this->getFormatValue('width', TRUE);
-    $this->height      = $this->getFormatValue('height', TRUE);
+    $this->fontName = $this->getFormatValue('font-name');
+    $this->charSize = $this->getFormatValue('font-size');
+    $this->fontStyle = $this->getFormatValue('font-style');
+    $this->xNumber = $this->getFormatValue('NX');
+    $this->yNumber = $this->getFormatValue('NY');
+    $this->metricDoc = $unit;
+    $this->marginLeft = $this->getFormatValue('lMargin', TRUE);
+    $this->marginTop = $this->getFormatValue('tMargin', TRUE);
+    $this->xSpace = $this->getFormatValue('SpaceX', TRUE);
+    $this->ySpace = $this->getFormatValue('SpaceY', TRUE);
+    $this->width = $this->getFormatValue('width', TRUE);
+    $this->height = $this->getFormatValue('height', TRUE);
     $this->paddingLeft = $this->getFormatValue('lPadding', TRUE);
-    $this->paddingTop  = $this->getFormatValue('tPadding', TRUE);
-    require_once "CRM/Core/BAO/PaperSize.php";
+    $this->paddingTop = $this->getFormatValue('tPadding', TRUE);
     $paperSize = CRM_Core_BAO_PaperSize::getByName($this->paperSize);
     $w = CRM_Utils_PDF_Utils::convertMetric($paperSize['width'], $paperSize['metric'], $this->metricDoc);
     $h = CRM_Utils_PDF_Utils::convertMetric($paperSize['height'], $paperSize['metric'], $this->metricDoc);
@@ -187,7 +183,6 @@ class CRM_Utils_PDF_Label extends TCPDF {
       'maxh' => $this->height,
     );
 
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::alterMailingLabelParams($args);
 
     if ($args['ishtml'] == TRUE) {

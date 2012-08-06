@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contact/BAO/Contact.php';
 
 /**
  * This class gets the name of the file to upload
@@ -70,7 +68,6 @@ class CRM_Export_Form_Select extends CRM_Core_Form {
     //special case for custom search, directly give option to download csv file
     $customSearchID = $this->get('customSearchID');
     if ($customSearchID) {
-      require_once 'CRM/Export/BAO/Export.php';
       CRM_Export_BAO_Export::exportCustom($this->get('customSearchClass'),
         $this->get('formValues'),
         $this->get(CRM_Utils_Sort::SORT_ORDER)
@@ -101,7 +98,6 @@ class CRM_Export_Form_Select extends CRM_Core_Form {
 
       if (in_array($componentName[1], $components)) {
         eval('$this->_exportMode = self::' . strtoupper($componentName[1]) . '_EXPORT;');
-        require_once "CRM/{$componentName[1]}/Form/Task.php";
         eval('CRM_' . $componentName[1] . '_Form_Task::preProcessCommon( $this, true );');
         $values = $this->controller->exportValues('Search');
       }
@@ -127,34 +123,35 @@ class CRM_Export_Form_Select extends CRM_Core_Form {
     $componentMode = $this->get('component_mode');
     switch ($componentMode) {
       case 2:
-        require_once 'CRM/Contribute/Form/Task.php';
         CRM_Contribute_Form_Task::preProcessCommon($this, TRUE);
         $this->_exportMode = self::CONTRIBUTE_EXPORT;
         $componentName = array('', 'Contribute');
         break;
 
       case 3:
-        require_once 'CRM/Event/Form/Task.php';
         CRM_Event_Form_Task::preProcessCommon($this, TRUE);
         $this->_exportMode = self::EVENT_EXPORT;
         $componentName = array('', 'Event');
         break;
 
       case 4:
-        require_once 'CRM/Activity/Form/Task.php';
         CRM_Activity_Form_Task::preProcessCommon($this, TRUE);
         $this->_exportMode = self::ACTIVITY_EXPORT;
         $componentName = array('', 'Activity');
         break;
+      case 5:
+        require_once 'CRM/Member/Form/Task.php';
+        CRM_Member_Form_Task::preProcessCommon($this, TRUE);
+        $this->_exportMode = self::MEMBER_EXPORT;
+        $componentName = array('', 'Member');
+        break;
     }
 
-    require_once 'CRM/Contact/Task.php';
     $this->_task = $values['task'];
     if ($this->_exportMode == self::CONTACT_EXPORT) {
       $contactTasks = CRM_Contact_Task::taskTitles();
       $taskName     = $contactTasks[$this->_task];
       $component    = FALSE;
-      require_once 'CRM/Contact/Form/Task.php';
       CRM_Contact_Form_Task::preProcessCommon($this, TRUE);
     }
     else {
@@ -204,39 +201,39 @@ FROM   {$this->_componentTable}
   public function buildQuickForm() {
     //export option
     $exportOptions = $mergeOptions = $postalMailing = array();
-    $exportOptions[] = HTML_QuickForm::createElement('radio',
+    $exportOptions[] = $this->createElement('radio',
       NULL, NULL,
       ts('Export PRIMARY fields'),
       self::EXPORT_ALL,
       array('onClick' => 'showMappingOption( );')
     );
-    $exportOptions[] = HTML_QuickForm::createElement('radio',
+    $exportOptions[] = $this->createElement('radio',
       NULL, NULL,
       ts('Select fields for export'),
       self::EXPORT_SELECTED,
       array('onClick' => 'showMappingOption( );')
     );
 
-    $mergeOptions[] = HTML_QuickForm::createElement('radio',
+    $mergeOptions[] = $this->createElement('radio',
       NULL, NULL,
       ts('Do not merge'),
       self::EXPORT_MERGE_DO_NOT_MERGE,
       array('onclick' => 'showGreetingOptions( );')
     );
-    $mergeOptions[] = HTML_QuickForm::createElement('radio',
+    $mergeOptions[] = $this->createElement('radio',
       NULL, NULL,
       ts('Merge All Contacts with the Same Address'),
       self::EXPORT_MERGE_SAME_ADDRESS,
       array('onclick' => 'showGreetingOptions( );')
     );
-    $mergeOptions[] = HTML_QuickForm::createElement('radio',
+    $mergeOptions[] = $this->createElement('radio',
       NULL, NULL,
       ts('Merge Household Members into their Households'),
       self::EXPORT_MERGE_HOUSEHOLD,
       array('onclick' => 'showGreetingOptions( );')
     );
 
-    $postalMailing[] = HTML_QuickForm::createElement('advcheckbox',
+    $postalMailing[] = $this->createElement('advcheckbox',
       'postal_mailing_export',
       NULL,
       NULL
@@ -261,7 +258,7 @@ FROM   {$this->_componentTable}
       $this->addGroup($postalMailing, 'postal_mailing_export', ts('Postal Mailing Export'), '<br/>');
 
       $this->addElement('select', 'additional_group', ts('Additional Group for Export'),
-        array('' => ts('- select group -')) + CRM_Core_PseudoConstant::staticGroup()
+        array('' => ts('- select group -')) + CRM_Core_PseudoConstant::group()
       );
     }
 
@@ -371,7 +368,6 @@ FROM   {$this->_componentTable}
 
 
     if ($exportOption == self::EXPORT_ALL) {
-      require_once 'CRM/Export/BAO/Export.php';
       CRM_Export_BAO_Export::exportComponents($this->_selectAll,
         $this->_componentIds,
         $this->get('queryParams'),
@@ -441,7 +437,6 @@ FROM   {$this->_componentTable}
         break;
     }
 
-    require_once 'CRM/Core/BAO/Mapping.php';
     $mappingTypeId = CRM_Core_OptionGroup::getValue('mapping_type', $exportType, 'name');
     $this->set('mappingTypeId', $mappingTypeId);
 

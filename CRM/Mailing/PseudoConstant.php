@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -96,7 +96,6 @@ class CRM_Mailing_PseudoConstant extends CRM_Core_PseudoConstant {
         // we need to add an additional filter for $type
         self::$component[$name] = array();
 
-        require_once 'CRM/Mailing/DAO/Component.php';
 
         $object = new CRM_Mailing_DAO_Component();
         $object->component_type = $type;
@@ -165,10 +164,11 @@ class CRM_Mailing_PseudoConstant extends CRM_Core_PseudoConstant {
    * @return array - array reference of all mailing templates if any
    * @static
    */
-  public static function &completed() {
+  public static function &completed($mode = NULL) {
     if (!self::$completed) {
-      require_once 'CRM/Mailing/BAO/Mailing.php';
       $mailingACL = CRM_Mailing_BAO_Mailing::mailingACL();
+      $mailingACL .= $mode == 'sms' ? " AND sms_provider_id IS NOT NULL " : "";
+
       CRM_Core_PseudoConstant::populate(self::$completed,
         'CRM_Mailing_DAO_Mailing',
         FALSE,
@@ -193,7 +193,6 @@ class CRM_Mailing_PseudoConstant extends CRM_Core_PseudoConstant {
    */
   public static function &approvalStatus() {
     if (!self::$approvalStatus) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$approvalStatus = CRM_Core_OptionGroup::values('mail_approval_status');
     }
     return self::$approvalStatus;
@@ -212,6 +211,9 @@ class CRM_Mailing_PseudoConstant extends CRM_Core_PseudoConstant {
       $options = array(
         'bounce' => array(
           'N' => ts('Successful '), 'Y' => ts('Bounced '),
+        ),
+        'delivered' => array(
+          'Y' => ts('Successful '), 'N' => ts('Bounced '),
         ),
         'open' => array(
           'Y' => ts('Opened '), 'N' => ts('Unopened/Hidden '),

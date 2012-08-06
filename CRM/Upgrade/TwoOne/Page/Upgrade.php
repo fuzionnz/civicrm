@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
-require_once 'CRM/Upgrade/Form.php';
 class CRM_Upgrade_TwoOne_Page_Upgrade extends CRM_Core_Page {
   function run() {
     $upgrade = new CRM_Upgrade_Form();
@@ -91,7 +88,6 @@ class CRM_Upgrade_TwoOne_Page_Upgrade extends CRM_Core_Page {
   }
 
   function runForm($stepID) {
-    require_once "CRM/Upgrade/TwoOne/Form/Step{$stepID}.php";
     $formName = "CRM_Upgrade_TwoOne_Form_Step{$stepID}";
     eval("\$form = new $formName( );");
 
@@ -118,7 +114,6 @@ class CRM_Upgrade_TwoOne_Page_Upgrade extends CRM_Core_Page {
   }
 
   function runTwoOneTwo() {
-    require_once "CRM/Upgrade/TwoOne/Form/TwoOneTwo.php";
     $formName = "CRM_Upgrade_TwoOne_Form_TwoOneTwo";
     eval("\$form = new $formName( '2.1.4' );");
 

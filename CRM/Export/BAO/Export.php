@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,12 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
 require_once 'api/api.php';
-require_once 'CRM/Utils/Token.php';
 
 /**
  * This class contains the funtions for Component export
@@ -129,7 +128,6 @@ class CRM_Export_BAO_Export {
         $queryMode = CRM_Contact_BAO_Query::MODE_ACTIVITY;
         break;
     }
-    require_once 'CRM/Core/BAO/CustomField.php';
     if ($fields) {
       //construct return properties
       $locationTypes = CRM_Core_PseudoConstant::locationType();
@@ -303,14 +301,12 @@ class CRM_Export_BAO_Export {
           break;
 
         case CRM_Contact_BAO_Query::MODE_PLEDGE:
-          require_once 'CRM/Pledge/BAO/Query.php';
           $extraReturnProperties = CRM_Pledge_BAO_Query::extraReturnProperties($queryMode);
           $paymentFields = TRUE;
           $paymentTableId = 'pledge_payment_id';
           break;
 
         case CRM_Contact_BAO_Query::MODE_CASE:
-          require_once 'CRM/Case/BAO/Query.php';
           $extraReturnProperties = CRM_Case_BAO_Query::extraReturnProperties($queryMode);
           break;
       }
@@ -391,7 +387,7 @@ INSERT INTO {$componentTable} SELECT distinct gc.contact_id FROM civicrm_group_c
     $exportParams['postal_mailing_export']['temp_columns'] = array();
     if ($exportParams['exportOption'] == 2 &&
       isset($exportParams['postal_mailing_export']) &&
-      $exportParams['postal_mailing_export']['postal_mailing_export'] == 1
+      CRM_Utils_Array::value('postal_mailing_export', $exportParams['postal_mailing_export']) == 1
     ) {
       $postalColumns = array('is_deceased', 'do_not_mail', 'street_address', 'supplemental_address_1');
       foreach ($postalColumns as $column) {
@@ -575,11 +571,9 @@ INSERT INTO {$componentTable} SELECT distinct gc.contact_id FROM civicrm_group_c
     }
 
     //hack for student data
-    require_once 'CRM/Core/OptionGroup.php';
     $multipleSelectFields = array('preferred_communication_method' => 1);
 
     if (CRM_Core_Permission::access('Quest')) {
-      require_once 'CRM/Quest/BAO/Student.php';
       $studentFields = array();
       $studentFields = CRM_Quest_BAO_Student::$multipleSelectFields;
       $multipleSelectFields = array_merge($multipleSelectFields, $studentFields);
@@ -598,7 +592,6 @@ INSERT INTO {$componentTable} SELECT distinct gc.contact_id FROM civicrm_group_c
       );
 
       // get payment related in for event and members
-      require_once 'CRM/Contribute/BAO/Contribution.php';
       $paymentDetails = CRM_Contribute_BAO_Contribution::getContributionDetails($exportMode, $ids);
       if (!empty($paymentDetails)) {
         $addPaymentHeader = TRUE;
@@ -608,7 +601,6 @@ INSERT INTO {$componentTable} SELECT distinct gc.contact_id FROM civicrm_group_c
 
     //get all campaigns.
     if ($exportCampaign) {
-      require_once 'CRM/Campaign/BAO/Campaign.php';
       $allCampaigns = CRM_Campaign_BAO_Campaign::getCampaigns(NULL, NULL, FALSE, FALSE, FALSE, TRUE);
     }
 
@@ -629,7 +621,6 @@ INSERT INTO {$componentTable} SELECT distinct gc.contact_id FROM civicrm_group_c
     while (1) {
       $limitQuery = "{$queryString} LIMIT {$offset}, {$rowCount}";
       $dao = CRM_Core_DAO::executeQuery($limitQuery);
-
       if ($dao->N <= 0) {
         break;
       }
@@ -768,7 +759,6 @@ INSERT INTO {$componentTable} SELECT distinct gc.contact_id FROM civicrm_group_c
               $fieldValue = CRM_Utils_Array::value($fieldValue, $imProviders);
             }
             elseif ($field == 'participant_role_id') {
-              require_once 'CRM/Event/PseudoConstant.php';
               $participantRoles = CRM_Event_PseudoConstant::participantRole();
               $sep              = CRM_Core_DAO::VALUE_SEPARATOR;
               $viewRoles        = array();
@@ -1057,7 +1047,6 @@ INSERT INTO {$componentTable} SELECT distinct gc.contact_id FROM civicrm_group_c
       }
 
       // call export hook
-      require_once 'CRM/Utils/Hook.php';
       CRM_Utils_Hook::export($exportTempTable, $headerRows, $sqlColumns, $exportMode);
 
       // now write the CSV file
@@ -1154,7 +1143,6 @@ INSERT INTO {$componentTable} SELECT distinct gc.contact_id FROM civicrm_group_c
   }
 
   function exportCustom($customSearchClass, $formValues, $order) {
-    require_once "CRM/Core/Extensions.php";
     $ext = new CRM_Core_Extensions();
     if (!$ext->isExtensionClass($customSearchClass)) {
       require_once (str_replace('_', DIRECTORY_SEPARATOR, $customSearchClass) . '.php');
@@ -1194,7 +1182,6 @@ INSERT INTO {$componentTable} SELECT distinct gc.contact_id FROM civicrm_group_c
       $rows[] = $row;
     }
 
-    require_once 'CRM/Core/Report/Excel.php';
     CRM_Core_Report_Excel::writeCSVFile(self::getExportFileName(), $header, $rows);
     CRM_Utils_System::civiExit();
   }
@@ -1533,7 +1520,6 @@ WHERE  id IN ( $deleteIDString )
   function _buildMasterCopyArray($sql, $exportParams, $sharedAddress = FALSE) {
     static $contactGreetingTokens = array();
 
-    require_once 'CRM/Core/OptionGroup.php';
     $addresseeOptions = CRM_Core_OptionGroup::values('addressee');
     $postalOptions = CRM_Core_OptionGroup::values('postal_greeting');
 
@@ -1720,7 +1706,6 @@ GROUP BY civicrm_primary_id ";
 SELECT *
 FROM   $exportTempTable
 ";
-    require_once 'CRM/Core/Report/Excel.php';
     while (1) {
       $limitQuery = $query . "
 LIMIT $offset, $limit
@@ -1788,7 +1773,6 @@ LIMIT $offset, $limit
 
       // check for supplemental_address_1
       if (array_key_exists('supplemental_address_1', $sqlColumns)) {
-        require_once 'CRM/Core/BAO/Setting.php';
         $addressOptions = CRM_Core_BAO_Setting::valueOptions(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
           'address_options', TRUE, NULL, TRUE
         );

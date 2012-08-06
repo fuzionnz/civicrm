@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
-require_once 'CRM/Case/BAO/Case.php';
-require_once 'CRM/Case/PseudoConstant.php';
 class CRM_Report_Form_Case_Detail extends CRM_Report_Form {
 
   protected $_relField = FALSE;
@@ -64,7 +62,7 @@ class CRM_Report_Form_Case_Detail extends CRM_Report_Form {
     }
 
     $this->caseActivityTypes = array();
-    foreach (CRM_Case_PseudoConstant::activityType() as $typeDetail) {
+    foreach (CRM_Case_PseudoConstant::caseActivityType() as $typeDetail) {
       $this->caseActivityTypes[$typeDetail['id']] = $typeDetail['label'];
     }
 
@@ -270,7 +268,7 @@ class CRM_Report_Form_Case_Detail extends CRM_Report_Form {
 
   function caseDetailSpecialColumnsAdd() {
     $elements = array();
-    $elements[] = &HTML_QuickForm::createElement('select', 'case_activity_all_dates', NULL,
+    $elements[] = &$this->createElement('select', 'case_activity_all_dates', NULL,
       array(
         '' => ts('-- select --')) + $this->caseActivityTypes
     );

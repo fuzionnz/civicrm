@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,17 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Core/Selector/Base.php';
-require_once 'CRM/Core/Selector/API.php';
-require_once 'CRM/Utils/Pager.php';
-require_once 'CRM/Utils/Sort.php';
-require_once 'CRM/Contact/BAO/Contact.php';
 
 /**
  * This class is used to browse past mailings.
@@ -112,8 +105,6 @@ class CRM_Mailing_Selector_Browse extends CRM_Core_Selector_Base implements CRM_
    * @access public
    */
   function &getColumnHeaders($action = NULL, $output = NULL) {
-    require_once 'CRM/Mailing/BAO/Mailing.php';
-    require_once 'CRM/Mailing/BAO/Job.php';
     $mailing = CRM_Mailing_BAO_Mailing::getTableName();
     $job = CRM_Mailing_BAO_Job::getTableName();
     if (!isset(self::$_columnHeaders)) {
@@ -175,7 +166,6 @@ class CRM_Mailing_Selector_Browse extends CRM_Core_Selector_Base implements CRM_
         ),
       );
 
-      require_once 'CRM/Campaign/BAO/Campaign.php';
       if (CRM_Campaign_BAO_Campaign::isCampaignEnable()) {
         self::$_columnHeaders[] = array('name' => ts('Campaign'),
           'sort' => 'campaign_id',
@@ -199,8 +189,6 @@ class CRM_Mailing_Selector_Browse extends CRM_Core_Selector_Base implements CRM_
    * @access public
    */
   function getTotalCount($action) {
-    require_once 'CRM/Mailing/BAO/Job.php';
-    require_once 'CRM/Mailing/BAO/Mailing.php';
     $job        = CRM_Mailing_BAO_Job::getTableName();
     $mailing    = CRM_Mailing_BAO_Mailing::getTableName();
     $mailingACL = CRM_Mailing_BAO_Mailing::mailingACL();
@@ -212,9 +200,9 @@ class CRM_Mailing_Selector_Browse extends CRM_Core_Selector_Base implements CRM_
     $query = "
    SELECT  COUNT( DISTINCT $mailing.id ) as count
      FROM  $mailing
-LEFT JOIN  $job ON ( $mailing.id = $job.mailing_id)
+LEFT JOIN  $job ON ( $mailing.id = $job.mailing_id) 
 LEFT JOIN  civicrm_contact createdContact   ON ( $mailing.created_id   = createdContact.id )
-LEFT JOIN  civicrm_contact scheduledContact ON ( $mailing.scheduled_id = scheduledContact.id )
+LEFT JOIN  civicrm_contact scheduledContact ON ( $mailing.scheduled_id = scheduledContact.id ) 
     WHERE  $whereClause";
 
     return CRM_Core_DAO::singleValueQuery($query, $params);
@@ -289,7 +277,6 @@ LEFT JOIN  civicrm_contact scheduledContact ON ( $mailing.scheduled_id = schedul
 
     $allAccess = TRUE;
     $workFlow = $showApprovalLinks = $showScheduleLinks = $showCreateLinks = FALSE;
-    require_once 'CRM/Mailing/Info.php';
     if (CRM_Mailing_Info::workflowEnabled()) {
       $allAccess = FALSE;
       $workFlow = TRUE;
@@ -313,6 +300,7 @@ LEFT JOIN  civicrm_contact scheduledContact ON ( $mailing.scheduled_id = schedul
     $mailing = new CRM_Mailing_BAO_Mailing();
 
     $params = array();
+
     $whereClause = ' AND ' . $this->whereClause($params);
 
     if (empty($params)) {
@@ -327,7 +315,6 @@ LEFT JOIN  civicrm_contact scheduledContact ON ( $mailing.scheduled_id = schedul
     $searchMailings = $mailing->searchMailingIDs();
 
     //check for delete CRM-4418
-    require_once 'CRM/Core/Permission.php';
     $allowToDelete = CRM_Core_Permission::check('delete in CiviMail');
 
     if ($output != CRM_Core_Selector_Controller::EXPORT) {
@@ -347,7 +334,11 @@ LEFT JOIN  civicrm_contact scheduledContact ON ( $mailing.scheduled_id = schedul
 
       foreach ($rows as $key => $row) {
         $actionMask = NULL;
-        if (!($row['status'] == 'Not scheduled')) {
+        if ($row['sms_provider_id']) {
+          $actionLinks[CRM_Core_Action::PREVIEW]['url'] = 'civicrm/sms/send';
+        }
+
+        if (!($row['status'] == 'Not scheduled') && !$row['sms_provider_id']) {
           if ($allAccess || $showCreateLinks) {
             $actionMask = CRM_Core_Action::VIEW;
           }
@@ -442,6 +433,7 @@ LEFT JOIN  civicrm_contact scheduledContact ON ( $mailing.scheduled_id = schedul
 
   function whereClause(&$params, $sortBy = TRUE) {
     $values = $clauses = array();
+
     $title = $this->_parent->get('mailing_name');
 
     if ($title) {
@@ -454,7 +446,6 @@ LEFT JOIN  civicrm_contact scheduledContact ON ( $mailing.scheduled_id = schedul
       }
     }
 
-    require_once 'CRM/Utils/Date.php';
 
     $from = $this->_parent->get('mailing_from');
     if (!CRM_Utils_System::isNull($from)) {
@@ -486,6 +477,13 @@ LEFT JOIN  civicrm_contact scheduledContact ON ( $mailing.scheduled_id = schedul
     if ($this->_parent->get('archived')) {
       // CRM-6446: archived view should also show cancelled mailings
       $clauses[] = "(civicrm_mailing.is_archived = 1 OR civicrm_mailing_job.status = 'Canceled')";
+    }
+
+    if ($this->_parent->get('sms')) {
+      $clauses[] = "(civicrm_mailing.sms_provider_id IS NOT NULL)";
+    }
+    else {
+      $clauses[] = "(civicrm_mailing.sms_provider_id IS NULL)";
     }
 
     // CRM-4290, do not show archived or unscheduled mails
@@ -549,7 +547,6 @@ LEFT JOIN  civicrm_contact scheduledContact ON ( $mailing.scheduled_id = schedul
   }
 
   function pagerAtoZ() {
-    require_once 'CRM/Utils/PagerAToZ.php';
 
     $params = array();
     $whereClause = $this->whereClause($params, FALSE);
@@ -559,7 +556,7 @@ SELECT DISTINCT UPPER(LEFT(name, 1)) as sort_name
 FROM civicrm_mailing
 LEFT JOIN civicrm_mailing_job ON (civicrm_mailing_job.mailing_id = civicrm_mailing.id)
 LEFT JOIN civicrm_contact createdContact ON ( civicrm_mailing.created_id = createdContact.id )
-LEFT JOIN civicrm_contact scheduledContact ON ( civicrm_mailing.scheduled_id = scheduledContact.id )
+LEFT JOIN civicrm_contact scheduledContact ON ( civicrm_mailing.scheduled_id = scheduledContact.id ) 
 WHERE $whereClause
 ORDER BY LEFT(name, 1)
 ";

@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,7 +34,7 @@
  * @package CiviCRM_APIv3
  * @subpackage API_Event
  *
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * @version $Id: Event.php 30964 2010-11-29 09:41:54Z shot $
  *
  */
@@ -56,9 +58,7 @@ require_once 'CRM/Event/BAO/Event.php';
  */
 function civicrm_api3_event_create($params) {
 
-  // to be removed - need to check what's being required
-  civicrm_api3_verify_mandatory($params, 'CRM_Event_DAO_Event');
-
+  _civicrm_api3_event_create_legacy_support_42($params);
   //format custom fields so they can be added
   $value = array();
   _civicrm_api3_custom_format_params($params, $values, 'Event');
@@ -66,20 +66,13 @@ function civicrm_api3_event_create($params) {
   require_once 'CRM/Event/BAO/Event.php';
 
   $eventBAO = CRM_Event_BAO_Event::create($params);
-
-  if (is_a($eventBAO, 'CRM_Core_Error')) {
-    return civicrm_api3_create_error("Event is not created");
-  }
-  else {
-    $event = array();
-    _civicrm_api3_object_to_array($eventBAO, $event[$eventBAO->id]);
-  }
-
+  $event = array();
+  _civicrm_api3_object_to_array($eventBAO, $event[$eventBAO->id]);
   return civicrm_api3_create_success($event, $params);
 }
 /*
  * Adjust Metadata for Create action
- * 
+ *
  * The metadata is used for setting defaults, documentation & validation
  * @param array $params array or parameters determined by getfields
  */
@@ -87,6 +80,17 @@ function _civicrm_api3_event_create_spec(&$params) {
   $params['event_type_id']['api.required'] = 1;;
   $params['start_date']['api.required'] = 1;
   $params['title']['api.required'] = 1;
+}
+/*
+ * Support for schema changes made in 4.2
+ * The main purpose of the API is to provide integrators a level of stability not provided by
+ * the core code or schema - this means we have to provide support for api calls (where possible)
+ * across schema changes.
+ */
+function _civicrm_api3_event_create_legacy_support_42(&$params){
+  if(!empty($params['payment_processor_id'])){
+    $params['payment_processor'] = CRM_Core_DAO::VALUE_SEPARATOR . $params['payment_processor_id'] . CRM_Core_DAO::VALUE_SEPARATOR;
+  }
 }
 
 /**
@@ -102,73 +106,72 @@ function _civicrm_api3_event_create_spec(&$params) {
  */
 function civicrm_api3_event_get($params) {
 
-  $inputParams = array();
-  $returnProperties = array();
-  $returnCustomProperties = array();
-  $otherVars = array('sort', 'offset', 'rowCount', 'isCurrent');
-
-  $sort = array_key_exists('return.sort', $params) ? $params['return.sort'] : FALSE;
-  // don't check if empty, more meaningful error for API user instead of silent defaults
-  $offset    = array_key_exists('return.offset', $params) ? $params['return.offset'] : 0;
-  $rowCount  = array_key_exists('return.max_results', $params) ? $params['return.max_results'] : 25;
-  $isCurrent = array_key_exists('isCurrent', $params) ? $params['isCurrent'] : 0;
-  $isFull    = array_key_exists('return.is_full', $params) ? $params['return.is_full'] : 0;
-
-  foreach ($params as $n => $v) {
-    if (substr($n, 0, 6) == 'return') {
-      if (substr($n, 0, 14) == 'return.custom_') {
-        //take custom return properties separate
-        $returnCustomProperties[] = substr($n, 7);
-      }
-      elseif (!in_array(substr($n, 7), array(
-        'sort', 'offset', 'max_results', 'isCurrent', 'is_full'))) {
-        $returnProperties[] = substr($n, 7);
-      }
-    }
-    elseif (in_array($n, $otherVars)) {
-      $$n = $v;
-    }
-    else {
-      $inputParams[$n] = $v;
-    }
+  //legacy support for $params['return.sort']
+  if (CRM_Utils_Array::value('return.sort', $params)) {
+    $params['options']['sort'] = $params['return.sort'];
+    unset($params['return.sort']);
   }
 
-  if (!empty($returnProperties)) {
-    $returnProperties[] = 'id';
-    $returnProperties[] = 'event_type_id';
+  //legacy support for $params['return.sort']
+  if (CRM_Utils_Array::value('return.offset', $params)) {
+    $params['options']['offset'] = $params['return.offset'];
+    unset($params['return.offset']);
+  }
+
+  //legacy support for $params['return.max_results']
+  if (CRM_Utils_Array::value('return.max_results', $params)) {
+    $params['options']['limit'] = $params['return.max_results'];
+    unset($params['return.max_results']);
   }
 
   require_once 'CRM/Core/BAO/CustomGroup.php';
-  require_once 'CRM/Event/BAO/Event.php';
+
   $eventDAO = new CRM_Event_BAO_Event();
-  _civicrm_api3_dao_set_filter($eventDAO, $inputParams);
+  _civicrm_api3_dao_set_filter($eventDAO, $params, TRUE, 'Event');
 
-
-  $event = array();
-  if (!empty($returnProperties)) {
-    $eventDAO->selectAdd();
-    $eventDAO->selectAdd(implode(',', $returnProperties));
+  if (CRM_Utils_Array::value('is_template', $params)) {
+    $eventDAO->whereAdd( '( is_template = 1 )' );
+  }
+  else {
+    $eventDAO->whereAdd('( is_template IS NULL ) OR ( is_template = 0 )');
   }
 
-  $eventDAO->whereAdd('( is_template IS NULL ) OR ( is_template = 0 )');
-
-  if ($isCurrent) {
+  if (CRM_Utils_Array::value('isCurrent', $params)) {
     $eventDAO->whereAdd('(start_date >= CURDATE() || end_date >= CURDATE())');
   }
-  $eventDAO->orderBy($sort);
-  $eventDAO->limit((int)$offset, (int)$rowCount);
+
+  // @todo should replace all this with _civicrm_api3_dao_to_array($bao, $params, FALSE, $entity) - but we still have
+  // the return.is_full to deal with.
+  // NB the std dao_to_array function should only return custom if required.
+  $event = array();
   $eventDAO->find();
   while ($eventDAO->fetch()) {
     $event[$eventDAO->id] = array();
     CRM_Core_DAO::storeValues($eventDAO, $event[$eventDAO->id]);
-    if ($isFull) {
+    if (CRM_Utils_Array::value('return.is_full', $params)) {
       _civicrm_api3_event_getisfull($event, $eventDAO->id);
     }
+    _civicrm_api3_event_get_legacy_support_42($event, $eventDAO->id);
     _civicrm_api3_custom_data_get($event[$eventDAO->id], 'Event', $eventDAO->id, NULL, $eventDAO->event_type_id);
   }
   //end of the loop
 
   return civicrm_api3_create_success($event, $params, 'event', 'get', $eventDAO);
+}
+
+/*
+ * Support for schema changes made in 4.2
+ * The main purpose of the API is to provide integrators a level of stability not provided by
+ * the core code or schema - this means we have to provide support for api calls (where possible)
+ * across schema changes.
+ */
+function _civicrm_api3_event_get_legacy_support_42(&$event, $event_id){
+  if(!empty($event[$event_id]['payment_processor'])){
+    $processors = explode(CRM_Core_DAO::VALUE_SEPARATOR,$event[$event_id]['payment_processor']);
+    if(count($processors) == 3 ){
+      $event[$event_id]['payment_processor_id'] = $processors[1];
+    }
+  }
 }
 
 /**
@@ -192,10 +195,10 @@ function civicrm_api3_event_delete($params) {
 /*
  * Function to add 'is_full' & 'available_seats' to the return array. (this might be better in the BAO)
  * Default BAO function returns a string if full rather than a Bool - which is more appropriate to a form
- * 
+ *
  * @param array $event return array of the event
  * @param int $event_id Id of the event to be updated
- * 
+ *
  */
 function _civicrm_api3_event_getisfull(&$event, $event_id) {
   require_once 'CRM/Event/BAO/Participant.php';

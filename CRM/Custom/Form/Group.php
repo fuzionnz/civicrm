@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 
 /**
  * form to process actions on the set aspect of Custom Data
@@ -81,7 +79,6 @@ class CRM_Custom_Form_Group extends CRM_Core_Form {
    * @access public
    */
   public function preProcess() {
-    require_once 'CRM/Core/BAO/CustomGroup.php';
     // current set id
     $this->_id = $this->get('id');
 
@@ -120,8 +117,7 @@ class CRM_Custom_Form_Group extends CRM_Core_Form {
    * @access public
    * @static
    */
-  static
-  function formRule($fields, $files, $self) {
+  static function formRule($fields, $files, $self) {
     $errors = array();
 
     //validate group title as well as name.
@@ -208,13 +204,6 @@ class CRM_Custom_Form_Group extends CRM_Core_Form {
     $this->add('text', 'title', ts('Set Name'), $attributes['title'], TRUE);
 
     //Fix for code alignment, CRM-3058
-    require_once "CRM/Contribute/PseudoConstant.php";
-    require_once "CRM/Member/BAO/MembershipType.php";
-    require_once 'CRM/Event/PseudoConstant.php';
-    require_once "CRM/Contact/BAO/Relationship.php";
-    require_once 'CRM/Core/OptionGroup.php';
-    require_once 'CRM/Contact/BAO/ContactType.php';
-    require_once 'CRM/Campaign/PseudoConstant.php';
     $contactTypes = array('Contact', 'Individual', 'Household', 'Organization');
     $this->assign('contactTypes', json_encode($contactTypes));
 
@@ -223,6 +212,7 @@ class CRM_Custom_Form_Group extends CRM_Core_Form {
     $activityType = CRM_Core_PseudoConstant::activityType(FALSE, TRUE, FALSE, 'label', TRUE);
 
     $eventType       = CRM_Core_OptionGroup::values('event_type');
+    $grantType       = CRM_Core_OptionGroup::values('grant_type');
     $campaignTypes   = CRM_Campaign_PseudoConstant::campaignType();
     $membershipType  = CRM_Member_BAO_MembershipType::getMembershipTypes(FALSE);
     $participantRole = CRM_Core_OptionGroup::values('participant_role');
@@ -233,6 +223,7 @@ class CRM_Custom_Form_Group extends CRM_Core_Form {
     ksort($sel1);
     asort($activityType);
     asort($eventType);
+    asort($grantType);
     asort($membershipType);
     asort($participantRole);
     $allRelationshipType = array();
@@ -250,6 +241,7 @@ class CRM_Custom_Form_Group extends CRM_Core_Form {
     }
 
     $sel2['Event'] = $eventType;
+    $sel2['Grant'] = $grantType;
     $sel2['Activity'] = $activityType;
     $sel2['Campaign'] = $campaignTypes;
     $sel2['Membership'] = $membershipType;
@@ -279,7 +271,6 @@ class CRM_Custom_Form_Group extends CRM_Core_Form {
       }
     }
 
-    require_once "CRM/Core/Component.php";
     $cSubTypes = CRM_Core_Component::contactSubTypes();
 
     if (!empty($cSubTypes)) {
@@ -502,7 +493,6 @@ class CRM_Custom_Form_Group extends CRM_Core_Form {
     $group = CRM_Core_BAO_CustomGroup::create($params);
 
     // reset the cache
-    require_once 'CRM/Core/BAO/Cache.php';
     CRM_Core_BAO_Cache::deleteGroup('contact fields');
 
     if ($this->_action & CRM_Core_Action::UPDATE) {
@@ -541,14 +531,12 @@ class CRM_Custom_Form_Group extends CRM_Core_Form {
   }
 
   /*
-     * Function to return a formatted list of relationship name.
-     * @param $list array array of relationship name.
-     * @static 
-     * return array array of relationship name.
-     */
-
-  static
-  function getFormattedList(&$list) {
+   * Function to return a formatted list of relationship name.
+   * @param $list array array of relationship name.
+   * @static 
+   * return array array of relationship name.
+   */
+  static function getFormattedList(&$list) {
     $relName = array();
 
     foreach ($list as $k => $v) {

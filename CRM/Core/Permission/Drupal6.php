@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -95,7 +95,6 @@ class CRM_Core_Permission_Drupal6 {
         self::$_viewPermissionedGroups = $groups;
       }
 
-      require_once 'CRM/ACL/API.php';
 
       $ids = CRM_ACL_API::group(CRM_Core_Permission::VIEW, NULL, 'civicrm_saved_search', $groups);
       foreach (array_values($ids) as $id) {
@@ -151,7 +150,6 @@ class CRM_Core_Permission_Drupal6 {
           $group = new CRM_Contact_DAO_Group();
           $group->id = $id;
           if ($group->find(TRUE) && $group->saved_search_id) {
-            require_once 'CRM/Contact/BAO/SavedSearch.php';
             $clause = CRM_Contact_BAO_SavedSearch::whereClause($group->saved_search_id,
               $tables,
               $whereTables
@@ -184,7 +182,6 @@ class CRM_Core_Permission_Drupal6 {
           $group = new CRM_Contact_DAO_Group();
           $group->id = $id;
           if ($group->find(TRUE) && $group->saved_search_id) {
-            require_once 'CRM/Contact/BAO/SavedSearch.php';
             $clause = CRM_Contact_BAO_SavedSearch::whereClause($group->saved_search_id,
               $tables,
               $whereTables
@@ -258,7 +255,6 @@ class CRM_Core_Permission_Drupal6 {
      $session = CRM_Core_Session::singleton( );
      $isAdmin = $session->get( 'ufID' ) == 1 ? true : false;
      }
-     require_once 'CRM/ACL/API.php';
      return ( $isAdmin) ? true : CRM_ACL_API::check( $str, $contactID );
      */
   }

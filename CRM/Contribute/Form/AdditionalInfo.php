@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -44,7 +44,6 @@ class CRM_Contribute_Form_AdditionalInfo {
   function buildPremium(&$form) {
     //premium section
     $form->add('hidden', 'hidden_Premium', 1);
-    require_once 'CRM/Contribute/DAO/Product.php';
     $sel1 = $sel2 = array();
 
     $dao = new CRM_Contribute_DAO_Product();
@@ -160,7 +159,7 @@ class CRM_Contribute_Form_AdditionalInfo {
     $honor = CRM_Core_PseudoConstant::honor();
     $extraOption = array('onclick' => "return enableHonorType();");
     foreach ($honor as $key => $var) {
-      $honorTypes[$key] = HTML_QuickForm::createElement('radio', NULL, NULL, $var, $key, $extraOption);
+      $honorTypes[$key] = $form->createElement('radio', NULL, NULL, $var, $key, $extraOption);
     }
     $form->addGroup($honorTypes, 'honor_type_id', NULL);
     $form->add('select', 'honor_prefix_id', ts('Prefix'), array('' => ts('- prefix -')) + CRM_Core_PseudoConstant::individualPrefix());
@@ -196,7 +195,6 @@ class CRM_Contribute_Form_AdditionalInfo {
    * @return None
    */
   function processPremium(&$params, $contributionID, $premiumID = NULL, &$options = NULL) {
-    require_once 'CRM/Contribute/DAO/ContributionProduct.php';
     $dao = new CRM_Contribute_DAO_ContributionProduct();
     $dao->contribution_id = $contributionID;
     $dao->product_id = $params['product_name'][0];
@@ -231,7 +229,6 @@ class CRM_Contribute_Form_AdditionalInfo {
    */
   function processNote(&$params, $contactID, $contributionID, $contributionNoteID = NULL) {
     //process note
-    require_once 'CRM/Core/BAO/Note.php';
     $noteParams = array(
       'entity_table' => 'civicrm_contribution',
       'note' => $params['note'],
@@ -281,7 +278,6 @@ class CRM_Contribute_Form_AdditionalInfo {
     }
 
     if (CRM_Utils_Array::value('honor_type_id', $params)) {
-      require_once 'CRM/Contribute/BAO/Contribution.php';
       if ($this->_honorID) {
         $honorId = CRM_Contribute_BAO_Contribution::createHonorContact($params, $this->_honorID);
       }
@@ -327,7 +323,6 @@ class CRM_Contribute_Form_AdditionalInfo {
       $params['contribution_type_id']
     );
     if (CRM_Utils_Array::value('payment_instrument_id', $params)) {
-      require_once 'CRM/Contribute/PseudoConstant.php';
       $paymentInstrument = CRM_Contribute_PseudoConstant::paymentInstrument();
       $params['paidBy'] = $paymentInstrument[$params['payment_instrument_id']];
     }
@@ -355,16 +350,17 @@ class CRM_Contribute_Form_AdditionalInfo {
         is_array($params['product_name']) &&
         !empty($params['product_name'])
       ) {
-        require_once 'CRM/Contribute/DAO/Product.php';
         $productDAO = new CRM_Contribute_DAO_Product();
         $productDAO->id = $params['product_name'][0];
         $productDAO->find(TRUE);
         $params['product_name'] = $productDAO->name;
         $params['product_sku'] = $productDAO->sku;
 
-        if (CRM_Utils_Array::value($params['product_name'][0],
+        if (!CRM_Utils_Array::value('product_option', $params) &&
+          CRM_Utils_Array::value($params['product_name'][0],
             $form->_options
-          )) {
+          )
+        ) {
           $params['product_option'] = $form->_options[$params['product_name'][0]][$params['product_name'][1]];
         }
       }
@@ -398,7 +394,6 @@ class CRM_Contribute_Form_AdditionalInfo {
       foreach ($addressParts as $name => $field) {
         $addressFields[$name] = CRM_Utils_Array::value($field, $params);
       }
-      require_once 'CRM/Utils/Address.php';
       $this->assign('address', CRM_Utils_Address::format($addressFields));
 
       $date = CRM_Utils_Date::format($params['credit_card_exp_date']);
@@ -413,7 +408,10 @@ class CRM_Contribute_Form_AdditionalInfo {
       //offline contribution
       // assigned various dates to the templates
       $form->assign('receipt_date', CRM_Utils_Date::processDate($params['receipt_date']));
-      $form->assign('cancel_date', CRM_Utils_Date::processDate($params['cancel_date']));
+
+      if (CRM_Utils_Array::value('cancel_date', $params)) {
+        $form->assign('cancel_date', CRM_Utils_Date::processDate($params['cancel_date']));
+      }
       if (CRM_Utils_Array::value('thankyou_date', $params)) {
         $form->assign('thankyou_date', CRM_Utils_Date::processDate($params['thankyou_date']));
       }
@@ -430,7 +428,6 @@ class CRM_Contribute_Form_AdditionalInfo {
       }
 
       //retrieve custom data
-      require_once "CRM/Core/BAO/UFGroup.php";
       $customGroup = array();
 
       foreach ($form->_groupTree as $groupID => $group) {
@@ -452,17 +449,20 @@ class CRM_Contribute_Form_AdditionalInfo {
     }
 
     $form->assign_by_ref('formValues', $params);
-    require_once 'CRM/Contact/BAO/Contact/Location.php';
-    require_once 'CRM/Utils/Mail.php';
     list($contributorDisplayName,
       $contributorEmail
     ) = CRM_Contact_BAO_Contact_Location::getEmailDetails($params['contact_id']);
     $this->assign('contactID', $params['contact_id']);
     $this->assign('contributionID', $params['contribution_id']);
-    $this->assign('currency', $params['currency']);
-    $this->assign('receive_date', CRM_Utils_Date::processDate($params['receive_date']));
 
-    require_once 'CRM/Core/BAO/MessageTemplates.php';
+    if (CRM_Utils_Array::value('currency', $params)) {
+      $this->assign('currency', $params['currency']);
+    }
+
+    if (CRM_Utils_Array::value('receive_date', $params)) {
+      $this->assign('receive_date', CRM_Utils_Date::processDate($params['receive_date']));
+    }
+
     list($sendReceipt, $subject, $message, $html) = CRM_Core_BAO_MessageTemplates::sendTemplate(
       array(
         'groupName' => 'msg_tpl_workflow_contribution',
@@ -486,25 +486,22 @@ class CRM_Contribute_Form_AdditionalInfo {
    *
    * @return None
    */
-  function processPriceSet($contributionId, $lineItem) {
+  function processPriceSet($contributionId, $lineItem, $entityTable = 'civicrm_contribution') {
     if (!$contributionId || !is_array($lineItem)
       || CRM_Utils_system::isNull($lineItem)
     ) {
       return;
     }
 
-    require_once 'CRM/Price/BAO/Set.php';
-    require_once 'CRM/Price/BAO/LineItem.php';
     foreach ($lineItem as $priceSetId => $values) {
       if (!$priceSetId) {
         continue;
       }
       foreach ($values as $line) {
-        $line['entity_table'] = 'civicrm_contribution';
+        $line['entity_table'] = $entityTable;
         $line['entity_id'] = $contributionId;
         CRM_Price_BAO_LineItem::create($line);
       }
-      CRM_Price_BAO_Set::addTo('civicrm_contribution', $contributionId, $priceSetId);
     }
   }
 }

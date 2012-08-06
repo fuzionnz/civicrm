@@ -27,9 +27,9 @@ function group_organization_create_expectedresult(){
   'is_error' => 0,
   'version' => 3,
   'count' => 3,
-  'id' => 3,
+  'id' => 1,
   'values' => array( 
-      'id' => 3,
+      'id' => 1,
       'group_id' => 1,
       'organization_id' => 1,
     ),

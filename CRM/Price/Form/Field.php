@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Core/ShowHideBlocks.php';
 
 /**
  * form to process actions on the field aspect of Price
@@ -85,7 +82,6 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
    * @access public
    */
   public function preProcess() {
-    require_once 'CRM/Price/BAO/Field.php';
 
     $this->_sid = CRM_Utils_Request::retrieve('sid', 'Positive', $this, FALSE, NULL, 'REQUEST');
     $this->_fid = CRM_Utils_Request::retrieve('fid', 'Positive', $this, FALSE, NULL, 'REQUEST');
@@ -126,11 +122,9 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
       if ($defaults['html_type'] == 'Text') {
         $valueParams = array('price_field_id' => $this->_fid);
 
-        require_once 'CRM/Price/BAO/FieldValue.php';
         CRM_Price_BAO_FieldValue::retrieve($valueParams, $defaults);
 
         // fix the display of the monetary value, CRM-4038
-        require_once 'CRM/Utils/Money.php';
         $defaults['price'] = CRM_Utils_Money::format($defaults['amount'], NULL, '%a');
       }
 
@@ -155,7 +149,6 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
     }
 
     if ($this->_action & CRM_Core_Action::ADD) {
-      require_once 'CRM/Utils/Weight.php';
       $fieldValues = array('price_set_id' => $this->_sid);
       $defaults['weight'] = CRM_Utils_Weight::getDefaultWeight('CRM_Price_DAO_Field', $fieldValues);
       $defaults['options_per_line'] = 1;
@@ -188,11 +181,9 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
     // html_type
     $javascript = 'onchange="option_html_type(this.form)";';
 
-    require_once 'CRM/Price/BAO/Field.php';
     $htmlTypes = CRM_Price_BAO_Field::htmlTypes();
 
     // Text box for Participant Count for a field
-    require_once 'CRM/Core/Component.php';
 
     $eventComponentId  = CRM_Core_Component::getComponentID('CiviEvent');
     $memberComponentId = CRM_Core_Component::getComponentID('CiviMember');
@@ -268,7 +259,6 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
         //$this->add('textArea', 'option_description['.$i.']', ts('Description'), array('rows' => 1, 'cols' => 40 ));
       }
       elseif (in_array($memberComponentId, $this->_extendComponentId)) {
-        require_once 'CRM/Member/PseudoConstant.php';
         $membershipTypes = CRM_Member_PseudoConstant::membershipType();
         $js = array('onchange' => "calculateRowValues( $i );");
 
@@ -346,7 +336,6 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
       )
     );
     // is public?
-    require_once 'CRM/Core/PseudoConstant.php';
     $this->add('select', 'visibility_id', ts('Visibility'), CRM_Core_PseudoConstant::visibility());
 
     // add a form rule to check default value
@@ -413,7 +402,6 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
     }
 
     if ($form->_action & CRM_Core_Action::ADD) {
-
       if ($fields['html_type'] != 'Text') {
         $countemptyrows = 0;
         $_flagOption = $_rowError = 0;
@@ -436,7 +424,7 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
               $_flagOption = 1;
             }
           }
-          if ($form->_useForMember && $fields['html_type'] == 'CheckBox') {
+          if ($form->_useForMember) {
             if (!empty($fields['membership_type_id'][$index])) {
               $memTypesIDS[] = $fields['membership_type_id'][$index];
             }
@@ -506,19 +494,41 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
         }
 
         if (!empty($memTypesIDS)) {
-          require_once 'CRM/Member/BAO/MembershipType.php';
-          $foundDuplicate = FALSE;
-          $orgIds = array();
+          // check for checkboxes allowing user to select multiple memberships from same membership organization
+          if ($fields['html_type'] == 'CheckBox') {
+            $foundDuplicate = FALSE;
+            $orgIds = array();
+            foreach ($memTypesIDS as $key => $val) {
+              $org = CRM_Member_BAO_MembershipType::getMembershipTypeOrganization($val);
+              if (in_array($org[$val], $orgIds)) {
+                $foundDuplicate = TRUE;
+                break;
+              }
+              $orgIds[$val] = $org[$val];
+
+            }
+            if ($foundDuplicate) {
+              $errors['_qf_default'] = ts('You have selected multiple memberships for the same organization or entity. Please review your selections and choose only one membership per entity.');
+            }
+          }
+          
+          // CRM-10390 - Only one price field in a set can include auto-renew membership options
+          $foundAutorenew = FALSE;
           foreach ($memTypesIDS as $key => $val) {
-            $org = CRM_Member_BAO_MembershipType::getMembershipTypeOrganization($val);
-            if (in_array($org[$val], $orgIds)) {
-              $foundDuplicate = TRUE;
+            // see if any price field option values in this price field are for memberships with autorenew
+            $memTypeDetails = CRM_Member_BAO_MembershipType::getMembershipTypeDetails($val);
+            if (CRM_Utils_Array::value('auto_renew', $memTypeDetails)) {
+              $foundAutorenew = TRUE;
               break;
             }
-            $orgIds[$val] = $org[$val];
           }
-          if ($foundDuplicate) {
-            $errors['_qf_default'] = ts('You have selected multiple memberships for the same organization or entity. Please review your selections and choose only one membership per entity.');
+
+          if ($foundAutorenew) {
+            // if so, check for other fields in this price set which also have auto-renew membership options
+            $otherFieldAutorenew = CRM_Price_BAO_Set::checkAutoRenewForPriceSet($form->_sid);
+            if ($otherFieldAutorenew) {
+              $errors['_qf_default'] = ts('You can include auto-renew membership choices for only one price field in a price set. Another field in this set already contains one or more auto-renew membership options.');
+            }
           }
         }
         $_showHide->addToTemplate();
@@ -586,7 +596,6 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
     // need the FKEY - price set id
     $params['price_set_id'] = $this->_sid;
 
-    require_once 'CRM/Utils/Weight.php';
     if ($this->_action & (CRM_Core_Action::UPDATE | CRM_Core_Action::ADD)) {
       $fieldValues = array('price_set_id' => $this->_sid);
       $oldWeight = NULL;
@@ -616,13 +625,11 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
       $params['is_active'] = array(1 => 1);
     }
 
-    $ids = array();
-
     if ($this->_fid) {
-      $ids['id'] = $this->_fid;
+      $params['id'] = $this->_fid;
     }
 
-    $priceField = CRM_Price_BAO_Field::create($params, $ids);
+    $priceField = CRM_Price_BAO_Field::create($params);
 
     if (!is_a($priceField, 'CRM_Core_Error')) {
       CRM_Core_Session::setStatus(ts('Price Field \'%1\' has been saved.', array(1 => $priceField->label)));

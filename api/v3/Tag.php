@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +33,7 @@
  * @package CiviCRM_APIv3
  * @subpackage API_Tag
  *
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * @version $Id: Tag.php 30486 2010-11-02 16:12:09Z shot $
  */
 
@@ -62,17 +64,12 @@ function civicrm_api3_tag_create($params) {
   }
   $tagBAO = CRM_Core_BAO_Tag::add($params, $ids);
 
-  if (is_a($tagBAO, 'CRM_Core_Error')) {
-    return civicrm_api3_create_error("Tag is not created");
-  }
-  else {
-    $values = array();
-    _civicrm_api3_object_to_array($tagBAO, $values[$tagBAO->id]);
-    return civicrm_api3_create_success($values, $params, 'tag', 'create', $tagBAO);
-  }
+  $values = array();
+  _civicrm_api3_object_to_array($tagBAO, $values[$tagBAO->id]);
+  return civicrm_api3_create_success($values, $params, 'tag', 'create', $tagBAO);
 }
 /*
- * Specify Meta data for create. Note that this data is retrievable via the getfields function 
+ * Specify Meta data for create. Note that this data is retrievable via the getfields function
  * and is used for pre-filling defaults and ensuring mandatory requirements are met.
  */
 function _civicrm_api3_tag_create_spec(&$params) {

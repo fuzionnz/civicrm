@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -24,14 +24,19 @@
  +--------------------------------------------------------------------+
 *}
 {* This template is used for adding/configuring Scheduled Jobs.  *}
-<h3>{if $action eq 1}{ts}New Scheduled Job{/ts}{elseif $action eq 2}{ts}Edit Scheduled Job{/ts}{else}{ts}Delete Scheduled Job{/ts}{/if}</h3>
+<h3>{if $action eq 1}{ts}New Scheduled Job{/ts}{elseif $action eq 2}{ts}Edit Scheduled Job{/ts}{elseif $action eq 128}{ts}Execute Scheduled Job{/ts}{else}{ts}Delete Scheduled Job{/ts}{/if}</h3>
 <div class="crm-block crm-form-block crm-job-form-block">
  <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="top"}</div>
 
 {if $action eq 8}
-  <div class="messages status">  
-      <div class="icon inform-icon"></div> 
+  <div class="messages status">
+      <div class="icon inform-icon"></div>
         {ts}WARNING: Deleting this Scheduled Job will cause some important site functionality to stop working.{/ts} {ts}Do you want to continue?{/ts}
+  </div>
+{elseif $action eq 128}
+  <div class="messages status">
+      <div class="icon inform-icon"></div>
+        {ts}Are you sure you would like to execute this job?{/ts}
   </div>
 {else}
   <table class="form-layout-compressed">
@@ -54,7 +59,7 @@
         <select name="api_entity" type="text" id="api_entity" class="form-select required">
           {crmAPI entity="Entity" action="get" var="entities" version=3}
           {foreach from=$entities.values item=entity}
-            <option value="{$entity}"{if $entity eq 'Job'} selected="selected"{/if}>{$entity}</option>
+            <option value="{$entity}"{if $entity eq $form.api_entity.value} selected="selected"{/if}>{$entity}</option>
           {/foreach}
         </select>
         {$form.api_action.html}
@@ -75,14 +80,14 @@
       return;
     }
 
-    if( apiPrefixRaw == 'civicrm_api3' ) { 
+    if( apiPrefixRaw == 'civicrm_api3' ) {
       apiPrefix = 'api'
     } else {
       apiPrefix = apiPrefixRaw;
     }
 
     // building entity
-    var apiEntity = cj('#api_entity').val().replace( /([A-Z])/g, function($1) { 
+    var apiEntity = cj('#api_entity').val().replace( /([A-Z])/g, function($1) {
                                                    return $1.toLowerCase();
                                                    });
     // building action
@@ -109,7 +114,7 @@
         <td></td><td>{$form.is_active.html}&nbsp;{$form.is_active.label}</td>
     </tr>
   </table>
-{/if} 
+{/if}
 </table>
        <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>
   </fieldset>

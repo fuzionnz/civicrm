@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -40,7 +40,7 @@
  * will be reworked to use caching.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -327,6 +327,13 @@ class CRM_Core_PseudoConstant {
   private static $extensions = array();
 
   /**
+   * Extensions of type module
+   * @var array
+   * @static
+   */
+  private static $moduleExtensions;
+
+  /**
    * activity contacts
    * @var array
    * @static
@@ -348,6 +355,27 @@ class CRM_Core_PseudoConstant {
   private static $autoRenew;
 
   /**
+   * batch type options
+   * @var array
+   * @static
+   */
+  private static $batchTypes;
+
+  /**
+   * batch status options
+   * @var array
+   * @static
+   */
+  private static $batchStatues;
+
+  /**
+   * contact Type
+   * @var array
+   * @static
+   */
+  private static $contactType = array();
+
+  /**
    * populate the object from the database. generic populate
    * method
    *
@@ -367,13 +395,11 @@ class CRM_Core_PseudoConstant {
    * @access public
    * @static
    */
-  public static function populate(&$var, $name, $all = FALSE, $retrieve = 'name',
-    $filter = 'is_active', $condition = NULL, $orderby = NULL, $key = 'id'
-  ) {
+  public static function populate(&$var, $name, $all = FALSE, $retrieve = 'name', $filter = 'is_active', $condition = NULL, $orderby = NULL, $key = 'id', $force = NULL) {
     $cacheKey = "CRM_PC_{$name}_{$all}_{$key}_{$retrieve}_{$filter}_{$condition}_{$orderby}";
     $cache    = CRM_Utils_Cache::singleton();
     $var      = $cache->get($cacheKey);
-    if ($var) {
+    if ($var && empty($force)) {
       return $var;
     }
 
@@ -490,21 +516,21 @@ class CRM_Core_PseudoConstant {
    * @access public
    * @static
    *
-   * @return array - array reference of all activty types.
+   * @return array - array reference of all activity types.
    */
-  public static function &activityType($all = TRUE,
-    $includeCaseActivities = FALSE,
-    $reset = FALSE,
-    $returnColumn = 'label',
-    $includeCampaignActivities = FALSE,
-    $onlyComponentActivities = FALSE
-  ) {
+  public static function &activityType() {
+    $args = func_get_args();
+    $all = CRM_Utils_Array::value(0, $args, TRUE);
+    $includeCaseActivities = CRM_Utils_Array::value(1, $args, FALSE);
+    $reset = CRM_Utils_Array::value(2, $args, FALSE);
+    $returnColumn = CRM_Utils_Array::value(3, $args, 'label');
+    $includeCampaignActivities = CRM_Utils_Array::value(4, $args, FALSE);
+    $onlyComponentActivities = CRM_Utils_Array::value(5, $args, FALSE);
     $index = (int) $all . '_' . $returnColumn . '_' . (int) $includeCaseActivities;
-    $index .= '_' . (int)$includeCampaignActivities;
-    $index .= '_' . (int)$onlyComponentActivities;
+    $index .= '_' . (int) $includeCampaignActivities;
+    $index .= '_' . (int) $onlyComponentActivities;
 
     if (!array_key_exists($index, self::$activityType) || $reset) {
-      require_once 'CRM/Core/OptionGroup.php';
       $condition = NULL;
       if (!$all) {
         $condition = 'AND filter = 0';
@@ -515,7 +541,6 @@ class CRM_Core_PseudoConstant {
       }
 
       $componentIds = array();
-      require_once 'CRM/Core/Component.php';
       $compInfo = CRM_Core_Component::getEnabledComponents();
 
       // build filter for listing activity types only if their
@@ -545,9 +570,7 @@ class CRM_Core_PseudoConstant {
       }
       $condition = $condition . ' AND ' . $componentClause;
 
-      self::$activityType[$index] = CRM_Core_OptionGroup::values('activity_type', FALSE, FALSE,
-        FALSE, $condition, $returnColumn
-      );
+      self::$activityType[$index] = CRM_Core_OptionGroup::values('activity_type', FALSE, FALSE, FALSE, $condition, $returnColumn);
     }
     return self::$activityType[$index];
   }
@@ -567,7 +590,6 @@ class CRM_Core_PseudoConstant {
    */
   public static function &individualPrefix() {
     if (!self::$individualPrefix) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$individualPrefix = CRM_Core_OptionGroup::values('individual_prefix');
     }
     return self::$individualPrefix;
@@ -588,7 +610,6 @@ class CRM_Core_PseudoConstant {
    */
   public static function &phoneType() {
     if (!self::$phoneType) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$phoneType = CRM_Core_OptionGroup::values('phone_type');
     }
     return self::$phoneType;
@@ -609,7 +630,6 @@ class CRM_Core_PseudoConstant {
    */
   public static function &individualSuffix() {
     if (!self::$individualSuffix) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$individualSuffix = CRM_Core_OptionGroup::values('individual_suffix');
     }
     return self::$individualSuffix;
@@ -628,10 +648,9 @@ class CRM_Core_PseudoConstant {
    * @return array - array reference of all gender.
    *
    */
-  public static function &gender() {
+  public static function &gender($localize = FALSE) {
     if (!self::$gender) {
-      require_once 'CRM/Core/OptionGroup.php';
-      self::$gender = CRM_Core_OptionGroup::values('gender');
+      self::$gender = CRM_Core_OptionGroup::values('gender', FALSE, FALSE, $localize);
     }
     return self::$gender;
   }
@@ -651,10 +670,9 @@ class CRM_Core_PseudoConstant {
    * @return array - array reference of all IM providers.
    *
    */
-  public static function &IMProvider() {
+  public static function &IMProvider($localize = FALSE) {
     if (!self::$imProvider) {
-      require_once 'CRM/Core/OptionGroup.php';
-      self::$imProvider = CRM_Core_OptionGroup::values('instant_messenger_service');
+      self::$imProvider = CRM_Core_OptionGroup::values('instant_messenger_service', FALSE, FALSE, $localize);
     }
     return self::$imProvider;
   }
@@ -676,7 +694,6 @@ class CRM_Core_PseudoConstant {
    */
   public static function &websiteType() {
     if (!self::$websiteType) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$websiteType = CRM_Core_OptionGroup::values('website_type');
     }
     return self::$websiteType;
@@ -698,7 +715,6 @@ class CRM_Core_PseudoConstant {
    */
   public static function &fromEmailAddress() {
     if (!self::$fromEmailAddress) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$fromEmailAddress = CRM_Core_OptionGroup::values('from_email_address');
     }
     return self::$fromEmailAddress;
@@ -720,7 +736,6 @@ class CRM_Core_PseudoConstant {
    */
   public static function &mailProtocol() {
     if (!self::$mailProtocol) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$mailProtocol = CRM_Core_OptionGroup::values('mail_protocol');
     }
     return self::$mailProtocol;
@@ -744,10 +759,7 @@ class CRM_Core_PseudoConstant {
    *
    */
   public static function &stateProvince($id = FALSE, $limit = TRUE) {
-    if (($id && !CRM_Utils_Array::value($id, self::$stateProvince)) ||
-      !self::$stateProvince ||
-      !$id
-    ) {
+    if (($id && !CRM_Utils_Array::value($id, self::$stateProvince)) || !self::$stateProvince || !$id) {
       $whereClause = FALSE;
       $config = CRM_Core_Config::singleton();
       if ($limit) {
@@ -771,8 +783,10 @@ class CRM_Core_PseudoConstant {
       global $tsLocale;
       if ($tsLocale != '' and $tsLocale != 'en_US') {
         $i18n = CRM_Core_I18n::singleton();
-        $i18n->localizeArray(self::$stateProvince, array('context' => 'province'));
-        asort(self::$stateProvince);
+        $i18n->localizeArray(self::$stateProvince, array(
+            'context' => 'province',
+          ));
+        CRM_Utils_Array::asort(self::$stateProvince);
       }
     }
     if ($id) {
@@ -805,7 +819,12 @@ class CRM_Core_PseudoConstant {
 SELECT abbreviation
 FROM   civicrm_state_province
 WHERE  id = %1";
-      $params = array(1 => array($id, 'Integer'));
+      $params = array(
+        1 => array(
+          $id,
+          'Integer',
+        ),
+      );
       return CRM_Core_DAO::singleValueQuery($query, $params);
     }
 
@@ -863,10 +882,7 @@ WHERE  id = %1";
    *
    */
   public static function country($id = FALSE, $applyLimit = TRUE) {
-    if (($id && !CRM_Utils_Array::value($id, self::$country)) ||
-      !self::$country ||
-      !$id
-    ) {
+    if (($id && !CRM_Utils_Array::value($id, self::$country)) || !self::$country || !$id) {
 
       $config = CRM_Core_Config::singleton();
       $limitCodes = array();
@@ -877,7 +893,9 @@ WHERE  id = %1";
         // K/P: We need to fix this, i dont think it works with new setting files
         $limitCodes = $config->countryLimit();
         if (!is_array($limitCodes)) {
-          $limitCodes = array($config->countryLimit => 1);
+          $limitCodes = array(
+            $config->countryLimit => 1,
+          );
         }
 
         $limitCodes = array_intersect(self::countryIsoCode(), $limitCodes);
@@ -906,8 +924,10 @@ WHERE  id = %1";
       global $tsLocale;
       if ($tsLocale != '' and $tsLocale != 'en_US') {
         $i18n = CRM_Core_I18n::singleton();
-        $i18n->localizeArray(self::$country, array('context' => 'country'));
-        asort(self::$country);
+        $i18n->localizeArray(self::$country, array(
+            'context' => 'country',
+          ));
+        CRM_Utils_Array::asort(self::$country);
       }
     }
     if ($id) {
@@ -938,9 +958,7 @@ WHERE  id = %1";
    */
   public static function &countryIsoCode($id = FALSE) {
     if (!self::$countryIsoCode) {
-      self::populate(self::$countryIsoCode, 'CRM_Core_DAO_Country',
-        TRUE, 'iso_code'
-      );
+      self::populate(self::$countryIsoCode, 'CRM_Core_DAO_Country', TRUE, 'iso_code');
     }
     if ($id) {
       if (array_key_exists($id, self::$countryIsoCode)) {
@@ -994,7 +1012,6 @@ WHERE  id = %1";
    *
    */
   public static function &allGroup($groupType = NULL, $excludeHidden = TRUE) {
-    require_once 'CRM/Contact/BAO/Group.php';
     $condition = CRM_Contact_BAO_Group::groupTypeCondition($groupType, $excludeHidden);
 
     if (!self::$group) {
@@ -1005,19 +1022,17 @@ WHERE  id = %1";
 
     if (!isset(self::$group[$groupKey])) {
       self::$group[$groupKey] = NULL;
-      self::populate(self::$group[$groupKey], 'CRM_Contact_DAO_Group', FALSE, 'title',
-        'is_active', $condition
-      );
+      self::populate(self::$group[$groupKey], 'CRM_Contact_DAO_Group', FALSE, 'title', 'is_active', $condition);
     }
     return self::$group[$groupKey];
   }
 
   /**
    * Create or get groups iterator (iterates over nested groups in a
-   *  logical fashion)
+   * logical fashion)
    *
    * The GroupNesting instance is returned; it's created if this is being
-   *  called for the first time
+   * called for the first time
    *
    *
    * @access public
@@ -1033,7 +1048,6 @@ WHERE  id = %1";
              and iterates nested groups in a logical manner for us
             */
 
-      require_once 'CRM/Contact/BAO/GroupNesting.php';
       self::$groupIterator = new CRM_Contact_BAO_GroupNesting($styledLabels);
     }
     return self::$groupIterator;
@@ -1058,7 +1072,6 @@ WHERE  id = %1";
    *
    */
   public static function group($groupType = NULL, $excludeHidden = TRUE) {
-    require_once 'CRM/Core/Permission.php';
     return CRM_Core_Permission::group($groupType, $excludeHidden);
   }
 
@@ -1077,10 +1090,7 @@ WHERE  id = %1";
    * @return array - array reference of all groups.
    *
    */
-  public static function &staticGroup($onlyPublic = FALSE,
-    $groupType = NULL,
-    $excludeHidden = TRUE
-  ) {
+  public static function &staticGroup($onlyPublic = FALSE, $groupType = NULL, $excludeHidden = TRUE) {
     if (!self::$staticGroup) {
       $condition = 'saved_search_id = 0 OR saved_search_id IS NULL';
       if ($onlyPublic) {
@@ -1088,7 +1098,6 @@ WHERE  id = %1";
       }
 
       if ($groupType) {
-        require_once 'CRM/Contact/BAO/Group.php';
         $condition .= ' AND ' . CRM_Contact_BAO_Group::groupTypeCondition($groupType);
       }
 
@@ -1172,7 +1181,6 @@ WHERE  id = %1";
       $column_a_b = "{$valueColumnName}_a_b";
       $column_b_a = "{$valueColumnName}_b_a";
 
-      require_once 'CRM/Contact/DAO/RelationshipType.php';
       $relationshipTypeDAO = new CRM_Contact_DAO_RelationshipType();
       $relationshipTypeDAO->selectAdd();
       $relationshipTypeDAO->selectAdd("id, {$column_a_b}, {$column_b_a}, contact_type_a, contact_type_b, contact_sub_type_a, contact_sub_type_b");
@@ -1205,9 +1213,7 @@ WHERE  id = %1";
   public static function &currencySymbols($name = 'symbol', $key = 'id') {
     $cacheKey = "{$name}_{$key}";
     if (!isset(self::$currencySymbols[$cacheKey])) {
-      self::populate(self::$currencySymbols[$cacheKey],
-        'CRM_Core_DAO_Currency', TRUE, $name, NULL, NULL, 'name', $key
-      );
+      self::populate(self::$currencySymbols[$cacheKey], 'CRM_Core_DAO_Currency', TRUE, $name, NULL, NULL, 'name', $key);
     }
 
     return self::$currencySymbols[$cacheKey];
@@ -1226,26 +1232,273 @@ WHERE  id = %1";
   public static function &currencyCode() {
     if (!self::$currencyCode) {
       self::$currencyCode = array(
-        'AFN', 'ALL', 'DZD', 'USD', 'EUR', 'AOA', 'XCD', 'XCD', 'ARS', 'AMD',
-        'AWG', 'AUD', 'EUR', 'AZM', 'BSD', 'BHD', 'BDT', 'BBD', 'BYR', 'EUR', 'BZD', 'XOF', 'BMD', 'INR',
-        'BTN', 'BOB', 'BOV', 'BAM', 'BWP', 'NOK', 'BRL', 'USD', 'BND', 'BGN', 'XOF', 'BIF', 'KHR', 'XAF',
-        'CAD', 'CVE', 'KYD', 'XAF', 'XAF', 'CLP', 'CLF', 'CNY', 'AUD', 'AUD', 'COP', 'COU', 'KMF', 'XAF',
-        'CDF', 'NZD', 'CRC', 'XOF', 'HRK', 'CUP', 'CYP', 'CZK', 'DKK', 'DJF', 'XCD', 'DOP', 'USD', 'EGP',
-        'SVC', 'USD', 'XAF', 'ERN', 'EEK', 'ETB', 'FKP', 'DKK', 'FJD', 'EUR', 'EUR', 'EUR', 'XPF', 'EUR',
-        'XAF', 'GMD', 'GEL', 'EUR', 'GHC', 'GIP', 'EUR', 'DKK', 'XCD', 'EUR', 'USD', 'GTQ', 'GNF', 'GWP',
-        'XOF', 'GYD', 'HTG', 'USD', 'AUD', 'EUR', 'HNL', 'HKD', 'HUF', 'ISK', 'INR', 'IDR', 'XDR', 'IRR',
-        'IQD', 'EUR', 'ILS', 'EUR', 'JMD', 'JPY', 'JOD', 'KZT', 'KES', 'AUD', 'KPW', 'KRW', 'KWD', 'KGS',
-        'LAK', 'LVL', 'LBP', 'ZAR', 'LSL', 'LRD', 'LYD', 'CHF', 'LTL', 'EUR', 'MOP', 'MKD', 'MGA', 'MWK',
-        'MYR', 'MVR', 'XOF', 'MTL', 'USD', 'EUR', 'MRO', 'MUR', 'EUR', 'MXN', 'MXV', 'USD', 'MDL', 'EUR',
-        'MNT', 'XCD', 'MAD', 'MZM', 'MMK', 'ZAR', 'NAD', 'AUD', 'NPR', 'EUR', 'ANG', 'XPF', 'NZD', 'NIO',
-        'XOF', 'NGN', 'NZD', 'AUD', 'USD', 'NOK', 'OMR', 'PKR', 'USD', 'PAB', 'USD', 'PGK', 'PYG', 'PEN',
-        'PHP', 'NZD', 'PLN', 'EUR', 'USD', 'QAR', 'EUR', 'ROL', 'RON', 'RUB', 'RWF', 'SHP', 'XCD', 'XCD',
-        'EUR', 'XCD', 'WST', 'EUR', 'STD', 'SAR', 'XOF', 'CSD', 'EUR', 'SCR', 'SLL', 'SGD', 'SKK', 'SIT',
-        'SBD', 'SOS', 'ZAR', 'EUR', 'LKR', 'SDD', 'SRD', 'NOK', 'SZL', 'SEK', 'CHF', 'CHW', 'CHE', 'SYP',
-        'TWD', 'TJS', 'TZS', 'THB', 'USD', 'XOF', 'NZD', 'TOP', 'TTD', 'TND', 'TRY', 'TRL', 'TMM', 'USD',
-        'AUD', 'UGX', 'UAH', 'AED', 'GBP', 'USD', 'USS', 'USN', 'USD', 'UYU', 'UZS', 'VUV', 'VEB', 'VND',
-        'USD', 'USD', 'XPF', 'MAD', 'YER', 'ZMK', 'ZWD', 'XAU', 'XBA', 'XBB', 'XBC', 'XBD', 'XPD', 'XPT',
-        'XAG', 'XFU', 'XFO', 'XTS', 'XXX',
+        'AFN',
+        'ALL',
+        'DZD',
+        'USD',
+        'EUR',
+        'AOA',
+        'XCD',
+        'XCD',
+        'ARS',
+        'AMD',
+        'AWG',
+        'AUD',
+        'EUR',
+        'AZM',
+        'BSD',
+        'BHD',
+        'BDT',
+        'BBD',
+        'BYR',
+        'EUR',
+        'BZD',
+        'XOF',
+        'BMD',
+        'INR',
+        'BTN',
+        'BOB',
+        'BOV',
+        'BAM',
+        'BWP',
+        'NOK',
+        'BRL',
+        'USD',
+        'BND',
+        'BGN',
+        'XOF',
+        'BIF',
+        'KHR',
+        'XAF',
+        'CAD',
+        'CVE',
+        'KYD',
+        'XAF',
+        'XAF',
+        'CLP',
+        'CLF',
+        'CNY',
+        'AUD',
+        'AUD',
+        'COP',
+        'COU',
+        'KMF',
+        'XAF',
+        'CDF',
+        'NZD',
+        'CRC',
+        'XOF',
+        'HRK',
+        'CUP',
+        'CYP',
+        'CZK',
+        'DKK',
+        'DJF',
+        'XCD',
+        'DOP',
+        'USD',
+        'EGP',
+        'SVC',
+        'USD',
+        'XAF',
+        'ERN',
+        'EEK',
+        'ETB',
+        'FKP',
+        'DKK',
+        'FJD',
+        'EUR',
+        'EUR',
+        'EUR',
+        'XPF',
+        'EUR',
+        'XAF',
+        'GMD',
+        'GEL',
+        'EUR',
+        'GHC',
+        'GIP',
+        'EUR',
+        'DKK',
+        'XCD',
+        'EUR',
+        'USD',
+        'GTQ',
+        'GNF',
+        'GWP',
+        'XOF',
+        'GYD',
+        'HTG',
+        'USD',
+        'AUD',
+        'EUR',
+        'HNL',
+        'HKD',
+        'HUF',
+        'ISK',
+        'INR',
+        'IDR',
+        'XDR',
+        'IRR',
+        'IQD',
+        'EUR',
+        'ILS',
+        'EUR',
+        'JMD',
+        'JPY',
+        'JOD',
+        'KZT',
+        'KES',
+        'AUD',
+        'KPW',
+        'KRW',
+        'KWD',
+        'KGS',
+        'LAK',
+        'LVL',
+        'LBP',
+        'ZAR',
+        'LSL',
+        'LRD',
+        'LYD',
+        'CHF',
+        'LTL',
+        'EUR',
+        'MOP',
+        'MKD',
+        'MGA',
+        'MWK',
+        'MYR',
+        'MVR',
+        'XOF',
+        'MTL',
+        'USD',
+        'EUR',
+        'MRO',
+        'MUR',
+        'EUR',
+        'MXN',
+        'MXV',
+        'USD',
+        'MDL',
+        'EUR',
+        'MNT',
+        'XCD',
+        'MAD',
+        'MZM',
+        'MMK',
+        'ZAR',
+        'NAD',
+        'AUD',
+        'NPR',
+        'EUR',
+        'ANG',
+        'XPF',
+        'NZD',
+        'NIO',
+        'XOF',
+        'NGN',
+        'NZD',
+        'AUD',
+        'USD',
+        'NOK',
+        'OMR',
+        'PKR',
+        'USD',
+        'PAB',
+        'USD',
+        'PGK',
+        'PYG',
+        'PEN',
+        'PHP',
+        'NZD',
+        'PLN',
+        'EUR',
+        'USD',
+        'QAR',
+        'EUR',
+        'ROL',
+        'RON',
+        'RUB',
+        'RWF',
+        'SHP',
+        'XCD',
+        'XCD',
+        'EUR',
+        'XCD',
+        'WST',
+        'EUR',
+        'STD',
+        'SAR',
+        'XOF',
+        'CSD',
+        'EUR',
+        'SCR',
+        'SLL',
+        'SGD',
+        'SKK',
+        'SIT',
+        'SBD',
+        'SOS',
+        'ZAR',
+        'EUR',
+        'LKR',
+        'SDD',
+        'SRD',
+        'NOK',
+        'SZL',
+        'SEK',
+        'CHF',
+        'CHW',
+        'CHE',
+        'SYP',
+        'TWD',
+        'TJS',
+        'TZS',
+        'THB',
+        'USD',
+        'XOF',
+        'NZD',
+        'TOP',
+        'TTD',
+        'TND',
+        'TRY',
+        'TRL',
+        'TMM',
+        'USD',
+        'AUD',
+        'UGX',
+        'UAH',
+        'AED',
+        'GBP',
+        'USD',
+        'USS',
+        'USN',
+        'USD',
+        'UYU',
+        'UZS',
+        'VUV',
+        'VEB',
+        'VND',
+        'USD',
+        'USD',
+        'XPF',
+        'MAD',
+        'YER',
+        'ZMK',
+        'ZWD',
+        'XAU',
+        'XBA',
+        'XBB',
+        'XBC',
+        'XBD',
+        'XPD',
+        'XPT',
+        'XAG',
+        'XFU',
+        'XFO',
+        'XTS',
+        'XXX',
       );
     }
     return self::$currencyCode;
@@ -1295,10 +1548,9 @@ WHERE  id = %1";
    * @return array self::pcm - array reference of all preferred communication methods.
    *
    */
-  public static function &pcm() {
+  public static function &pcm($localize = FALSE) {
     if (!self::$pcm) {
-      require_once 'CRM/Core/OptionGroup.php';
-      self::$pcm = CRM_Core_OptionGroup::values('preferred_communication_method');
+      self::$pcm = CRM_Core_OptionGroup::values('preferred_communication_method', FALSE, FALSE, $localize);
     }
     return self::$pcm;
   }
@@ -1327,15 +1579,11 @@ WHERE  id = %1";
 
     // CRM-7178. Make sure we only include payment processors valid in ths
     // domain
-    require_once 'CRM/Core/Config.php';
     $condition .= " AND domain_id = " . CRM_Core_Config::domainID();
 
-    $cacheKey = $condition . '_' . (int)$all;
+    $cacheKey = $condition . '_' . (int) $all;
     if (!isset(self::$paymentProcessor[$cacheKey])) {
-      self::populate(self::$paymentProcessor[$cacheKey],
-        'CRM_Core_DAO_PaymentProcessor', $all,
-        'name', 'is_active', $condition, 'is_default desc, name'
-      );
+      self::populate(self::$paymentProcessor[$cacheKey], 'CRM_Core_DAO_PaymentProcessor', $all, 'name', 'is_active', $condition, 'is_default desc, name');
     }
 
     return self::$paymentProcessor[$cacheKey];
@@ -1356,9 +1604,7 @@ WHERE  id = %1";
    */
   public static function &paymentProcessorType($all = FALSE) {
     if (!self::$paymentProcessorType) {
-      self::populate(self::$paymentProcessorType, 'CRM_Core_DAO_PaymentProcessorType', $all,
-        'title', 'is_active', NULL, 'is_default, title', 'name'
-      );
+      self::populate(self::$paymentProcessorType, 'CRM_Core_DAO_PaymentProcessorType', $all, 'title', 'is_active', NULL, 'is_default, title', 'name');
     }
     return self::$paymentProcessorType;
   }
@@ -1403,7 +1649,6 @@ WHERE  id = %1";
    */
   public static function &honor() {
     if (!self::$honorType) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$honorType = CRM_Core_OptionGroup::values('honor_type');
     }
     return self::$honorType;
@@ -1423,10 +1668,7 @@ WHERE  id = %1";
     if (!array_key_exists($column, self::$activityStatus)) {
       self::$activityStatus[$column] = array();
 
-      require_once 'CRM/Core/OptionGroup.php';
-      self::$activityStatus[$column] = CRM_Core_OptionGroup::values('activity_status', FALSE,
-        FALSE, FALSE, NULL, $column
-      );
+      self::$activityStatus[$column] = CRM_Core_OptionGroup::values('activity_status', FALSE, FALSE, FALSE, NULL, $column);
     }
 
     return self::$activityStatus[$column];
@@ -1444,7 +1686,6 @@ WHERE  id = %1";
    */
   public static function &priority() {
     if (!self::$priority) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$priority = CRM_Core_OptionGroup::values('priority');
     }
 
@@ -1463,7 +1704,6 @@ WHERE  id = %1";
    */
   public static function &wysiwygEditor() {
     if (!self::$wysiwygEditor) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$wysiwygEditor = CRM_Core_OptionGroup::values('wysiwyg_editor');
     }
     return self::$wysiwygEditor;
@@ -1481,11 +1721,15 @@ WHERE  id = %1";
    *
    */
   public static function &visibility($column = 'label') {
-    if (!self::$visibility) {
-      require_once 'CRM/Core/OptionGroup.php';
-      self::$visibility = CRM_Core_OptionGroup::values('visibility', FALSE, FALSE, FALSE, NULL, $column);
+    if (!isset(self::$visibility)) {
+      self::$visibility = array( );
     }
-    return self::$visibility;
+
+    if (!isset(self::$visibility[$column])) {
+      self::$visibility[$column] = CRM_Core_OptionGroup::values('visibility', FALSE, FALSE, FALSE, NULL, $column);
+    }
+
+    return self::$visibility[$column];
   }
 
   /**
@@ -1497,7 +1741,6 @@ WHERE  id = %1";
    */
   public static function &mappingTypes() {
     if (!self::$mappingType) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$mappingType = CRM_Core_OptionGroup::values('mapping_type');
     }
     return self::$mappingType;
@@ -1520,7 +1763,12 @@ SELECT civicrm_state_province.{$field} name, civicrm_state_province.id id
   FROM civicrm_state_province
 WHERE country_id = %1
 ORDER BY name";
-    $params = array(1 => array($countryID, 'Integer'));
+    $params = array(
+      1 => array(
+        $countryID,
+        'Integer',
+      ),
+    );
 
     $dao = CRM_Core_DAO::executeQuery($query, $params);
 
@@ -1535,12 +1783,11 @@ ORDER BY name";
     if ($tsLocale != '' and $tsLocale != 'en_US') {
       $i18n = CRM_Core_I18n::singleton();
       $i18n->localizeArray($result);
-      asort($result);
+      CRM_Utils_Array::asort($result);
     }
 
     $_cache[$cacheKey] = $result;
 
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::buildStateProvinceForCountry($countryID, $result);
 
     return $result;
@@ -1581,7 +1828,12 @@ ORDER BY name";
       FROM civicrm_county
     WHERE state_province_id = %1
     ORDER BY name";
-      $params = array(1 => array($stateID, 'Integer'));
+      $params = array(
+        1 => array(
+          $stateID,
+          'Integer',
+        ),
+      );
 
       $dao = CRM_Core_DAO::executeQuery($query, $params);
 
@@ -1636,11 +1888,7 @@ ORDER BY name";
         $filterCondition .= "AND (v.filter = 0 OR {$filterVal}) ";
       }
 
-      require_once 'CRM/Core/OptionGroup.php';
-      self::$greeting[$index] = CRM_Core_OptionGroup::values($filter['greeting_type'],
-        NULL, NULL, NULL,
-        $filterCondition, $columnName
-      );
+      self::$greeting[$index] = CRM_Core_OptionGroup::values($filter['greeting_type'], NULL, NULL, NULL, $filterCondition, $columnName);
     }
 
     return self::$greeting[$index];
@@ -1658,17 +1906,17 @@ ORDER BY name";
   public static function &greetingDefaults() {
     if (!self::$greetingDefaults) {
       $defaultGreetings = array();
-      $contactTypes = array('Individual' => 1, 'Household' => 2, 'Organization' => 3);
+      $contactTypes = array(
+        'Individual' => 1,
+        'Household' => 2,
+        'Organization' => 3,
+      );
 
-      require_once 'CRM/Core/OptionGroup.php';
-      require_once 'CRM/Contact/BAO/Contact.php';
       foreach ($contactTypes as $contactType => $filter) {
         $filterCondition = " AND (v.filter = 0 OR v.filter = $filter) AND v.is_default = 1 ";
 
         foreach (CRM_Contact_BAO_Contact::$_greetingTypes as $greeting) {
-          $tokenVal = CRM_Core_OptionGroup::values($greeting, NULL, NULL, NULL,
-            $filterCondition, 'label'
-          );
+          $tokenVal = CRM_Core_OptionGroup::values($greeting, NULL, NULL, NULL, $filterCondition, 'label');
           $defaultGreetings[$contactType][$greeting] = $tokenVal;
         }
       }
@@ -1689,7 +1937,6 @@ ORDER BY name";
    *
    */
   public static function &languages() {
-    require_once 'CRM/Core/I18n/PseudoConstant.php';
     return CRM_Core_I18n_PseudoConstant::languages();
   }
 
@@ -1701,15 +1948,82 @@ ORDER BY name";
    * @access public
    * @static
    *
-   * @return array - array reference of all system extensions
+   * @return array - array($fullyQualifiedName => $label) list of extensions
    */
   public static function &getExtensions() {
     if (!self::$extensions) {
-      require_once 'CRM/Core/OptionGroup.php';
-      self::$extensions = CRM_Core_OptionGroup::values('system_extensions');
+      self::$extensions = array();
+      $sql = '
+        SELECT full_name, label
+        FROM civicrm_extension
+        WHERE is_active = 1
+      ';
+      $dao = CRM_Core_DAO::executeQuery($sql);
+      while ($dao->fetch()) {
+        self::$extensions[$dao->full_name] = $dao->label;
+      }
     }
 
     return self::$extensions;
+  }
+
+  /**
+   * Fetch the list of active extensions of type 'module'
+   *
+   * @param $fresh bool whether to forcibly reload extensions list from canonical store
+   * @access public
+   * @static
+   *
+   * @return array - array(array('prefix' => $, 'file' => $))
+   */
+  public static function getModuleExtensions($fresh = FALSE) {
+    $config = CRM_Core_Config::singleton();
+    if (!isset($config->extensionsDir)) {
+      return array(); // hmm, ok
+    }
+
+    /*
+    if (!is_array(self::$moduleExtensions)) {
+      // Check prefetched module list
+
+      // ISSUE: 'Directory Preferences' can only store strings
+      self::$moduleExtensions = CRM_Core_BAO_Setting::getItem(
+        CRM_Core_BAO_Setting::DIRECTORY_PREFERENCES_NAME,
+        'modulePaths');
+    }
+    */
+
+    if ($fresh || !is_array(self::$moduleExtensions)) {
+      // Check canonical module list
+
+      self::$moduleExtensions = array();
+      $sql = '
+        SELECT full_name, file
+        FROM civicrm_extension
+        WHERE is_active = 1
+        AND type = "module"
+      ';
+      $dao = CRM_Core_DAO::executeQuery($sql);
+      while ($dao->fetch()) {
+        self::$moduleExtensions[] = array(
+          'prefix' => $dao->file,
+          'filePath' => $config->extensionsDir
+            . DIRECTORY_SEPARATOR . $dao->full_name
+            . DIRECTORY_SEPARATOR . $dao->file . '.php',
+        );
+      }
+
+      /*
+      // Store for future pre-fetching
+      // ISSUE: 'Directory Preferences' can only store strings
+      CRM_Core_BAO_Setting::setItem(
+        self::$moduleExtensions,
+        CRM_Core_BAO_Setting::DIRECTORY_PREFERENCES_NAME,
+        'modulePaths'
+        );
+      */
+    }
+    return self::$moduleExtensions;
   }
 
   /**
@@ -1720,14 +2034,13 @@ ORDER BY name";
    * @access public
    * @static
    *
-   * @param boolean $all - get All activity Contacts - default is to get only active ones.
+   * @param string $column db column name/label.
    *
    * @return array - array reference of all  activity Contacts
    *
    */
   public static function &activityContacts($column = 'label') {
     if (!self::$activityContacts) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$activityContacts = CRM_Core_OptionGroup::values('activity_contacts', FALSE, FALSE, FALSE, NULL, $column);
     }
     return self::$activityContacts;
@@ -1741,17 +2054,109 @@ ORDER BY name";
    * @access public
    * @static
    *
-   * @param boolean $all - get All event Contacts - default is to get only active ones.
+   * @param string $column db column name/label.
    *
    * @return array - array reference of all  event Contacts
    *
    */
   public static function &eventContacts($column = 'label') {
     if (!self::$eventContacts) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$eventContacts = CRM_Core_OptionGroup::values('event_contacts', FALSE, FALSE, FALSE, NULL, $column);
     }
     return self::$eventContacts;
+  }
+
+  /**
+   * Get all batch types
+   *
+   * The static array batchTypes
+   *
+   * @access public
+   * @static
+   *
+   * @return array - array reference of all batch types
+   */
+  public static function &getBatchType() {
+    if (!self::$batchTypes) {
+      self::$batchTypes = CRM_Core_OptionGroup::values('batch_type');
+    }
+
+    return self::$batchTypes;
+  }
+
+  /**
+   * Get all batch statuses
+   *
+   * The static array batchStatues
+   *
+   * @access public
+   * @static
+   *
+   * @return array - array reference of all batch statuses
+   */
+  public static function &getBatchStatus() {
+    if (!self::$batchStatues) {
+      self::$batchStatues = CRM_Core_OptionGroup::values('batch_status');
+    }
+
+    return self::$batchStatues;
+  }
+
+  /*
+  * The static array contactType is returned
+  *
+  * @access public
+  * @static
+  * @param string $column db column name/label.
+  *
+  * @return array - array reference of all Types
+  *
+     */
+
+  public static function &contactType($column = 'label') {
+    if (!self::$contactType) {
+      self::$contactType = CRM_Contact_BAO_ContactType::basicTypePairs(TRUE);
+    }
+    return self::$contactType;
+  }
+
+  /**
+   * Get constant
+   *
+   * Wrapper for Pseudoconstant methods. We use this so the calling function
+   * doesn't need to know which class the Pseudoconstant is on
+   * (some are on the Contribute_Pseudoconsant Class etc
+   *
+   * @access public
+   * @static
+   *
+   * @return array - array reference of all relevant constant
+   */
+  public static function getConstant($constant) {
+    if (!self::$$constant) {
+      if (method_exists(get_class(), $constant)) {
+        self::$$constant = self::$constant();
+      }
+    }
+
+    return self::$$constant;
+  }
+
+
+  /**
+   * Get all the auto renew options
+   *
+   * @access public
+   * @static
+   *
+   * @return array self::autoRenew - array reference of all autoRenew
+   *
+   */
+  public static function &autoRenew() {
+      if (!self::$autoRenew) {
+          self::$autoRenew = CRM_Core_OptionGroup::values('auto_renew_options', FALSE, FALSE);
+      }
+      return self::$autoRenew;
   }
 }
 

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Contribute/PseudoConstant.php';
 class CRM_Contribute_Form_SearchContribution extends CRM_Core_Form {
 
   /**
@@ -55,7 +52,6 @@ class CRM_Contribute_Form_SearchContribution extends CRM_Core_Form {
       $this->addElement('checkbox', "contribution_type_id[$contributionId]", 'Contribution Type', $contributionName);
     }
 
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     CRM_Campaign_BAO_Campaign::addCampaignInComponentSearch($this);
 
     $this->addButtons(array(

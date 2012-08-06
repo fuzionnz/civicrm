@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,20 +28,21 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'PHPgettext/streams.php';
-require_once 'PHPgettext/gettext.php';
-require_once 'CRM/Core/Config.php';
 class CRM_Core_I18n {
 
   /**
    * A PHP-gettext instance for string translation; should stay null if the strings are not to be translated (en_US).
    */
   private $_phpgettext = NULL;
+
+  /**
+   * Whether we are using native gettext or not.
+   */
+  private $_nativegettext = FALSE;
 
   /**
    * A locale-based constructor that shouldn't be called from outside of this class (use singleton() instead).
@@ -51,10 +52,41 @@ class CRM_Core_I18n {
    * @return         void
    */ function __construct($locale) {
     if ($locale != '' and $locale != 'en_US') {
-      $config            = CRM_Core_Config::singleton();
-      $streamer          = new FileReader($config->gettextResourceDir . $locale . DIRECTORY_SEPARATOR . 'civicrm.mo');
+      $config = CRM_Core_Config::singleton();
+
+      if (defined('CIVICRM_GETTEXT_NATIVE') && CIVICRM_GETTEXT_NATIVE && function_exists('gettext')) {
+        // Note: the file hierarchy for .po must be, for example: l10n/fr_FR/LC_MESSAGES/civicrm.mo
+
+        $this->_nativegettext = TRUE;
+
+        $locale .= '.utf8';
+        putenv("LANG=$locale");
+        setlocale(LC_ALL, $locale);
+
+        bindtextdomain('civicrm', $config->gettextResourceDir);
+        bind_textdomain_codeset('civicrm', 'UTF-8');
+        textdomain('civicrm');
+
+        $this->_phpgettext = new CRM_Core_I18n_NativeGettext();
+        return;
+      }
+
+      // Otherwise, use PHP-gettext
+      require_once 'PHPgettext/streams.php';
+      require_once 'PHPgettext/gettext.php';
+
+      $streamer = new FileReader($config->gettextResourceDir . $locale . DIRECTORY_SEPARATOR . 'civicrm.mo');
       $this->_phpgettext = new gettext_reader($streamer);
     }
+  }
+
+  /**
+   * Returns whether gettext is running natively or using PHP-Gettext.
+   *
+   * @return bool True if gettext is native
+   */
+  function isNative() {
+    return $this->_nativegettext;
   }
 
   /**
@@ -70,7 +102,6 @@ class CRM_Core_I18n {
     static $enabled = NULL;
 
     if (!$all) {
-      require_once 'CRM/Core/I18n/PseudoConstant.php';
       $all = CRM_Core_I18n_PseudoConstant::languages();
 
       // check which ones are available; add them to $all if not there already
@@ -196,7 +227,6 @@ class CRM_Core_I18n {
     }
 
     // do all wildcard translations first
-    require_once 'CRM/Utils/Array.php';
     $config = CRM_Core_Config::singleton();
     $stringTable = CRM_Utils_Array::value($config->lcMessages,
       $config->localeCustomStrings
@@ -292,8 +322,16 @@ class CRM_Core_I18n {
    *
    * @return        void
    */
-  function localizeArray(&$array, $params = array(
-    )) {
+  function localizeArray(
+    &$array,
+    $params = array()
+  ) {
+    global $tsLocale;
+
+    if ($tsLocale == 'en_US') {
+      return;
+    }
+
     foreach ($array as & $value) {
       if ($value) {
         $value = ts($value, $params);

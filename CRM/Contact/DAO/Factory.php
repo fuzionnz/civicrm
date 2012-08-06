@@ -1,5 +1,6 @@
 <?php
-require_once 'CRM/Core/DAO/Factory.php';
+// $Id$
+
 class CRM_Contact_DAO_Factory {
 
   static $_classes = array(

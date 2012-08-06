@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
-require_once 'CRM/PCP/BAO/PCP.php';
 
 /**
  * PCP Info Page - Summary about the PCP
@@ -80,8 +77,6 @@ class CRM_PCP_Page_PCPInfo extends CRM_Core_Page {
     CRM_Utils_System::setTitle($pcpInfo['title']);
     $this->assign('pcp', $pcpInfo);
 
-    require_once 'CRM/PCP/PseudoConstant.php';
-    require_once 'CRM/Core/OptionGroup.php';
     $pcpStatus = CRM_PCP_PseudoConstant::pcpStatus();
     $approvedId = CRM_Core_OptionGroup::getValue('pcp_status', 'Approved', 'name');
 
@@ -151,7 +146,6 @@ class CRM_PCP_Page_PCPInfo extends CRM_Core_Page {
 
     if ($pcpBlock->entity_table == 'civicrm_event') {
       $page_class = 'CRM_Event_DAO_Event';
-      require_once "CRM/Event/PseudoConstant.php";
       $this->assign('pageName', CRM_Event_PseudoConstant::event($pcpInfo['page_id']));
       CRM_Core_DAO::commonRetrieveAll($page_class, 'id',
         $pcpInfo['page_id'], $default, array('start_date', 'end_date', 'registration_start_date', 'registration_end_date')
@@ -159,20 +153,20 @@ class CRM_PCP_Page_PCPInfo extends CRM_Core_Page {
     }
     elseif ($pcpBlock->entity_table == 'civicrm_contribution_page') {
       $page_class = 'CRM_Contribute_DAO_ContributionPage';
-      require_once "CRM/Contribute/PseudoConstant.php";
       $this->assign('pageName', CRM_Contribute_PseudoConstant::contributionPage($pcpInfo['page_id'], TRUE));
       CRM_Core_DAO::commonRetrieveAll($page_class, 'id',
         $pcpInfo['page_id'], $default, array('start_date', 'end_date')
       );
     }
+    
+    $pageInfo = $default[$pcpInfo['page_id']];
 
     if ($pcpInfo['contact_id'] == $session->get('userID')) {
-      $owner = $default[$pcpInfo['page_id']];
+      $owner = $pageInfo;
       $owner['status'] = CRM_Utils_Array::value($pcpInfo['status_id'], $pcpStatus);
 
       $this->assign('owner', $owner);
 
-      require_once 'CRM/PCP/BAO/PCP.php';
       $link = CRM_PCP_BAO_PCP::pcpLinks();
 
       $hints = array(
@@ -241,12 +235,12 @@ class CRM_PCP_Page_PCPInfo extends CRM_Core_Page {
     }
     // make sure that we are between contribution page start and end dates OR registration start date and end dates if they are set
     if ($pcpBlock->entity_table == 'civicrm_event') {
-      $startDate = CRM_Utils_Date::unixTime(CRM_Utils_Array::value('registration_start_date', $owner));
-      $endDate = CRM_Utils_Date::unixTime(CRM_Utils_Array::value('registration_end_date', $owner));
+      $startDate = CRM_Utils_Date::unixTime(CRM_Utils_Array::value('registration_start_date', $pageInfo));
+      $endDate = CRM_Utils_Date::unixTime(CRM_Utils_Array::value('registration_end_date', $pageInfo));
     }
     else {
-      $startDate = CRM_Utils_Date::unixTime(CRM_Utils_Array::value('start_date', $owner));
-      $endDate = CRM_Utils_Date::unixTime(CRM_Utils_Array::value('end_date', $owner));
+      $startDate = CRM_Utils_Date::unixTime(CRM_Utils_Array::value('start_date', $pageInfo));
+      $endDate = CRM_Utils_Date::unixTime(CRM_Utils_Array::value('end_date', $pageInfo));
     }
 
 
@@ -334,7 +328,6 @@ class CRM_PCP_Page_PCPInfo extends CRM_Core_Page {
       $permission = TRUE;
     }
     if ($single && $permission) {
-      require_once 'CRM/Core/Controller/Simple.php';
       $controller = new CRM_Core_Controller_Simple($form, $subForm, $action);
       $controller->set('id', $this->_id);
       $controller->set('single', TRUE);

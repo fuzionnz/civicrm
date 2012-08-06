@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -36,8 +36,6 @@
 /**
  *  This file contains functions for creating and altering CiviCRM-tables.
  */
-
-require_once 'CRM/Core/DAO.php';
 
 /**
  * structure, similar to what is used in GenCode.php
@@ -81,10 +79,12 @@ class CRM_Core_BAO_SchemaHandler {
     $dao = CRM_Core_DAO::executeQuery($sql, array(), TRUE, NULL, FALSE, FALSE);
     $dao->free();
 
-    // logging support
-    require_once 'CRM/Logging/Schema.php';
-    $logging = new CRM_Logging_Schema;
-    $logging->fixSchemaDifferencesFor($params['name']);
+    $config = CRM_Core_Config::singleton();
+    if ($config->logging) {
+      // logging support
+      $logging = new CRM_Logging_Schema;
+      $logging->fixSchemaDifferencesFor($params['name']);
+    }
 
     return TRUE;
   }
@@ -299,17 +299,17 @@ ALTER TABLE {$tableName}
     $dao = CRM_Core_DAO::executeQuery($sql, array(), TRUE, NULL, FALSE, FALSE);
     $dao->free();
 
-    // logging support: if we’re adding a column (but only then!) make sure the potential relevant log table gets a column as well
-    if ($params['operation'] == 'add') {
-      require_once 'CRM/Logging/Schema.php';
-      $logging = new CRM_Logging_Schema;
-      $logging->fixSchemaDifferencesFor($params['table_name'], array($params['name']));
-      // CRM-7293: if we’re dropping a column – rebuild triggers
-    }
-    elseif ($params['operation'] == 'delete') {
-      require_once 'CRM/Logging/Schema.php';
-      $logging = new CRM_Logging_Schema;
-      $logging->createTriggersFor($params['table_name']);
+    $config = CRM_Core_Config::singleton();
+    if ($config->logging) {
+      // logging support: if we’re adding a column (but only then!) make sure the potential relevant log table gets a column as well
+      if ($params['operation'] == 'add') {
+        $logging = new CRM_Logging_Schema;
+        $logging->fixSchemaDifferencesFor($params['table_name'], array($params['name']));
+      }
+      elseif ($params['operation'] == 'delete') {
+        // CRM-7293: if we’re dropping a column – rebuild triggers
+        CRM_Core_DAO::triggerRebuild($params['table_name']);
+      }
     }
 
     return TRUE;
@@ -357,16 +357,14 @@ ADD UNIQUE INDEX `unique_entity_id` ( `entity_id` )";
     )) {
     $queries = array();
 
-    require_once 'CRM/Core/DAO/Domain.php';
+        require_once 'CRM/Core/DAO/Domain.php';
     $domain = new CRM_Core_DAO_Domain;
     $domain->find(TRUE);
     $locales = explode(CRM_Core_DAO::VALUE_SEPARATOR, $domain->locales);
 
     // if we're multilingual, cache the information on internationalised fields
     static $columns = NULL;
-    require_once 'CRM/Utils/System.php';
     if (!CRM_Utils_System::isNull($locales) and $columns === NULL) {
-      require_once 'CRM/Core/I18n/SchemaStructure.php';
       $columns = CRM_Core_I18n_SchemaStructure::columns();
     }
 
@@ -459,7 +457,7 @@ MODIFY      {$columnName} varchar( $length )
           array(
             1 => $tableName,
             2 => $columnName,
-            3 => $customFieldID,
+            3 => $customFieldID
           )
         ));
     }

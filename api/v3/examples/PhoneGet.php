@@ -26,18 +26,11 @@ function phone_get_expectedresult(){
   $expectedResult = array( 
   'is_error' => 0,
   'version' => 3,
-  'count' => 2,
+  'count' => 1,
+  'id' => 1,
   'values' => array( 
       '1' => array( 
           'id' => '1',
-          'location_type_id' => '1',
-          'is_primary' => 0,
-          'is_billing' => 0,
-          'phone' => '204 222-1001',
-          'phone_type_id' => '1',
-        ),
-      '4' => array( 
-          'id' => '4',
           'contact_id' => '1',
           'location_type_id' => '11',
           'is_primary' => '1',

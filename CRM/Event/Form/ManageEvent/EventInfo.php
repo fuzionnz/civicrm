@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,15 +29,10 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Event/Form/ManageEvent.php';
-require_once 'CRM/Core/BAO/CustomGroup.php';
-require_once 'CRM/Custom/Form/CustomData.php';
-require_once 'CRM/Core/BAO/CustomField.php';
 
 /**
  * This class generates form components for processing Event
@@ -83,9 +78,9 @@ class CRM_Event_Form_ManageEvent_EventInfo extends CRM_Event_Form_ManageEvent {
       $this->set('subType', CRM_Utils_Array::value('event_type_id', $_POST));
       $this->set('entityId', $this->_id);
 
-      CRM_Custom_Form_Customdata::preProcess($this);
-      CRM_Custom_Form_Customdata::buildQuickForm($this);
-      CRM_Custom_Form_Customdata::setDefaultValues($this);
+      CRM_Custom_Form_CustomData::preProcess($this);
+      CRM_Custom_Form_CustomData::buildQuickForm($this);
+      CRM_Custom_Form_CustomData::setDefaultValues($this);
     }
   }
 
@@ -117,7 +112,6 @@ class CRM_Event_Form_ManageEvent_EventInfo extends CRM_Event_Form_ManageEvent {
       $this->assign('customDataSubType', $defaults['event_type_id']);
     }
 
-    require_once 'CRM/Core/ShowHideBlocks.php';
     $this->_showHide = new CRM_Core_ShowHideBlocks();
     // Show waitlist features or event_full_text if max participants set
     if (CRM_Utils_Array::value('max_participants', $defaults)) {
@@ -180,7 +174,6 @@ class CRM_Event_Form_ManageEvent_EventInfo extends CRM_Event_Form_ManageEvent {
     }
 
     if ($this->_action & CRM_Core_Action::ADD) {
-      require_once 'CRM/Event/PseudoConstant.php';
       $eventTemplates = CRM_Event_PseudoConstant::eventTemplates();
       if (CRM_Utils_System::isNull($eventTemplates)) {
         $this->assign('noEventTemplates', TRUE);
@@ -196,7 +189,6 @@ class CRM_Event_Form_ManageEvent_EventInfo extends CRM_Event_Form_ManageEvent {
     // add event title, make required if this is not a template
     $this->add('text', 'title', ts('Event Title'), $attributes['event_title'], !$this->_isTemplate);
 
-    require_once 'CRM/Core/OptionGroup.php';
     $event = CRM_Core_OptionGroup::values('event_type');
 
     $this->add('select',
@@ -209,7 +201,6 @@ class CRM_Event_Form_ManageEvent_EventInfo extends CRM_Event_Form_ManageEvent {
     );
 
     //CRM-7362 --add campaigns.
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     $campaignId = NULL;
     if ($this->_id) {
       $campaignId = CRM_Core_DAO::getFieldValue('CRM_Event_DAO_Event', $this->_id, 'campaign_id');
@@ -247,7 +238,6 @@ class CRM_Event_Form_ManageEvent_EventInfo extends CRM_Event_Form_ManageEvent {
     );
     $this->addRule('max_participants', ts('Max participants should be a positive number'), 'positiveInteger');
 
-    require_once 'CRM/Event/PseudoConstant.php';
     $participantStatuses = CRM_Event_PseudoConstant::participantStatus();
     if (in_array('On waitlist', $participantStatuses) and in_array('Pending from waitlist', $participantStatuses)) {
       $this->addElement('checkbox', 'has_waitlist', ts('Offer a Waitlist?'), NULL, array('onclick' => "showHideByValue('has_waitlist','0','id-event_full','table-row','radio',true); showHideByValue('has_waitlist','0','id-waitlist-text','table-row','radio',false);"));
@@ -330,7 +320,6 @@ class CRM_Event_Form_ManageEvent_EventInfo extends CRM_Event_Form_ManageEvent {
       'Event'
     );
 
-    require_once 'CRM/Event/BAO/Event.php';
     //merge params with defaults from templates
     if (CRM_Utils_Array::value('template_id', $params)) {
       $params = array_merge(CRM_Event_BAO_Event::getTemplateDefaultValues($params['template_id']), $params);
@@ -340,34 +329,7 @@ class CRM_Event_Form_ManageEvent_EventInfo extends CRM_Event_Form_ManageEvent {
 
     // now that we have the event’s id, do some more template-based stuff
     if (CRM_Utils_Array::value('template_id', $params)) {
-      // copy event fees
-      $ogParams = array('name' => "civicrm_event.amount.$event->id");
-      $defaults = array();
-      require_once 'CRM/Core/BAO/OptionGroup.php';
-      if (is_null(CRM_Core_BAO_OptionGroup::retrieve($ogParams, $defaults))) {
-
-        // Copy the Main Event Fees
-        CRM_Core_BAO_OptionGroup::copyValue('event', $params['template_id'], $event->id);
-
-        // Copy the Discount option Group and Values
-        require_once 'CRM/Core/BAO/Discount.php';
-        $optionGroupIds = CRM_Core_BAO_Discount::getOptionGroup($params['template_id'], 'civicrm_event');
-        foreach ($optionGroupIds as $id) {
-          $discountSuffix = '.discount.' . CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionGroup',
-            $id,
-            'title'
-          );
-          CRM_Core_BAO_OptionGroup::copyValue('event',
-            $params['template_id'],
-            $event->id,
-            FALSE,
-            $discountSuffix
-          );
-        }
-      }
-
       // copy price sets if any
-      require_once 'CRM/Price/BAO/Set.php';
       $priceSetId = CRM_Price_BAO_Set::getFor('civicrm_event', $params['template_id']);
       if ($priceSetId) {
         CRM_Price_BAO_Set::addTo('civicrm_event', $event->id, $priceSetId);
@@ -375,7 +337,6 @@ class CRM_Event_Form_ManageEvent_EventInfo extends CRM_Event_Form_ManageEvent {
 
       // link profiles if none linked
       $ufParams = array('entity_table' => 'civicrm_event', 'entity_id' => $event->id);
-      require_once 'CRM/Core/BAO/UFJoin.php';
       if (!CRM_Core_BAO_UFJoin::findUFGroupId($ufParams)) {
         CRM_Core_DAO::copyGeneric('CRM_Core_DAO_UFJoin',
           array('entity_id' => $params['template_id'], 'entity_table' => 'civicrm_event'),
@@ -385,7 +346,6 @@ class CRM_Event_Form_ManageEvent_EventInfo extends CRM_Event_Form_ManageEvent {
 
       // if no Tell-a-Friend defined, check whether there’s one for template and copy if so
       $tafParams = array('entity_table' => 'civicrm_event', 'entity_id' => $event->id);
-      require_once 'CRM/Friend/BAO/Friend.php';
       if (!CRM_Friend_BAO_Friend::getValues($tafParams)) {
         $tafParams['entity_id'] = $params['template_id'];
         if (CRM_Friend_BAO_Friend::getValues($tafParams)) {

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO.php';
 
 /**
  * Business objects for managing custom data values.
@@ -52,7 +50,6 @@ class CRM_Core_BAO_CustomValue extends CRM_Core_DAO {
    * @static
    */
   public static function typecheck($type, $value) {
-    require_once 'CRM/Utils/Rule.php';
     switch ($type) {
       case 'Memo':
         return TRUE;
@@ -204,8 +201,7 @@ class CRM_Core_BAO_CustomValue extends CRM_Core_DAO {
    * @return void
    * @static
    */
-  static
-  function deleteCustomValue($customValueID, $customGroupID) {
+  static function deleteCustomValue($customValueID, $customGroupID) {
     // first we need to find custom value table, from custom group ID
     $tableName = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_CustomGroup', $customGroupID, 'table_name');
 
@@ -213,7 +209,6 @@ class CRM_Core_BAO_CustomValue extends CRM_Core_DAO {
     $sql = "DELETE FROM {$tableName} WHERE id = {$customValueID}";
     CRM_Core_DAO::executeQuery($sql);
 
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::custom('delete',
       $customGroupID,
       NULL,

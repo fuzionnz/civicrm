@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/Log.php';
 
 /**
  * BAO object for crm_log table
@@ -43,7 +41,6 @@ class CRM_Core_BAO_Log extends CRM_Core_DAO_Log {
 
   static
   function &lastModified($id, $table = 'civicrm_contact') {
-    require_once 'CRM/Core/DAO/Log.php';
 
     $log = new CRM_Core_DAO_Log();
 
@@ -73,7 +70,6 @@ class CRM_Core_BAO_Log extends CRM_Core_DAO_Log {
    */
   static
   function add(&$params) {
-    require_once 'CRM/Core/DAO/Log.php';
 
     $log = new CRM_Core_DAO_Log();
     $log->copyValues($params);
@@ -148,7 +144,7 @@ UPDATE civicrm_log
    */
   static
   function getContactLogCount($contactID) {
-    $query = "SELECT count(*) FROM civicrm_log 
+    $query = "SELECT count(*) FROM civicrm_log
                    WHERE civicrm_log.entity_table = 'civicrm_contact' AND civicrm_log.entity_id = {$contactID}";
     return CRM_Core_DAO::singleValueQuery($query);
   }
@@ -163,18 +159,15 @@ UPDATE civicrm_log
    */
   static
   function useLoggingReport() {
-
     // first check if logging is enabled
     $config = CRM_Core_Config::singleton();
     if (!$config->logging) {
       return FALSE;
     }
 
-    require_once 'CRM/Logging/Schema.php';
     $loggingSchema = new CRM_Logging_Schema();
 
     if ($loggingSchema->isEnabled()) {
-      require_once 'CRM/Report/BAO/Instance.php';
       $params = array('report_id' => 'logging/contact/summary');
       $instance = array();
       CRM_Report_BAO_Instance::retrieve($params, $instance);

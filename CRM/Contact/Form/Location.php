@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -65,7 +65,6 @@ class CRM_Contact_Form_Location {
 
     // get address sequence.
     if (!$addressSequence = $form->get('addressSequence')) {
-      require_once 'CRM/Core/BAO/Address.php';
       $addressSequence = CRM_Core_BAO_Address::addressSequence();
       $form->set('addressSequence', $addressSequence);
     }
@@ -78,7 +77,7 @@ class CRM_Contact_Form_Location {
    * @return None
    * @access public
    */
-  function buildQuickForm(&$form) {
+  static function buildQuickForm(&$form) {
     // required for subsequent AJAX requests.
     $ajaxRequestBlocks = array();
     $generateAjaxRequest = 0;
@@ -92,7 +91,7 @@ class CRM_Contact_Form_Location {
       if (CRM_Utils_Array::value($name, $_POST) && is_array($_POST[$name])) {
         $instances = array_keys($_POST[$name]);
       }
-      elseif (CRM_Utils_Array::value($name, $form->_values) && is_array($form->_values[$name])) {
+      elseif (property_exists($form, '_values') && CRM_Utils_Array::value($name, $form->_values) && is_array($form->_values[$name])) {
         $instances = array_keys($form->_values[$name]);
       }
 

@@ -1,6 +1,6 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | Copyright (C) 2011 Marty Wright                                    |
  | Licensed to CiviCRM under the Academic Free License version 3.0.   |
@@ -245,10 +245,10 @@
 	     cj('#is_recipient_listing').val('');
 	  }
 	  
-	  if (entityMapping[entity] == 'civicrm_participant') {
-	     cj("#recipientLabel").text("Additional Recipient(s)");
+	  if (entityMapping[entity] == 'civicrm_activity') {
+	     cj("#recipientLabel").text("Recipient(s)");
 	  } else {
- 	     cj("#recipientLabel").text("Recipient(s)");
+ 	     cj("#recipientLabel").text("Additional Recipient(s)");
 	  }
      }
      function buildSelect( selectID ) {

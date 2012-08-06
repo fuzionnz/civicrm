@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Profile/Form.php';
 
 /**
  * This class provides the functionality for batch profile update
@@ -96,7 +94,6 @@ class CRM_Contact_Form_Task_Batch extends CRM_Contact_Form_Task {
     if (!$ufGroupId) {
       CRM_Core_Error::fatal('ufGroupId is missing');
     }
-    require_once "CRM/Core/BAO/UFGroup.php";
     $this->_title = ts('Batch Update') . ' - ' . CRM_Core_BAO_UFGroup::getTitle($ufGroupId);
     CRM_Utils_System::setTitle($this->_title);
 
@@ -143,7 +140,6 @@ class CRM_Contact_Form_Task_Batch extends CRM_Contact_Form_Task {
       'household_name',
     );
 
-    require_once 'CRM/Core/BAO/Address.php';
     foreach ($this->_contactIds as $contactId) {
       $profileFields = $this->_fields;
       CRM_Core_BAO_Address::checkContactSharedAddressFields($profileFields, $contactId);
@@ -180,7 +176,8 @@ class CRM_Contact_Form_Task_Batch extends CRM_Contact_Form_Task {
     if (empty($this->_fields)) {
       return;
     }
-
+    
+    $defaults = $sortName = array();
     foreach ($this->_contactIds as $contactId) {
       $details[$contactId] = array();
 
@@ -254,7 +251,7 @@ class CRM_Contact_Form_Task_Batch extends CRM_Contact_Form_Task {
       $value['preserveDBName'] = $this->_preserveDefault;
 
       //parse street address, CRM-7768
-      $this->parseStreetAddress($value);
+      self::parseStreetAddress($value, $this);
 
       CRM_Contact_BAO_Contact::createProfileContact($value, $this->_fields, $key, NULL, $ufGroupId);
       if ($notify) {
@@ -271,9 +268,9 @@ class CRM_Contact_Form_Task_Batch extends CRM_Contact_Form_Task {
     CRM_Core_Session::setStatus("{$statusMsg}");
   }
   //end of function
-  function parseStreetAddress(&$contactValues) {
+  function parseStreetAddress(&$contactValues, &$form) {
     if (!is_array($contactValues) ||
-      !is_array($this->_fields)
+      !is_array($form->_fields)
     ) {
       return;
     }
@@ -282,8 +279,7 @@ class CRM_Contact_Form_Task_Batch extends CRM_Contact_Form_Task {
     $addressFldKey = 'street_address';
     if (!isset($parseAddress)) {
       $parseAddress = FALSE;
-      require_once 'CRM/Core/BAO/Setting.php';
-      foreach ($this->_fields as $key => $fld) {
+      foreach ($form->_fields as $key => $fld) {
         if (strpos($key, $addressFldKey) !== FALSE) {
           $parseAddress = CRM_Utils_Array::value('street_address_parsing',
             CRM_Core_BAO_Setting::valueOptions(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
@@ -301,7 +297,6 @@ class CRM_Contact_Form_Task_Batch extends CRM_Contact_Form_Task {
     }
 
     $allParseValues = array();
-    require_once 'CRM/Core/BAO/Address.php';
     foreach ($contactValues as $key => $value) {
       if (strpos($key, $addressFldKey) !== FALSE) {
         $locTypeId = substr($key, strlen($addressFldKey) + 1);

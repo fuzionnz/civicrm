@@ -1,9 +1,9 @@
 <?php
 /*
    +--------------------------------------------------------------------+
-   | CiviCRM version 4.1                                                |
+   | CiviCRM version 4.2                                                |
    +--------------------------------------------------------------------+
-   | Copyright CiviCRM LLC (c) 2004-2011                                |
+   | Copyright CiviCRM LLC (c) 2004-2012                                |
    +--------------------------------------------------------------------+
    | This file is a part of CiviCRM.                                    |
    |                                                                    |
@@ -29,11 +29,9 @@
  * This class handles all REST client requests.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  *
  */
-
-require_once 'CRM/Utils/Request.php';
 class CRM_Utils_REST {
 
   /**
@@ -86,8 +84,6 @@ class CRM_Utils_REST {
    * @static
    */
   public function authenticate($name, $pass) {
-    require_once 'CRM/Utils/System.php';
-    require_once 'CRM/Core/DAO.php';
 
     $result = &CRM_Utils_System::authenticate($name, $pass);
 
@@ -168,13 +164,22 @@ class CRM_Utils_REST {
       return $json;
     }
 
+
+    if (isset($result['count'])) {
+
+
+      $count = ' count="' . $result['count'] . '" ';
+
+
+    }
+    else $count = "";
     $xml = "<?xml version=\"1.0\"?>
-      <ResultSet xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">
+      <ResultSet xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" $count>
       ";
     // check if this is a single element result (contact_get etc)
     // or multi element
     if ($hier) {
-      foreach ($result as $n => $v) {
+      foreach ($result['values'] as $n => $v) {
         $xml .= "<Result>\n" . CRM_Utils_Array::xml($v) . "</Result>\n";
       }
     }
@@ -265,7 +270,6 @@ class CRM_Utils_REST {
   }
 
   function handle() {
-    require_once 'CRM/Utils/Request.php';
     // Get the function name being called from the q parameter in the query string
     $q = CRM_Utils_array::value('q', $_REQUEST);
     // or for the rest interface, from fnName
@@ -309,14 +313,13 @@ class CRM_Utils_REST {
     //  This used to be done in the authenticate function, but that was bad...trust me
     // first check for civicrm site key
     if (!CRM_Utils_System::authenticateKey(FALSE)) {
-      $docLink = CRM_Utils_System::docURL2("Command-line Script Configuration", TRUE);
+      $docLink = CRM_Utils_System::docURL2("Managing Scheduled Jobs", TRUE, NULL, NULL, NULL, "wiki");
       $key = CRM_Utils_array::value('key', $_REQUEST);
       if (empty($key)) {
         return self::error("FATAL: mandatory param 'key' missing. More info at: " . $docLink);
       }
       return self::error("FATAL: 'key' is incorrect. More info at: " . $docLink);
     }
-    require_once 'CRM/Utils/Request.php';
 
 
     // At this point we know we are not calling either login or ping (neither of which
@@ -341,7 +344,6 @@ class CRM_Utils_REST {
     // an ajax interface), we need to check to see if they are carring a valid user's
     // secret key.
     if (!$valid_user) {
-      require_once 'CRM/Core/DAO.php';
       $api_key = CRM_Utils_Request::retrieve('api_key', 'String', $store, FALSE, NULL, 'REQUEST');
       if (!$api_key || strtolower($api_key) == 'null') {
         return ("FATAL:mandatory param 'api_key' (user key) missing");
@@ -357,12 +359,12 @@ class CRM_Utils_REST {
     return self::process($args);
   }
 
+  static
   function process(&$args, $restInterface = TRUE) {
     $params = &self::buildParamList();
 
     $params['check_permissions'] = TRUE;
     $fnName = $apiFile = NULL;
-    require_once 'CRM/Utils/String.php';
     // clean up all function / class names. they should be alphanumeric and _ only
     for ($i = 1; $i <= 3; $i++) {
       if (!empty($args[$i])) {
@@ -396,16 +398,20 @@ class CRM_Utils_REST {
     }
 
     if (!array_key_exists('version', $params)) {
-      $params['version'] = (array_key_exists('entity', $params)) ? 3 : 2;
+      $params['version'] = 3;
+    }
+
+    if ($params['version'] == 2) {
+      $result['is_error'] = 1;
+      $result['error_message'] = "FATAL: API v2 not accessible from ajax/REST";
+      $result['deprecated'] = "Please upgrade to API v3";
+      return $result;
     }
 
     // trap all fatal errors
     CRM_Core_Error::setCallback(array('CRM_Utils_REST', 'fatal'));
     $result = civicrm_api($args[1], $args[2], $params);
     CRM_Core_Error::setCallback();
-    if ($params['version'] == 2) {
-      $result['deprecated'] = "Please upgrade to API v3";
-    }
 
     if ($result === FALSE) {
       return self::error('Unknown error.');
@@ -413,6 +419,7 @@ class CRM_Utils_REST {
     return $result;
   }
 
+  static
   function &buildParamList() {
     $params = array();
 
@@ -473,31 +480,112 @@ class CRM_Utils_REST {
     );
   }
 
+  /** used to load a template "inline", eg. for ajax, without having to build a menu for each template */
+  static 
+  function loadTemplate () {
+    $request = CRM_Utils_Request::retrieve( 'q', 'String');
+    if (false !== strpos($request, '..')) {
+      die ("SECURITY FATAL: the url can't contain '..'. Please report the issue on the forum at civicrm.org");
+    }
+
+    $request = split ('/',$request);
+    $entity = _civicrm_api_get_camel_name($request[2]);
+    $tplfile=_civicrm_api_get_camel_name($request[3]);
+
+    $tpl = 'CRM/'.$entity.'/Page/Inline/'.$tplfile.'.tpl';
+    $smarty= CRM_Core_Smarty::singleton( );
+    CRM_Utils_System::setTitle( "$entity::$tplfile inline $tpl" );
+    if( !$smarty->template_exists($tpl) ){
+      header("Status: 404 Not Found"); 
+      die ("Can't find the requested template file templates/$tpl");
+    }
+    if (array_key_exists('id',$_GET)) {// special treatmenent, because it's often used
+      $smarty->assign ('id',(int)$_GET['id']);// an id is always positive
+    }
+    $pos = strpos (implode (array_keys ($_GET)),'<') ;
+
+    if ($pos !== false) {
+      die ("SECURITY FATAL: one of the param names contains &lt;");
+    }
+    $param = array_map( 'htmlentities' , $_GET);
+    unset($param['q']);
+    $smarty->assign_by_ref("request", $param);
+
+    if  ( ! array_key_exists ( 'HTTP_X_REQUESTED_WITH', $_SERVER ) ||
+      $_SERVER['HTTP_X_REQUESTED_WITH'] != "XMLHttpRequest"  )  {
+
+        $smarty->assign( 'tplFile', $tpl );
+        $config = CRM_Core_Config::singleton();
+        $content = $smarty->fetch( 'CRM/common/'. strtolower($config->userFramework) .'.tpl' );
+
+        if ($region = CRM_Core_Region::instance('html-header', FALSE)) {
+          CRM_Utils_System::addHTMLHead($region->render(''));
+        }
+        CRM_Utils_System::appendTPLFile( $tpl, $content );
+
+        return CRM_Utils_System::theme( 'page', $content, true);
+
+      } else {
+        $content = "<!-- .tpl file embeded: $tpl -->\n";
+        CRM_Utils_System::appendTPLFile( $tpl, $content );
+        echo $content . $smarty->fetch ($tpl);
+        CRM_Utils_System::civiExit( );
+    }
+  }
+
   /** This is a wrapper so you can call an api via json (it returns json too)
-   * http://example.org/civicrm/api/json?{"entity":"Contact","action":"Get","debug":1}
-   * works both as GET or POST
+   * http://example.org/civicrm/api/json?entity=Contact&action=Get"&json={"contact_type":"Individual","email.get.email":{}} to take all the emails from individuals
+   * works for POST & GET (POST recommended)
    **/
   static
   function ajaxJson() {
-    if (!empty($_POST)) {
-      $params = $_POST;
-    }
-    else $params = $_GET;
-
-    foreach ($params as $k => $v) {
-      if ($k[0] == '{') {
-        $p = stripslashes($k);
-        $a_params = json_decode(stripslashes($p), TRUE);
-        if (is_array($a_params)) {
-          $_REQUEST = $a_params;
-          $_REQUEST['json'] = 1;
-          CRM_Utils_REST::ajax();
-          return;
-        }
-      }
-    }
     require_once 'api/v3/utils.php';
-    civicrm_api3_create_error('missing json param, eg: /civicrm/api/json?{"entity":"Contact","action":"Get"}');
+    if (!$config->debug && (!array_key_exists('HTTP_X_REQUESTED_WITH', $_SERVER) ||
+        $_SERVER['HTTP_X_REQUESTED_WITH'] != "XMLHttpRequest"
+      )) {
+      $error = civicrm_api3_create_error("SECURITY ALERT: Ajax requests can only be issued by javascript clients, eg. $().crmAPI().",
+        array(
+          'IP' => $_SERVER['REMOTE_ADDR'],
+          'level' => 'security',
+          'referer' => $_SERVER['HTTP_REFERER'],
+          'reason' => 'CSRF suspected',
+        )
+      );
+      echo json_encode($error);
+      CRM_Utils_System::civiExit();
+    }
+    if (empty($_REQUEST['entity'])) {
+      echo json_encode(civicrm_api3_create_error('missing entity param'));
+      CRM_Utils_System::civiExit();
+    }
+    if (empty($_REQUEST['entity'])) {
+      echo json_encode(civicrm_api3_create_error('missing entity entity'));
+      CRM_Utils_System::civiExit();
+    }
+    if (!empty($_REQUEST['json'])) {
+      $params = json_decode($_REQUEST['json'], TRUE);
+    }
+    $entity = CRM_Utils_String::munge(CRM_Utils_Array::value('entity', $_REQUEST));
+    $action = CRM_Utils_String::munge(CRM_Utils_Array::value('action', $_REQUEST));
+    if (!is_array($params)) {
+      echo json_encode(array('is_error' => 1, 'error_message', 'invalid json format: ?{"param_with_double_quote":"value"}'));
+      CRM_Utils_System::civiExit();
+    }
+
+    $params['check_permissions'] = TRUE;
+    $params['version'] = 3;
+    $_REQUEST['json'] = 1;
+    if (!$params['sequential']) {
+      $params['sequential'] = 1;
+    }
+    // trap all fatal errors
+    CRM_Core_Error::setCallback(array('CRM_Utils_REST', 'fatal'));
+    $result = civicrm_api($entity, $action, $params);
+
+    CRM_Core_Error::setCallback();
+
+    echo self::output($result);
+
     CRM_Utils_System::civiExit();
   }
 
@@ -506,7 +594,6 @@ class CRM_Utils_REST {
     // this is driven by the menu system, so we can use permissioning to
     // restrict calls to this etc
     // the request has to be sent by an ajax call. First line of protection against csrf
-    require_once 'CRM/Core/Config.php';
     $config = CRM_Core_Config::singleton();
     if (FALSE &&
       !$config->debug &&
@@ -577,7 +664,6 @@ class CRM_Utils_REST {
       return;
     }
 
-    require_once 'CRM/Core/DAO.php';
     if ($args[1] == 'login') {
       CRM_Utils_System::loadBootStrap(CRM_Core_DAO::$_nullArray, TRUE, FALSE);
       return;
@@ -593,13 +679,10 @@ class CRM_Utils_REST {
     }
 
     if (!$uid) {
-      require_once 'CRM/Utils/Request.php';
-
       $store      = NULL;
       $api_key    = CRM_Utils_Request::retrieve('api_key', 'String', $store, FALSE, NULL, 'REQUEST');
       $contact_id = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $api_key, 'id', 'api_key');
       if ($contact_id) {
-        require_once 'CRM/Core/BAO/UFMatch.php';
         $uid = CRM_Core_BAO_UFMatch::getUFId($contact_id);
       }
     }

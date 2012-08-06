@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,20 +28,22 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
- * $Id: Display.php 40475 2012-05-17 00:55:16Z allen $
+ * @copyright CiviCRM LLC (c) 2004-2012
+ * $Id: Display.php 41013 2012-06-13 21:15:02Z kurund $
  *
  */
 
-require_once 'CRM/Admin/Form/Preferences.php';
-
-/**
+/**r
  * This class generates form components for the display preferences
  *
  */
 class CRM_Admin_Form_Preferences_Display extends CRM_Admin_Form_Preferences {
   function preProcess() {
     CRM_Utils_System::setTitle(ts('Settings - Display Preferences'));
+
+    if (defined('CIVICRM_ACTIVITY_ASSIGNEE_MAIL') && CIVICRM_ACTIVITY_ASSIGNEE_MAIL) {
+      CRM_Core_Session::setStatus(ts('Your civicrm.settings.php file contains CIVICRM_ACTIVITY_ASSIGNEE_MAIL but this constant is no longer used. Please remove this from your config file and set your "Notify Activity Assignees" preference below.'));
+    }
 
     $this->_varNames = array(
       CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME =>
@@ -154,6 +156,7 @@ class CRM_Admin_Form_Preferences_Display extends CRM_Admin_Form_Preferences {
     }
     else {
       $extra['onchange'] = 'if (this.value==4) { cj("#crm-preferences-display-form-block-wysiwyg_input_format").show(); } else {  cj("#crm-preferences-display-form-block-wysiwyg_input_format").hide() }';
+
       $formats           = filter_formats();
       $format_options    = array();
       foreach ($formats as $id => $format) {
@@ -166,7 +169,6 @@ class CRM_Admin_Form_Preferences_Display extends CRM_Admin_Form_Preferences {
     if ($drupal_wysiwyg) {
       $this->addElement('select', 'wysiwyg_input_format', ts('Input Format'), $format_options, NULL);
     }
-    require_once 'CRM/Core/OptionGroup.php';
     $editOptions = CRM_Core_OptionGroup::values('contact_edit_options', FALSE, FALSE, FALSE, 'AND v.filter = 0');
     $this->assign('editOptions', $editOptions);
 
@@ -199,7 +201,6 @@ class CRM_Admin_Form_Preferences_Display extends CRM_Admin_Form_Preferences {
           unset($preferenceWeights[$key]);
         }
       }
-      require_once 'CRM/Core/BAO/OptionValue.php';
       $opGroupId = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionGroup', 'contact_edit_options', 'id', 'name');
       CRM_Core_BAO_OptionValue::updateOptionWeights($opGroupId, array_flip($preferenceWeights));
     }

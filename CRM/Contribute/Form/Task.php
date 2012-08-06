@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/SelectValues.php';
-require_once 'CRM/Core/Form.php';
 
 /**
  * This class generates form components for relationship
@@ -107,7 +104,6 @@ class CRM_Contribute_Form_Task extends CRM_Core_Form {
       }
     }
     else {
-      require_once 'CRM/Contact/BAO/Query.php';
       $queryParams = $form->get('queryParams');
       $query = new CRM_Contact_BAO_Query($queryParams, NULL, NULL, FALSE, FALSE,
         CRM_Contact_BAO_Query::MODE_CONTRIBUTE
@@ -134,7 +130,6 @@ class CRM_Contribute_Form_Task extends CRM_Core_Form {
     $session = CRM_Core_Session::singleton();
 
     $qfKey = CRM_Utils_Request::retrieve('qfKey', 'String', $form);
-    require_once 'CRM/Utils/Rule.php';
     $urlParams = 'force=1';
     if (CRM_Utils_Rule::qfKey($qfKey)) {
       $urlParams .= "&qfKey=$qfKey";

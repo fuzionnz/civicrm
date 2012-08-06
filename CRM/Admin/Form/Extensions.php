@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Admin/Form.php';
 
 /**
  * This class generates form components for Extensions
@@ -50,7 +48,6 @@ class CRM_Admin_Form_Extensions extends CRM_Admin_Form {
   public function preProcess() {
     parent::preProcess();
 
-    require_once 'CRM/Utils/Request.php';
     $this->_key = CRM_Utils_Request::retrieve('key', 'String',
       $this, FALSE, 0
     );
@@ -61,7 +58,6 @@ class CRM_Admin_Form_Extensions extends CRM_Admin_Form {
     $this->assign('id', $this->_id);
     $this->assign('key', $this->_key);
 
-    require_once "CRM/Core/Extensions.php";
     $ext = new CRM_Core_Extensions();
     $extension = $ext->getExtensions();
 
@@ -88,48 +84,47 @@ class CRM_Admin_Form_Extensions extends CRM_Admin_Form {
    * @access public
    */
   public function buildQuickForm() {
-    if ($this->_action & CRM_Core_Action::DELETE) {
-      $this->addButtons(array(
-          array(
-            'type' => 'next',
-            'name' => ts('Uninstall'),
-            'isDefault' => TRUE,
-          ),
-          array(
-            'type' => 'cancel',
-            'name' => ts('Cancel'),
-          ),
-        )
-      );
+
+    switch ($this->_action) {
+      case 1:
+        $buttonName = ts('Install');
+        $title = ts('Install Extension');
+        break;
+
+      case 2:
+        $buttonName = ts('Upgrade');
+        $title = ts('Upgrade Extension');
+        break;
+
+      case 8:
+        $buttonName = ts('Uninstall');
+        $title = ts('Uninstall Extension');
+        break;
+
+      case 32:
+        $buttonName = ts('Enable');
+        $title = ts('Enable Extension');
+        break;
+
+      case 64:
+        $buttonName = 'Disable';
+        $title = ts('Disable Extension');
+        break;
     }
-    elseif ($this->_action & CRM_Core_Action::UPDATE) {
-      $this->addButtons(array(
-          array(
-            'type' => 'next',
-            'name' => ts('Upgrade'),
-            'isDefault' => TRUE,
-          ),
-          array(
-            'type' => 'cancel',
-            'name' => ts('Cancel'),
-          ),
-        )
-      );
-    }
-    else {
-      $this->addButtons(array(
-          array(
-            'type' => 'next',
-            'name' => ts('Install'),
-            'isDefault' => TRUE,
-          ),
-          array(
-            'type' => 'cancel',
-            'name' => ts('Cancel'),
-          ),
-        )
-      );
-    }
+
+    $this->assign('title', $title);
+    $this->addButtons(array(
+        array(
+          'type' => 'next',
+          'name' => $buttonName,
+          'isDefault' => TRUE,
+        ),
+        array(
+          'type' => 'cancel',
+          'name' => ts('Cancel'),
+        ),
+      )
+    );
   }
 
   /**
@@ -161,25 +156,42 @@ class CRM_Admin_Form_Extensions extends CRM_Admin_Form {
     CRM_Utils_System::flushCache();
 
     if ($this->_action & CRM_Core_Action::DELETE) {
-      require_once ('CRM/Core/Extensions.php');
       $ext = new CRM_Core_Extensions();
-      $ext->uninstall($this->_id, $this->_key);
-      CRM_Core_Session::setStatus(ts('Extension has been uninstalled.'));
+      if ($ext->uninstall($this->_id, $this->_key)) {
+        CRM_Core_Session::setStatus(ts('Extension has been uninstalled.'));
+      }
     }
 
     if ($this->_action & CRM_Core_Action::ADD) {
-      require_once ('CRM/Core/Extensions.php');
       $ext = new CRM_Core_Extensions();
       $ext->install($this->_id, $this->_key);
       CRM_Core_Session::setStatus(ts('Extension has been installed.'));
     }
 
+    if ($this->_action & CRM_Core_Action::ENABLE) {
+      $ext = new CRM_Core_Extensions();
+      $ext->enable($this->_id, $this->_key);
+      CRM_Core_Session::setStatus(ts('Extension has been enabled.'));
+    }
+
+    if ($this->_action & CRM_Core_Action::DISABLE) {
+      $ext = new CRM_Core_Extensions();
+      $ext->disable($this->_id, $this->_key);
+      CRM_Core_Session::setStatus(ts('Extension has been disabled.'));
+    }
+
     if ($this->_action & CRM_Core_Action::UPDATE) {
-      require_once ('CRM/Core/Extensions.php');
       $ext = new CRM_Core_Extensions();
       $ext->upgrade($this->_id, $this->_key);
       CRM_Core_Session::setStatus(ts('Extension has been upgraded.'));
     }
+
+    CRM_Utils_System::redirect(
+      CRM_Utils_System::url(
+        'civicrm/admin/extensions',
+        'reset=1&action=browse'
+      )
+    );
   }
 }
 

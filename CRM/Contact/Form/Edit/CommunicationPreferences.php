@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -69,15 +69,14 @@ class CRM_Contact_Form_Edit_CommunicationPreferences {
     unset($privacyOptions['is_opt_out']);
 
     foreach ($privacyOptions as $name => $label) {
-      $privacy[] = HTML_QuickForm::createElement('advcheckbox', $name, NULL, $label);
+      $privacy[] = $form->createElement('advcheckbox', $name, NULL, $label);
     }
     $form->addGroup($privacy, 'privacy', ts('Privacy'), '&nbsp;');
 
     // preferred communication method
-    require_once 'CRM/Core/PseudoConstant.php';
-    $comm = CRM_Core_PseudoConstant::pcm();
+    $comm = CRM_Core_PseudoConstant::pcm(TRUE);
     foreach ($comm as $value => $title) {
-      $commPreff[] = HTML_QuickForm::createElement('advcheckbox', $value, NULL, $title);
+      $commPreff[] = $form->createElement('advcheckbox', $value, NULL, $title);
     }
     $form->addGroup($commPreff, 'preferred_communication_method', ts('Preferred Method(s)'));
 
@@ -139,7 +138,6 @@ class CRM_Contact_Form_Edit_CommunicationPreferences {
   static
   function formRule($fields, $files, $self) {
     //CRM-4575
-    require_once 'CRM/Core/OptionGroup.php';
 
     $greetings = self::getGreetingFields($self->_contactType);
     foreach ($greetings as $greeting => $details) {
@@ -177,11 +175,9 @@ class CRM_Contact_Form_Edit_CommunicationPreferences {
     }
 
     //set default from greeting types CRM-4575, CRM-9739
-    require_once 'CRM/Contact/BAO/Contact.php';
     if ($form->_action & CRM_Core_Action::ADD) {
       foreach (CRM_Contact_BAO_Contact::$_greetingTypes as $greeting) {
         if (empty($defaults[$greeting . '_id'])) {
-          require_once 'CRM/Contact/BAO/Contact/Utils.php';
           if ($defaultGreetingTypeId =
             CRM_Contact_BAO_Contact_Utils::defaultGreeting($form->_contactType, $greeting)
           ) {

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -48,8 +48,7 @@ class CRM_Core_BAO_ConfigSetting {
    * @return null
    * @static
    */
-  static
-  function add(&$params) {
+  static function add(&$params) {
     self::fixParams($params);
 
     // also set a template url so js files can use this
@@ -60,7 +59,6 @@ class CRM_Core_BAO_ConfigSetting {
       $params['civiRelativeURL']
     );
 
-    require_once "CRM/Core/DAO/Domain.php";
     $domain = new CRM_Core_DAO_Domain();
     $domain->id = CRM_Core_Config::domainID();
     $domain->find(TRUE);
@@ -84,7 +82,6 @@ class CRM_Core_BAO_ConfigSetting {
       unset($params[$var]);
     }
 
-    require_once 'CRM/Core/BAO/Setting.php';
     CRM_Core_BAO_Setting::fixAndStoreDirAndURL($params);
 
     // also skip all Dir Params, we dont need to store those in the DB!
@@ -105,7 +102,6 @@ class CRM_Core_BAO_ConfigSetting {
         $lcMessages = $session->get('lcMessages');
       }
 
-      require_once 'CRM/Core/DAO/UFMatch.php';
       $ufm = new CRM_Core_DAO_UFMatch();
       $ufm->contact_id = $session->get('userID');
       if ($lcMessages && $ufm->find(TRUE)) {
@@ -128,8 +124,7 @@ class CRM_Core_BAO_ConfigSetting {
    * @return null
    * @static
    */
-  static
-  function fixParams(&$params) {
+  static function fixParams(&$params) {
     // in our old civicrm.settings.php we were using ISO code for country and
     // province limit, now we have changed it to use ids
 
@@ -162,8 +157,7 @@ class CRM_Core_BAO_ConfigSetting {
    * @return null
    * @static
    */
-  static
-  function formatParams(&$params, &$values) {
+  static function formatParams(&$params, &$values) {
     if (empty($params) ||
       !is_array($params)
     ) {
@@ -185,9 +179,7 @@ class CRM_Core_BAO_ConfigSetting {
    * @return array $defaults
    * @static
    */
-  static
-  function retrieve(&$defaults) {
-    require_once "CRM/Core/DAO/Domain.php";
+  static function retrieve(&$defaults) {
     $domain = new CRM_Core_DAO_Domain();
 
     //we are initializing config, really can't use, CRM-7863
@@ -226,6 +218,11 @@ class CRM_Core_BAO_ConfigSetting {
 
       // since language field won't be present before upgrade.
       if (CRM_Core_Config::isUpgradeMode()) {
+        // dont add if its empty
+        if (!empty($defaults)) {
+          // retrieve directory and url preferences also
+          CRM_Core_BAO_Setting::retrieveDirectoryAndURLPreferences($defaults);
+        }
         return;
       }
 
@@ -245,16 +242,8 @@ class CRM_Core_BAO_ConfigSetting {
 
       $session = CRM_Core_Session::singleton();
 
-      // for logging purposes, pass the userID to the db
-      if ($session->get('userID')) {
-        CRM_Core_DAO::executeQuery('SET @civicrm_user_id = %1',
-          array(1 => array($session->get('userID'), 'Integer'))
-        );
-      }
-
       // on multi-lang sites based on request and civicrm_uf_match
       if ($multiLang) {
-        require_once 'CRM/Utils/Request.php';
         $lcMessagesRequest = CRM_Utils_Request::retrieve('lcMessages', 'String', $this);
         $languageLimit = array();
         if (array_key_exists('languageLimit', $defaults) && is_array($defaults['languageLimit'])) {
@@ -265,7 +254,6 @@ class CRM_Core_BAO_ConfigSetting {
           $lcMessages = $lcMessagesRequest;
 
           //CRM-8559, cache navigation do not respect locale if it is changed, so reseting cache.
-          require_once 'CRM/Core/BAO/Cache.php';
           CRM_Core_BAO_Cache::deleteGroup('navigation');
         }
         else {
@@ -283,7 +271,6 @@ class CRM_Core_BAO_ConfigSetting {
         }
 
         if ($lcMessagesRequest) {
-          require_once 'CRM/Core/DAO/UFMatch.php';
           $ufm = new CRM_Core_DAO_UFMatch();
           $ufm->contact_id = $session->get('userID');
           if ($ufm->find(TRUE)) {
@@ -294,7 +281,6 @@ class CRM_Core_BAO_ConfigSetting {
         }
 
         if (!$lcMessages and $session->get('userID')) {
-          require_once 'CRM/Core/DAO/UFMatch.php';
           $ufm = new CRM_Core_DAO_UFMatch();
           $ufm->contact_id = $session->get('userID');
           if ($ufm->find(TRUE) &&
@@ -307,13 +293,11 @@ class CRM_Core_BAO_ConfigSetting {
       }
       global $dbLocale;
 
-      // if unset and the install is so configured, try to inherit the language from the hosting CMS
-      if ($lcMessages === NULL and CRM_Utils_Array::value('inheritLocale', $defaults)) {
+      // try to inherit the language from the hosting CMS
+      if (CRM_Utils_Array::value('inheritLocale', $defaults)) {
         // FIXME: On multilanguage installs, CRM_Utils_System::getUFLocale() in many cases returns nothing if $dbLocale is not set
         $dbLocale = $multiLang ? "_{$defaults['lcMessages']}" : '';
-        require_once 'CRM/Utils/System.php';
         $lcMessages = CRM_Utils_System::getUFLocale();
-        require_once 'CRM/Core/BAO/CustomOption.php';
         if ($domain->locales and !in_array($lcMessages, explode(CRM_Core_DAO::VALUE_SEPARATOR,
               $domain->locales
             ))) {
@@ -327,7 +311,7 @@ class CRM_Core_BAO_ConfigSetting {
       }
       else {
         // if a single-lang site or the above didn't yield a result, use default
-        $lcMessages = $defaults['lcMessages'];
+        $lcMessages = CRM_Utils_Array::value( 'lcMessages', $defaults );
       }
 
       // set suffix for table names - use views if more than one language
@@ -347,14 +331,11 @@ class CRM_Core_BAO_ConfigSetting {
     // dont add if its empty
     if (!empty($defaults)) {
       // retrieve directory and url preferences also
-      require_once 'CRM/Core/BAO/Setting.php';
       CRM_Core_BAO_Setting::retrieveDirectoryAndURLPreferences($defaults);
     }
   }
 
-
-  static
-  function getConfigSettings() {
+  static function getConfigSettings() {
     $config = CRM_Core_Config::singleton();
 
     $url = $dir = $siteName = $siteRoot = NULL;
@@ -410,8 +391,7 @@ class CRM_Core_BAO_ConfigSetting {
     return array($url, $dir, $siteName, $siteRoot);
   }
 
-  static
-  function getBestGuessSettings() {
+  static function getBestGuessSettings() {
     $config = CRM_Core_Config::singleton();
 
     $url = $config->userFrameworkBaseURL;
@@ -451,15 +431,12 @@ class CRM_Core_BAO_ConfigSetting {
     return array($url, $dir, $siteName, $siteRoot);
   }
 
-  static
-  function doSiteMove($defaultValues = array(
-    )) {
+  static function doSiteMove($defaultValues = array() ) {
     $moveStatus = ts('Beginning site move process...') . '<br />';
     // get the current and guessed values
     list($oldURL, $oldDir, $oldSiteName, $oldSiteRoot) = self::getConfigSettings();
     list($newURL, $newDir, $newSiteName, $newSiteRoot) = self::getBestGuessSettings();
 
-    require_once 'CRM/Utils/Request.php';
 
     // retrieve these values from the argument list
     $variables = array('URL', 'Dir', 'SiteName', 'SiteRoot', 'Val_1', 'Val_2', 'Val_3');
@@ -537,11 +514,11 @@ WHERE  id = %1
 
         if ($from && $to && $from != $to) {
           $sql = '
-UPDATE civicrm_option_value 
-SET    value = REPLACE(value, %1, %2) 
-WHERE  option_group_id = ( 
-  SELECT id 
-  FROM   civicrm_option_group 
+UPDATE civicrm_option_value
+SET    value = REPLACE(value, %1, %2)
+WHERE  option_group_id = (
+  SELECT id
+  FROM   civicrm_option_group
   WHERE  name = %3 )
 ';
           $params = array(1 => array($from, 'String'),
@@ -596,14 +573,12 @@ WHERE  option_group_id = (
    * @return boolean - true if valid component name and enabling succeeds, else false
    * @static
    */
-  static
-  function enableComponent($componentName) {
+  static function enableComponent($componentName) {
     $config = CRM_Core_Config::singleton();
     if (in_array($componentName, $config->enableComponents)) {
       // component is already enabled
       return TRUE;
     }
-    require_once 'CRM/Core/Component.php';
     $components = CRM_Core_Component::getComponents();
 
     // return if component does not exist
@@ -657,8 +632,7 @@ WHERE  id = %1
     return TRUE;
   }
 
-  static
-  function skipVars() {
+  static function skipVars() {
     return array(
       'dsn', 'templateCompileDir',
       'userFrameworkDSN',

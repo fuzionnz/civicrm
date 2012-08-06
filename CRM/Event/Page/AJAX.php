@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -42,7 +42,6 @@ class CRM_Event_Page_AJAX {
    * Function for building Event combo box
    */
   function event() {
-    require_once 'CRM/Utils/Type.php';
     $name = trim(CRM_Utils_Type::escape($_GET['s'], 'String'));
     if (!$name) {
       $name = '%';
@@ -69,7 +68,6 @@ ORDER BY title
    * Function for building Event Type combo box
    */
   function eventType() {
-    require_once 'CRM/Utils/Type.php';
     $name = trim(CRM_Utils_Type::escape($_GET['s'], 'String'));
     if (!$name) {
       $name = '%';
@@ -97,21 +95,22 @@ ORDER by v.weight";
    * Function for building EventFee combo box
    */
   function eventFee() {
-    require_once 'CRM/Utils/Type.php';
     $name = trim(CRM_Utils_Type::escape($_GET['s'], 'String'));
+
     if (!$name) {
       $name = '%';
     }
 
     $whereClause = "cv.label LIKE '$name%' ";
-
-    $query = "
-SELECT distinct(cv.label), cv.id
-FROM civicrm_option_value cv, civicrm_option_group cg
-WHERE cg.name LIKE 'civicrm_event.amount%'
-   AND cg.id = cv.option_group_id AND {$whereClause}
-   GROUP BY cv.label
-";
+    
+    $query = "SELECT DISTINCT (
+cv.label
+), cv.id
+FROM civicrm_price_field_value cv
+LEFT JOIN civicrm_price_field cf ON cv.price_field_id = cf.id
+LEFT JOIN civicrm_price_set_entity ce ON ce.price_set_id = cf.price_set_id
+WHERE ce.entity_table = 'civicrm_event' AND {$whereClause} 
+GROUP BY cv.label";
     $dao = CRM_Core_DAO::executeQuery($query);
     while ($dao->fetch()) {
       echo $elements = "$dao->label|$dao->id\n";
@@ -120,7 +119,6 @@ WHERE cg.name LIKE 'civicrm_event.amount%'
   }
 
   function eventList() {
-    require_once "CRM/Event/BAO/Event.php";
     $events = CRM_Event_BAO_Event::getEvents(TRUE);
 
     $elements = array(array('name' => ts('- select -'),
@@ -133,7 +131,6 @@ WHERE cg.name LIKE 'civicrm_event.amount%'
       );
     }
 
-    require_once "CRM/Utils/JSON.php";
     echo json_encode($elements);
     CRM_Utils_System::civiExit();
   }
@@ -143,7 +140,6 @@ WHERE cg.name LIKE 'civicrm_event.amount%'
    */
   function participantRole() {
 
-    require_once 'CRM/Utils/Type.php';
 
     $eventID = $_GET['eventId'];
 
@@ -152,7 +148,6 @@ WHERE cg.name LIKE 'civicrm_event.amount%'
       'default_role_id',
       'id'
     );
-    require_once "CRM/Utils/JSON.php";
     $participantRole = array('role' => $defaultRoleId);
     echo json_encode($participantRole);
     CRM_Utils_System::civiExit();

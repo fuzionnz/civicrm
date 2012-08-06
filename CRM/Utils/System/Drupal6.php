@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Utils/System/Base.php';
 
 /**
  * Drupal specific stuff goes here
@@ -221,7 +219,6 @@ SELECT name, mail
      *
      */
   function getLoginDestination(&$form) {
-    require_once 'CRM/Utils/System.php';
     $args = NULL;
 
     $id = $form->get('id');
@@ -377,7 +374,6 @@ SELECT name, mail
     $config = CRM_Core_Config::singleton();
     $script = 'index.php';
 
-    require_once 'CRM/Utils/String.php';
     $path = CRM_Utils_String::stripPathChars($path);
 
     if (isset($fragment)) {
@@ -441,7 +437,7 @@ SELECT name, mail
       contactID, ufID, unique string ) if success
    * @access public
    */
-  function authenticate($name, $password) {
+  function authenticate($name, $password, $loadCMSBootstrap = FALSE, $realPath = NULL) {
     require_once 'DB.php';
 
     $config = CRM_Core_Config::singleton();
@@ -452,21 +448,32 @@ SELECT name, mail
     }
 
     $strtolower = function_exists('mb_strtolower') ? 'mb_strtolower' : 'strtolower';
-    $password   = md5($password);
+    $dbpassword   = md5($password);
     $name       = $dbDrupal->escapeSimple($strtolower($name));
-    $sql        = 'SELECT u.* FROM ' . $config->userFrameworkUsersTableName . " u WHERE LOWER(u.name) = '$name' AND u.pass = '$password' AND u.status = 1";
+    $sql        = 'SELECT u.* FROM ' . $config->userFrameworkUsersTableName . " u WHERE LOWER(u.name) = '$name' AND u.pass = '$dbpassword' AND u.status = 1";
     $query      = $dbDrupal->query($sql);
 
     $user = NULL;
     // need to change this to make sure we matched only one row
-    require_once 'CRM/Core/BAO/UFMatch.php';
     while ($row = $query->fetchRow(DB_FETCHMODE_ASSOC)) {
       CRM_Core_BAO_UFMatch::synchronizeUFMatch($user, $row['uid'], $row['mail'], 'Drupal');
       $contactID = CRM_Core_BAO_UFMatch::getContactId($row['uid']);
       if (!$contactID) {
         return FALSE;
       }
+      else{//success
+        if ($loadCMSBootstrap) {
+          $bootStrapParams = array();
+          if ($name && $password) {
+            $bootStrapParams = array(
+                'name' => $name,
+                'pass' => $password,
+            );
+          }
+          CRM_Utils_System::loadBootStrap($bootStrapParams, TRUE, TRUE, $realPath);
+        }
       return array($contactID, $row['uid'], mt_rand());
+    }
     }
     return FALSE;
   }
@@ -480,7 +487,6 @@ SELECT name, mail
       return FALSE;
     }
 
-    require_once ('CRM/Core/BAO/UFMatch.php');
     $contact_id = CRM_Core_BAO_UFMatch::getContactId($uid);
 
     // lets store contact id and user id in session
@@ -537,7 +543,6 @@ SELECT name, mail
         return $language->language;
 
       default:
-        require_once 'CRM/Core/I18n/PseudoConstant.php';
         return CRM_Core_I18n_PseudoConstant::longForShort(substr($language->language, 0, 2));
     }
   }
@@ -583,7 +588,6 @@ SELECT name, mail
     // all the modules that are listening on it, does not apply
     // to J! and WP as yet
     // CRM-8655
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::config($config);
 
     if (!$loadUser) {
@@ -610,7 +614,7 @@ SELECT name, mail
     }
   }
 
-  function cmsRootPath($scriptFilename) {
+  function cmsRootPath($scriptFilename = NULL) {
     $cmsRoot = $valid = NULL;
 
     if (!is_null($scriptFilename)) {
@@ -755,6 +759,33 @@ SELECT name, mail
     }
 
     return $url;
+  }
+
+  /**
+   * Find any users/roles/security-principals with the given permission
+   * and replace it with one or more permissions.
+   *
+   * @param $oldPerm string
+   * @param $newPerms array, strings
+   *
+   * @return void
+   */
+  function replacePermission($oldPerm, $newPerms) {
+    $roles = user_roles(FALSE, $oldPerm);
+    foreach ($roles as $rid => $roleName) {
+      $permList = db_result(db_query('SELECT perm FROM {permission} WHERE rid = %d', $rid));
+      $perms = drupal_map_assoc(explode(', ', $permList));
+      unset($perms[$oldPerm]);
+      $perms = $perms + drupal_map_assoc($newPerms);
+      $permList = implode(', ', $perms);
+      db_query('UPDATE {permission} SET perm = "%s" WHERE rid = %d', $permList, $rid);
+      /*        
+        if ( ! empty( $roles ) ) {
+            $rids = implode(',', array_keys($roles));
+            db_query( 'UPDATE {permission} SET perm = CONCAT( perm, \', edit all events\') WHERE rid IN (' . implode(',', array_keys($roles)) . ')' );
+            db_query( "UPDATE {permission} SET perm = REPLACE( perm, '%s', '%s' ) WHERE rid IN ($rids)", 
+                $oldPerm, implode(', ', $newPerms) );*/
+    }
   }
 }
 

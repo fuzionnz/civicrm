@@ -11,27 +11,27 @@ $params = array(
   'contact_id' => 1,
   'values' => array( 
       '0' => array( 
-          'location_type_id' => 12,
+          'location_type_id' => 18,
           'email' => '1-1@example.com',
           'is_primary' => 1,
         ),
       '1' => array( 
-          'location_type_id' => 12,
+          'location_type_id' => 18,
           'email' => '1-2@example.com',
           'is_primary' => 0,
         ),
       '2' => array( 
-          'location_type_id' => 12,
+          'location_type_id' => 18,
           'email' => '1-3@example.com',
           'is_primary' => 0,
         ),
       '3' => array( 
-          'location_type_id' => 13,
+          'location_type_id' => 19,
           'email' => '2-1@example.com',
           'is_primary' => 0,
         ),
       '4' => array( 
-          'location_type_id' => 13,
+          'location_type_id' => 19,
           'email' => '2-2@example.com',
           'is_primary' => 0,
         ),
@@ -54,10 +54,10 @@ function email_replace_expectedresult(){
   'version' => 3,
   'count' => 5,
   'values' => array( 
-      '4' => array( 
-          'id' => 4,
+      '11' => array( 
+          'id' => 11,
           'contact_id' => 1,
-          'location_type_id' => 12,
+          'location_type_id' => 18,
           'email' => '1-1@example.com',
           'is_primary' => 1,
           'is_billing' => '',
@@ -68,10 +68,10 @@ function email_replace_expectedresult(){
           'signature_text' => '',
           'signature_html' => '',
         ),
-      '5' => array( 
-          'id' => 5,
+      '12' => array( 
+          'id' => 12,
           'contact_id' => 1,
-          'location_type_id' => 12,
+          'location_type_id' => 18,
           'email' => '1-2@example.com',
           'is_primary' => 0,
           'is_billing' => '',
@@ -82,10 +82,10 @@ function email_replace_expectedresult(){
           'signature_text' => '',
           'signature_html' => '',
         ),
-      '6' => array( 
-          'id' => 6,
+      '13' => array( 
+          'id' => 13,
           'contact_id' => 1,
-          'location_type_id' => 12,
+          'location_type_id' => 18,
           'email' => '1-3@example.com',
           'is_primary' => 0,
           'is_billing' => '',
@@ -96,10 +96,10 @@ function email_replace_expectedresult(){
           'signature_text' => '',
           'signature_html' => '',
         ),
-      '7' => array( 
-          'id' => 7,
+      '14' => array( 
+          'id' => 14,
           'contact_id' => 1,
-          'location_type_id' => 13,
+          'location_type_id' => 19,
           'email' => '2-1@example.com',
           'is_primary' => 0,
           'is_billing' => '',
@@ -110,10 +110,10 @@ function email_replace_expectedresult(){
           'signature_text' => '',
           'signature_html' => '',
         ),
-      '8' => array( 
-          'id' => 8,
+      '15' => array( 
+          'id' => 15,
           'contact_id' => 1,
-          'location_type_id' => 13,
+          'location_type_id' => 19,
           'email' => '2-2@example.com',
           'is_primary' => 0,
           'is_billing' => '',

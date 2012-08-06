@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,14 +33,14 @@
  * @package CiviCRM_APIv3
  * @subpackage API_CustomField
  *
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * @version $Id: CustomField.php 30879 2010-11-22 15:45:55Z shot $
  */
 
 /**
  * Files required for this package
  */
-require_once 'api/v3/utils.php';
+
 require_once 'CRM/Core/BAO/CustomField.php';
 require_once 'CRM/Core/BAO/CustomGroup.php';
 require_once 'CRM/Core/BAO/CustomValueTable.php';
@@ -164,34 +166,45 @@ function civicrm_api3_custom_value_get($params) {
   $result = CRM_Core_BAO_CustomValueTable::getValues($getParams);
 
   if ($result['is_error']) {
-    return civicrm_api3_create_error($result['error_message']);
+    if ($result['error_message'] == "No values found for the specified entity ID and custom field(s).") {
+      $values = array();
+      return civicrm_api3_create_success($values, $params);
+    }
+    else {
+      return civicrm_api3_create_error($result['error_message']);
+    }
   }
   else {
     $entity_id = $result['entityID'];
     unset($result['is_error'], $result['entityID']);
-
     // Convert multi-value strings to arrays
     $sp = CRM_Core_DAO::VALUE_SEPARATOR;
     foreach ($result as $id => $value) {
       if (strpos($value, $sp) !== FALSE) {
         $value = explode($sp, trim($value, $sp));
       }
-      list($c, $i, $n) = explode('_', $id);
-      if ($c != 'custom') {
+
+      $idArray = explode('_', $id);
+      if ($idArray[0] != 'custom') {
         continue;
       }
-      $info = array_pop(CRM_Core_BAO_CustomField::getNameFromID($i));
+      $fieldNumber = $idArray[1];
+      $info = array_pop(CRM_Core_BAO_CustomField::getNameFromID($fieldNumber));
       // id is the index for returned results
-      $id = $i . "." . $n;
-      if (!$n) {
+
+      if (empty($idArray[2])) {
         $n = 0;
-        $id = $i;
+        $id = $fieldNumber;
+      }
+      else{
+        $n = $idArray[2];
+        $id = $fieldNumber . "." . $idArray[2];
       }
       if (CRM_Utils_Array::value('format.field_names', $params)) {
         $id = $info['field_name'];
       }
       else {
-        $id = $i;
+        $id = $fieldNumber;
       }
       $values[$id]['entity_id'] = $getParams['entityID'];
       if (CRM_Utils_Array::value('entityType', $getParams)) {

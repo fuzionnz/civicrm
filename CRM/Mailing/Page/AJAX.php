@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -42,10 +42,8 @@ class CRM_Mailing_Page_AJAX {
    * Function to fetch the template text/html messages
    */
   function template() {
-    require_once 'CRM/Utils/Type.php';
     $templateId = CRM_Utils_Type::escape($_POST['tid'], 'Integer');
 
-    require_once "CRM/Core/DAO/MessageTemplates.php";
     $messageTemplate = new CRM_Core_DAO_MessageTemplates();
     $messageTemplate->id = $templateId;
     $messageTemplate->selectAdd();

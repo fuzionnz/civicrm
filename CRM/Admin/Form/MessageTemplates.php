@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Admin/Form.php';
 
 /**
  * This class generates form components for Message templates
@@ -74,7 +72,6 @@ class CRM_Admin_Form_MessageTemplates extends CRM_Admin_Form {
     if ($this->_action & CRM_Core_Action::ADD) {
       $defaults['is_active'] = 1;
       //set the context for redirection after form submit or cancel
-      require_once 'CRM/Core/Session.php';
       $session = CRM_Core_Session::singleton();
       $session->replaceUserContext(CRM_Utils_System::url('civicrm/admin/messageTemplates',
           'selectedChild=user&reset=1'
@@ -141,7 +138,6 @@ class CRM_Admin_Form_MessageTemplates extends CRM_Admin_Form {
       return;
     }
 
-    require_once 'CRM/Utils/System.php';
     $breadCrumb = array(array('title' => ts('Message Templates'),
         'url' => CRM_Utils_System::url('civicrm/admin/messageTemplates',
           'action=browse&reset=1'
@@ -215,7 +211,6 @@ class CRM_Admin_Form_MessageTemplates extends CRM_Admin_Form {
       );
     }
 
-    require_once 'CRM/Core/BAO/PdfFormat.php';
     $this->add('select', 'pdf_format_id', ts('PDF Page Format'),
       array(
         'null' => ts('- default -')) + CRM_Core_BAO_PdfFormat::getList(TRUE), FALSE
@@ -237,7 +232,6 @@ class CRM_Admin_Form_MessageTemplates extends CRM_Admin_Form {
    * @return None
    */
   public function postProcess() {
-    require_once 'CRM/Core/BAO/MessageTemplates.php';
     if ($this->_action & CRM_Core_Action::DELETE) {
       CRM_Core_BAO_MessageTemplates::del($this->_id);
     }

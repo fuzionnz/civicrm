@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -36,7 +36,6 @@
 /**
  * Class contains Contact dashboard related functions
  */
-require_once 'CRM/Core/DAO/Dashboard.php';
 class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard {
 
   /**
@@ -49,8 +48,7 @@ class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard {
    * @access public
    * @static
    */
-  static
-  function getDashlets($all = TRUE) {
+  static function getDashlets($all = TRUE) {
     $dashlets = array();
     $dao = new CRM_Core_DAO_Dashboard();
 
@@ -85,17 +83,15 @@ class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard {
    * @access public
    * @static
    */
-  static
-  function getContactDashlets($flatFormat = FALSE) {
+  static function getContactDashlets($flatFormat = FALSE) {
     $dashlets = array();
 
     $session = CRM_Core_Session::singleton();
     $contactID = $session->get('userID');
 
     // get contact dashboard dashlets
-    $hasDashlets = FALSE;
-    require_once 'CRM/Contact/DAO/DashboardContact.php';
-    $dao = new CRM_Contact_DAO_DashboardContact();
+    $hasDashlets     = FALSE;
+    $dao             = new CRM_Contact_DAO_DashboardContact();
     $dao->contact_id = $contactID;
     $dao->orderBy('column_no asc, weight asc');
     $dao->find();
@@ -147,8 +143,7 @@ class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard {
    *
    * @return boolean true if use has permission else false
    */
-  static
-  function checkPermission($permission, $operator) {
+  static function checkPermission($permission, $operator) {
     if ($permission) {
       $permissions = explode(',', $permission);
       $config = CRM_Core_Config::singleton();
@@ -223,8 +218,7 @@ class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard {
    * @access public
    * @static
    */
-  static
-  function getDashletInfo($dashletID) {
+  static function getDashletInfo($dashletID) {
     $dashletInfo = array();
 
     $params      = array(1 => array($dashletID, 'Integer'));
@@ -233,7 +227,6 @@ class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard {
     $dashboadDAO->fetch();
 
     // build the content
-    require_once 'CRM/Contact/DAO/DashboardContact.php';
     $dao = new CRM_Contact_DAO_DashboardContact();
 
     $session           = CRM_Core_Session::singleton();
@@ -294,8 +287,7 @@ class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard {
    * @access public
    * @static
    */
-  static
-  function saveDashletChanges($columns) {
+  static function saveDashletChanges($columns) {
     $session = CRM_Core_Session::singleton();
     $contactID = $session->get('userID');
 
@@ -359,8 +351,7 @@ class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard {
    * @access public
    * @static
    */
-  static
-  function addDashlet(&$params) {
+  static function addDashlet(&$params) {
 
     // special case to handle duplicate entires for report instances
     $dashboardID = NULL;
@@ -371,7 +362,6 @@ class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard {
       $dashboardID = CRM_Core_DAO::singleValueQuery($query);
     }
 
-    require_once "CRM/Core/DAO/Dashboard.php";
     $dashlet = new CRM_Core_DAO_Dashboard();
 
     if (!$dashboardID) {
@@ -402,8 +392,7 @@ class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard {
    * Update contact dashboard with new dashlet
    *
    */
-  static
-  function addContactDashlet(&$dashlet) {
+  static function addContactDashlet(&$dashlet) {
     $admin = CRM_Core_Permission::check('administer CiviCRM');
 
     // if dashlet is created by admin then you need to add it all contacts.
@@ -448,8 +437,7 @@ class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard {
    * @return void
    * @static
    */
-  static
-  function resetDashletCache() {
+  static function resetDashletCache() {
     $query = "UPDATE civicrm_dashboard_contact SET content = NULL";
     $dao = CRM_Core_DAO::executeQuery($query);
   }
@@ -460,9 +448,7 @@ class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard {
    * @return void
    * @static
    */
-  static
-  function deleteDashlet($dashletID) {
-    require_once "CRM/Core/DAO/Dashboard.php";
+  static function deleteDashlet($dashletID) {
     $dashlet = new CRM_Core_DAO_Dashboard();
     $dashlet->id = $dashletID;
     $dashlet->delete();

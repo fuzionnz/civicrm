@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,18 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Selector/Base.php';
-require_once 'CRM/Core/Selector/API.php';
-
-require_once 'CRM/Utils/Pager.php';
-require_once 'CRM/Utils/Sort.php';
-
-require_once 'CRM/Contact/BAO/Query.php';
 
 /**
  * This class is used to retrieve and display a range of
@@ -188,7 +180,6 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
     // type of selector
     $this->_action = $action;
 
-    require_once 'CRM/Event/BAO/Query.php';
     $this->_query = new CRM_Contact_BAO_Query($this->_queryParams,
       CRM_Event_BAO_Query::defaultReturnProperties(CRM_Contact_BAO_Query::MODE_EVENT,
         FALSE
@@ -333,15 +324,12 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
     }
     $mask = CRM_Core_Action::mask($permissions);
 
-    require_once 'CRM/Event/BAO/Event.php';
-    require_once 'CRM/Event/PseudoConstant.php';
     $statusTypes      = CRM_Event_PseudoConstant::participantStatus();
     $statusClasses    = CRM_Event_PseudoConstant::participantStatusClass();
     $participantRoles = CRM_Event_PseudoConstant::participantRole();
     $sep              = CRM_Core_DAO::VALUE_SEPARATOR;
 
     //get all campaigns.
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     $allCampaigns = CRM_Campaign_BAO_Campaign::getCampaigns(NULL, NULL, FALSE, FALSE, FALSE, TRUE);
 
     while ($result->fetch()) {
@@ -382,7 +370,6 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
         )
       );
 
-      require_once ('CRM/Contact/BAO/Contact/Utils.php');
 
       $row['contact_type'] = CRM_Contact_BAO_Contact_Utils::getImage($result->contact_sub_type ?
         $result->contact_sub_type : $result->contact_type, FALSE, $result->contact_id
@@ -396,7 +383,6 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
 
       if (CRM_Event_BAO_Event::usesPriceSet($row['event_id'])) {
         // add line item details if applicable
-        require_once 'CRM/Price/BAO/LineItem.php';
         $lineItems[$row['participant_id']] = CRM_Price_BAO_LineItem::getLineItems($row['participant_id']);
       }
 

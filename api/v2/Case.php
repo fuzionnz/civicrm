@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +33,7 @@
  *
  * @package CiviCRM_APIv2
  * @subpackage API_Case
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  *
  */
 
@@ -70,7 +72,6 @@ function civicrm_case_create(&$params) {
   if ($errors) {
 
     return $errors;
-
   }
 
   _civicrm_case_format_params($params, 'create');
@@ -200,7 +201,6 @@ function civicrm_case_get(&$params) {
     if (empty($ids)) {
 
       return civicrm_create_success(array());
-
     }
 
     $cases = array();
@@ -404,7 +404,6 @@ function civicrm_case_delete(&$params) {
   if ($errors) {
 
     return $errors;
-
   }
 
   if (CRM_Case_BAO_Case::deleteCase($params['case_id'], $params['move_to_trash'])) {
@@ -418,7 +417,9 @@ function civicrm_case_delete(&$params) {
 /***********************************/
 /*                                 */
 
+
 /*     INTERNAL FUNCTIONS          */
+
 
 /*                                 */
 
@@ -514,26 +515,24 @@ function _civicrm_case_check_params(&$params, $mode = NULL) {
       if (!$params['case_type_id'] && !$params['case_type']) {
 
         return civicrm_create_error(ts('Missing input parameters. Must provide case_type or case_type_id.'));
-
       }
 
-    $required = array(
-      'contact_id' => 'num',
-      'status_id' => 'num',
-      'medium_id' => 'num',
-      'creator_id' => 'num',
-      'subject' => 'str',
-    );
+      $required = array(
+        'contact_id' => 'num',
+        'status_id' => 'num',
+        'medium_id' => 'num',
+        'creator_id' => 'num',
+        'subject' => 'str',
+      );
 
-    if (!$params['case_type']) {
+      if (!$params['case_type']) {
 
-      $required['case_type_id'] = 'num';
-
-    }
-    if (!$params['case_type_id']) {
-      $required['case_type'] = 'str';
-    }
-    break;
+        $required['case_type_id'] = 'num';
+      }
+      if (!$params['case_type_id']) {
+        $required['case_type'] = 'str';
+      }
+      break;
 
     case 'activity':
 
@@ -560,19 +559,16 @@ function _civicrm_case_check_params(&$params, $mode = NULL) {
     if (!$params[$req]) {
 
       return civicrm_create_error(ts('Missing required parameter: %1.', array(1 => $req)));
-
     }
 
     if ($type == 'num' && !is_numeric($params[$req])) {
 
       return civicrm_create_error(ts('Invalid parameter: %1. Must provide a numeric value.', array(1 => $req)));
-
     }
 
     if ($type == 'str' && !is_string($params[$req])) {
 
       return civicrm_create_error(ts('Invalid parameter: %1. Must provide a string.', array(1 => $req)));
-
     }
   }
 

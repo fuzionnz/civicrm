@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Admin/Form.php';
 
 /**
  * This class generates form components for Mapping
@@ -72,7 +70,6 @@ class CRM_Admin_Form_Mapping extends CRM_Admin_Form {
         CRM_Core_DAO::getAttribute('CRM_Core_DAO_Mapping', 'description')
       );
 
-      require_once 'CRM/Core/PseudoConstant.php';
       $mappingType = $this->addElement('select', 'mapping_type_id', ts('Mapping Type'), CRM_Core_PseudoConstant::mappingTypes());
 
       if ($this->_action == CRM_Core_Action::UPDATE) {

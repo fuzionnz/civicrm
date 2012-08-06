@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -131,11 +131,10 @@ class CRM_Contact_Form_Edit_TagsandGroups {
       }
       $form->_tagGroup[$fName] = 1;
       $elements = array();
-      require_once 'CRM/Core/BAO/Tag.php';
       $tag = CRM_Core_BAO_Tag::getTags();
 
       foreach ($tag as $id => $name) {
-        $elements[] = HTML_QuickForm::createElement('checkbox', $id, NULL, $name);
+        $elements[] = $form->createElement('checkbox', $id, NULL, $name);
       }
       if (!empty($elements)) {
         $form->addGroup($elements, $fName, $tagName, '<br />');
@@ -147,8 +146,6 @@ class CRM_Contact_Form_Edit_TagsandGroups {
       }
 
       // build tag widget
-      require_once 'CRM/Core/Form/Tag.php';
-      require_once 'CRM/Core/BAO/Tag.php';
       $parentNames = CRM_Core_BAO_Tag::getTagSet('civicrm_contact');
 
       CRM_Core_Form_Tag::buildQuickForm($form, $parentNames, 'civicrm_contact', $contactId, FALSE, TRUE);
@@ -177,7 +174,6 @@ class CRM_Contact_Form_Edit_TagsandGroups {
         $fName = $fieldName;
       }
 
-      require_once 'CRM/Contact/BAO/GroupContact.php';
       $contactGroup = CRM_Contact_BAO_GroupContact::getContactGroup($id, 'Added', NULL, FALSE, TRUE);
       if ($contactGroup) {
         foreach ($contactGroup as $group) {
@@ -192,7 +188,6 @@ class CRM_Contact_Form_Edit_TagsandGroups {
         $fName = $fieldName;
       }
 
-      require_once 'CRM/Core/BAO/EntityTag.php';
       $contactTag = CRM_Core_BAO_EntityTag::getTag($id);
       if ($contactTag) {
         foreach ($contactTag as $tag) {

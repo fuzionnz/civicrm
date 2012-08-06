@@ -11,21 +11,19 @@
  *
  * @package CRM
  * @author Marshal Newrock <marshal@idealso.com>
- * $Id: AuthorizeNet.php 40475 2012-05-17 00:55:16Z allen $
+ * $Id: AuthorizeNet.php 41419 2012-07-06 16:31:23Z lobo $
  */
 
 /* NOTE:
  * When looking up response codes in the Authorize.Net API, they
  * begin at one, so always delete one from the "Position in Response"
  */
-
-
-require_once 'CRM/Core/Payment.php';
 class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
   CONST CHARSET = 'iso-8859-1';
   CONST AUTH_APPROVED = 1;
   CONST AUTH_DECLINED = 2;
   CONST AUTH_ERROR = 3;
+  CONST TIMEZONE = 'America/Denver';
 
   static protected $_mode = NULL;
 
@@ -49,7 +47,7 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
    */ function __construct($mode, &$paymentProcessor) {
     $this->_mode = $mode;
     $this->_paymentProcessor = $paymentProcessor;
-    $this->_processorName = ts('Authorized .Net');
+    $this->_processorName = ts('Authorize.net');
 
     $config = CRM_Core_Config::singleton();
     $this->_setParam('apiLogin', $paymentProcessor['user_name']);
@@ -116,7 +114,8 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
     if (CRM_Utils_Array::value('is_recur', $params) &&
       $params['contributionRecurID']
     ) {
-      return $this->doRecurPayment($params);
+      $this->doRecurPayment();
+      return $params;
     }
 
     $postFields = array();
@@ -149,6 +148,7 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
     curl_setopt($submit, CURLOPT_POST, TRUE);
     curl_setopt($submit, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt($submit, CURLOPT_POSTFIELDS, implode('&', $postFields));
+    curl_setopt($submit, CURLOPT_SSL_VERIFYPEER, CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'verifySSL'));
 
     $response = curl_exec($submit);
 
@@ -200,12 +200,9 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
   /**
    * Submit an Automated Recurring Billing subscription
    *
-   * @param  array $params assoc array of input parameters for this transaction
-   *
-   * @return array the result in a nice formatted array (or an error object)
    * @public
    */
-  function doRecurPayment(&$params) {
+  function doRecurPayment() {
     $template = CRM_Core_Smarty::singleton();
 
     $intervalLength = $this->_getParam('frequency_interval');
@@ -255,11 +252,14 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
     $firstPaymentDate = $this->_getParam('receive_date');
     if (!empty($firstPaymentDate)) {
       //allow for post dated payment if set in form
-      $template->assign('startDate', date('Y-m-d', strtotime($firstPaymentDate)));
+      $startDate = date_create($firstPaymentDate);
     }
     else {
-      $template->assign('startDate', date('Y-m-d'));
+      $startDate = date_create();
     }
+    // Format start date in Mountain Time to avoid Authorize.net error E00017
+    $startDate->setTimezone(new DateTimeZone(self::TIMEZONE));
+    $template->assign( 'startDate', $startDate->format('Y-m-d') );
     // for open ended subscription totalOccurrences has to be 9999
     $installments = $this->_getParam('installments');
     $template->assign('totalOccurrences', $installments ? $installments : 9999);
@@ -295,7 +295,7 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
     curl_setopt($submit, CURLOPT_HEADER, 1);
     curl_setopt($submit, CURLOPT_POSTFIELDS, $arbXML);
     curl_setopt($submit, CURLOPT_POST, 1);
-    curl_setopt($submit, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($submit, CURLOPT_SSL_VERIFYPEER, CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'verifySSL'));
 
     $response = curl_exec($submit);
 
@@ -311,7 +311,7 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
     }
 
     // update recur processor_id with subscriptionId
-    CRM_Core_DAO::setFieldValue('CRM_Contribute_DAO_ContributionRecur', $params['contributionRecurID'],
+    CRM_Core_DAO::setFieldValue('CRM_Contribute_DAO_ContributionRecur', $this->_getParam('contributionRecurID'),
       'processor_id', $responseFields['subscriptionId']
     );
     //only impact of assigning this here is is can be used to cancel the subscription in an automated test
@@ -319,14 +319,11 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
     if (CRM_Utils_Array::value('subscriptionId', $responseFields)) {
       $this->_setParam('subscriptionId', $responseFields['subscriptionId']);
     }
-    return $params;
   }
 
   function _getAuthorizeNetFields() {
-    // Total amount is from the form contribution field
-    $amount = $this->_getParam('total_amount');
-    // CRM-9894 would this ever be the case??
-    if (empty($amount)) {
+    $amount = $this->_getParam('total_amount');//Total amount is from the form contribution field
+    if(empty($amount)){//CRM-9894 would this ever be the case?? 
       $amount = $this->_getParam('amount');
     }
     $fields = array();
@@ -343,7 +340,7 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
     $fields['x_customer_ip'] = $this->_getParam('ip_address');
     $fields['x_email'] = $this->_getParam('email');
     $fields['x_invoice_num'] = substr($this->_getParam('invoiceID'), 0, 20);
-    $fields['x_amount'] = $amount;
+        $fields['x_amount']         = $amount;
     $fields['x_currency_code'] = $this->_getParam('currencyID');
     $fields['x_description'] = $this->_getParam('description');
     $fields['x_cust_id'] = $this->_getParam('contactID');
@@ -376,7 +373,6 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
    * @return bool                 True if ID exists, else false
    */
   function _checkDupe($invoiceId) {
-    require_once 'CRM/Contribute/DAO/Contribution.php';
     $contribution = new CRM_Contribute_DAO_Contribution();
     $contribution->invoice_id = $invoiceId;
     return $contribution->find();
@@ -548,10 +544,10 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
   function &error($errorCode = NULL, $errorMessage = NULL) {
     $e = CRM_Core_Error::singleton();
     if ($errorCode) {
-      $e->push($errorCode, 0, NULL, $errorMessage);
+      $e->push($errorCode, 0, array( ), $errorMessage);
     }
     else {
-      $e->push(9001, 0, NULL, 'Unknown System Error.');
+      $e->push(9001, 0, array( ), 'Unknown System Error.');
     }
     return $e;
   }
@@ -598,28 +594,19 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
     }
   }
 
-  function cancelSubscriptionURL($entityID = NULL, $entity = NULL) {
-    if ($entityID && $entity == 'membership') {
-      require_once 'CRM/Contact/BAO/Contact/Utils.php';
-      $contactID = CRM_Core_DAO::getFieldValue("CRM_Member_DAO_Membership", $entityID, "contact_id");
-      $checksumValue = CRM_Contact_BAO_Contact_Utils::generateChecksum($contactID, NULL, 'inf');
-
-      return CRM_Utils_System::url('civicrm/contribute/unsubscribe',
-        "reset=1&mid={$entityID}&cs={$checksumValue}", TRUE, NULL, FALSE, FALSE
-      );
-    }
-
+  function accountLoginURL() {
     return ($this->_mode == 'test') ? 'https://test.authorize.net' : 'https://authorize.net';
   }
 
-  function cancelSubscription() {
+  function cancelSubscription(&$message = '', $params = array(
+    )) {
     $template = CRM_Core_Smarty::singleton();
 
     $template->assign('subscriptionType', 'cancel');
 
     $template->assign('apiLogin', $this->_getParam('apiLogin'));
     $template->assign('paymentKey', $this->_getParam('paymentKey'));
-    $template->assign('subscriptionId', $this->_getParam('subscriptionId'));
+    $template->assign('subscriptionId', CRM_Utils_Array::value('subscriptionId', $params));
 
     $arbXML = $template->fetch('CRM/Contribute/Form/Contribution/AuthorizeNetARB.tpl');
 
@@ -634,7 +621,7 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
     curl_setopt($submit, CURLOPT_HEADER, 1);
     curl_setopt($submit, CURLOPT_POSTFIELDS, $arbXML);
     curl_setopt($submit, CURLOPT_POST, 1);
-    curl_setopt($submit, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($submit, CURLOPT_SSL_VERIFYPEER, CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'verifySSL'));
 
     $response = curl_exec($submit);
 
@@ -645,12 +632,110 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
     curl_close($submit);
 
     $responseFields = $this->_ParseArbReturn($response);
+    $message = "{$responseFields['code']}: {$responseFields['text']}";
 
     if ($responseFields['resultCode'] == 'Error') {
       return self::error($responseFields['code'], $responseFields['text']);
     }
+    return TRUE;
+  }
 
-    // carry on cancelation procedure
+  function updateSubscriptionBillingInfo(&$message = '', $params = array(
+    )) {
+    $template = CRM_Core_Smarty::singleton();
+    $template->assign('subscriptionType', 'updateBilling');
+
+    $template->assign('apiLogin', $this->_getParam('apiLogin'));
+    $template->assign('paymentKey', $this->_getParam('paymentKey'));
+    $template->assign('subscriptionId', $params['subscriptionId']);
+
+    $template->assign('cardNumber', $params['credit_card_number']);
+    $exp_month = str_pad($params['month'], 2, '0', STR_PAD_LEFT);
+    $exp_year = $params['year'];
+    $template->assign('expirationDate', $exp_year . '-' . $exp_month);
+
+    $template->assign('billingFirstName', $params['first_name']);
+    $template->assign('billingLastName', $params['last_name']);
+    $template->assign('billingAddress', $params['street_address']);
+    $template->assign('billingCity', $params['city']);
+    $template->assign('billingState', $params['state_province']);
+    $template->assign('billingZip', $params['postal_code']);
+    $template->assign('billingCountry', $params['country']);
+
+    $arbXML = $template->fetch('CRM/Contribute/Form/Contribution/AuthorizeNetARB.tpl');
+
+    // submit to authorize.net
+    $submit = curl_init($this->_paymentProcessor['url_recur']);
+    if (!$submit) {
+      return self::error(9002, 'Could not initiate connection to payment gateway');
+    }
+
+    curl_setopt($submit, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($submit, CURLOPT_HTTPHEADER, array("Content-Type: text/xml"));
+    curl_setopt($submit, CURLOPT_HEADER, 1);
+    curl_setopt($submit, CURLOPT_POSTFIELDS, $arbXML);
+    curl_setopt($submit, CURLOPT_POST, 1);
+    curl_setopt($submit, CURLOPT_SSL_VERIFYPEER, CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'verifySSL'));
+
+    $response = curl_exec($submit);
+
+    if (!$response) {
+      return self::error(curl_errno($submit), curl_error($submit));
+    }
+
+    curl_close($submit);
+
+    $responseFields = $this->_ParseArbReturn($response);
+    $message = "{$responseFields['code']}: {$responseFields['text']}";
+
+    if ($responseFields['resultCode'] == 'Error') {
+      return self::error($responseFields['code'], $responseFields['text']);
+    }
+    return TRUE;
+  }
+
+  function changeSubscriptionAmount(&$message = '', $params = array(
+    )) {
+    $template = CRM_Core_Smarty::singleton();
+
+    $template->assign('subscriptionType', 'update');
+
+    $template->assign('apiLogin', $this->_getParam('apiLogin'));
+    $template->assign('paymentKey', $this->_getParam('paymentKey'));
+
+    $template->assign('subscriptionId', $params['subscriptionId']);
+    $template->assign('totalOccurrences', $params['installments']);
+    $template->assign('amount', $params['amount']);
+
+    $arbXML = $template->fetch('CRM/Contribute/Form/Contribution/AuthorizeNetARB.tpl');
+
+    // submit to authorize.net
+    $submit = curl_init($this->_paymentProcessor['url_recur']);
+    if (!$submit) {
+      return self::error(9002, 'Could not initiate connection to payment gateway');
+    }
+
+    curl_setopt($submit, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($submit, CURLOPT_HTTPHEADER, array("Content-Type: text/xml"));
+    curl_setopt($submit, CURLOPT_HEADER, 1);
+    curl_setopt($submit, CURLOPT_POSTFIELDS, $arbXML);
+    curl_setopt($submit, CURLOPT_POST, 1);
+    curl_setopt($submit, CURLOPT_SSL_VERIFYPEER, CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'verifySSL'));
+
+    $response = curl_exec($submit);
+
+    if (!$response) {
+      return self::error(curl_errno($submit), curl_error($submit));
+    }
+
+    curl_close($submit);
+
+    $responseFields = $this->_ParseArbReturn($response);
+    $message = "{$responseFields['code']}: {$responseFields['text']}";
+
+    if ($responseFields['resultCode'] == 'Error') {
+      return self::error($responseFields['code'], $responseFields['text']);
+    }
     return TRUE;
   }
 }

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/MailSettings.php';
 class CRM_Mailing_MailStore {
   // flag to decide whether to print debug messages
   var $_debug = FALSE;
@@ -57,26 +55,21 @@ class CRM_Mailing_MailStore {
 
     switch ($protocols[$dao->protocol]) {
       case 'IMAP':
-        require_once 'CRM/Mailing/MailStore/Imap.php';
         return new CRM_Mailing_MailStore_Imap($dao->server, $dao->username, $dao->password, (bool) $dao->is_ssl, $dao->source);
 
       case 'POP3':
-        require_once 'CRM/Mailing/MailStore/Pop3.php';
         return new CRM_Mailing_MailStore_Pop3($dao->server, $dao->username, $dao->password, (bool) $dao->is_ssl);
 
       case 'Maildir':
-        require_once 'CRM/Mailing/MailStore/Maildir.php';
         return new CRM_Mailing_MailStore_Maildir($dao->source);
 
       case 'Localdir':
-        require_once 'CRM/Mailing/MailStore/Localdir.php';
         return new CRM_Mailing_MailStore_Localdir($dao->source);
 
       // DO NOT USE the mbox transport for anything other than testing
       // in particular, it does not clear the mbox afterwards
 
       case 'mbox':
-        require_once 'CRM/Mailing/MailStore/Mbox.php';
         return new CRM_Mailing_MailStore_Mbox($dao->source);
 
       default:

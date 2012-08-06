@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,16 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Core/BAO/CustomGroup.php';
-require_once 'CRM/Core/DAO/CustomField.php';
-require_once 'CRM/Core/BAO/CustomOption.php';
-require_once 'CRM/Core/BAO/CustomField.php';
 
 /**
  * This class generates form components for previewing custom data
@@ -65,7 +59,8 @@ class CRM_Custom_Form_Preview extends CRM_Core_Form {
    *
    * @return void
    * @access public
-   */ function preProcess() {
+   */ 
+  function preProcess() {
     // get the controller vars
     $this->_groupId = $this->get('groupId');
     $this->_fieldId = $this->get('fieldId');
@@ -108,7 +103,6 @@ class CRM_Custom_Form_Preview extends CRM_Core_Form {
   function &setDefaultValues() {
     $defaults = array();
 
-    require_once 'CRM/Core/BAO/CustomGroup.php';
     CRM_Core_BAO_CustomGroup::setDefaults($this->_groupTree, $defaults, FALSE, FALSE);
 
     return $defaults;
@@ -126,7 +120,7 @@ class CRM_Custom_Form_Preview extends CRM_Core_Form {
     if (is_array($this->_groupTree[$this->_groupId])) {
       foreach ($this->_groupTree[$this->_groupId]['fields'] as & $field) {
         //add the form elements
-        CRM_Core_BAO_CustomField::addQuickFormElement($this, $field['element_name'], $field['id'], FALSE, $field['is_required']);
+        CRM_Core_BAO_CustomField::addQuickFormElement($this, $field['element_name'], $field['id'], FALSE, CRM_Utils_Array::value('is_required', $field));
       }
 
       $this->assign('groupTree', $this->_groupTree);

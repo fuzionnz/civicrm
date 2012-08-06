@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -24,20 +24,15 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 */
-
-
-require_once 'CRM/Core/DAO.php';
 class CRM_Utils_Weight {
-
-  /**
-   * @var array, list of GET fields which must be validated
-   *
-   * To reduce the size of this patch, we only sign the exploitable fields
-   * which make up "$baseURL" in addOrder() (eg 'filter' or 'dao').
-   * Less-exploitable fields (eg 'dir') are left unsigned.
-   */
-  // 'id','src','dst','dir'
-  static $SIGNABLE_FIELDS = array('reset', 'dao', 'idName', 'url', 'filter');
+    /**
+     * @var array, list of GET fields which must be validated
+     *
+     * To reduce the size of this patch, we only sign the exploitable fields
+     * which make up "$baseURL" in addOrder() (eg 'filter' or 'dao'). 
+     * Less-exploitable fields (eg 'dir') are left unsigned.
+     */
+    static $SIGNABLE_FIELDS = array('reset', 'dao', 'idName', 'url', 'filter'); // 'id','src','dst','dir'
 
   /**
    * Function to correct duplicate weight entries by putting them (duplicate weights) in sequence.
@@ -280,7 +275,6 @@ class CRM_Utils_Weight {
     $orderBy         = NULL,
     $groupBy         = NULL
   ) {
-    require_once 'CRM/Utils/Type.php';
 
     require_once (str_replace('_', DIRECTORY_SEPARATOR, $daoName) . ".php");
 
@@ -358,21 +352,21 @@ class CRM_Utils_Weight {
       $rows[$firstID]['order'] = NULL;
       return;
     }
-    $config = CRM_Core_Config::singleton();
-    $imageURL = $config->userFrameworkResourceURL . 'i/arrow';
+    $config    = CRM_Core_Config::singleton();
+    $imageURL  = $config->userFrameworkResourceURL . 'i/arrow';
 
-    $queryParams = array(
-      'reset' => 1,
-      'dao' => $daoName,
-      'idName' => $idName,
-      'url' => $returnURL,
-      'filter' => $filter,
-    );
-    require_once 'CRM/Core/Key.php';
-    require_once 'CRM/Utils/Signer.php';
-    $signer              = new CRM_Utils_Signer(CRM_Core_Key::privateKey(), self::$SIGNABLE_FIELDS);
-    $queryParams['_sgn'] = $signer->sign($queryParams);
-    $baseURL             = CRM_Utils_System::url('civicrm/admin/weight', $queryParams);
+        $queryParams = array(
+          'reset' => 1,
+          'dao' => $daoName,
+          'idName' => $idName,
+          'url' => $returnURL,
+          'filter' => $filter,
+        );
+        require_once 'CRM/Core/Key.php';
+        require_once 'CRM/Utils/Signer.php';
+        $signer = new CRM_Utils_Signer(CRM_Core_Key::privateKey(), self::$SIGNABLE_FIELDS);
+        $queryParams['_sgn'] = $signer->sign($queryParams);
+        $baseURL = CRM_Utils_System::url('civicrm/admin/weight', $queryParams);
 
     for ($i = 1; $i <= $numIDs; $i++) {
       $id     = $ids[$i];
@@ -411,16 +405,16 @@ class CRM_Utils_Weight {
 
   static
   function fixOrder() {
-    $signature = CRM_Utils_Request::retrieve('_sgn', 'String', CRM_Core_DAO::$_nullObject);
-    require_once 'CRM/Core/Key.php';
-    require_once 'CRM/Utils/Signer.php';
-    $signer = new CRM_Utils_Signer(CRM_Core_Key::privateKey(), self::$SIGNABLE_FIELDS);
-    // Validate $_GET values b/c subsequent code reads $_GET (via CRM_Utils_Request::retrieve)
-    if (!$signer->validate($signature, $_GET)) {
-      CRM_Core_Error::fatal('Request signature is invalid');
-    }
+        $signature = CRM_Utils_Request::retrieve( '_sgn', 'String', CRM_Core_DAO::$_nullObject);
+        require_once 'CRM/Core/Key.php';
+        require_once 'CRM/Utils/Signer.php';
+        $signer = new CRM_Utils_Signer(CRM_Core_Key::privateKey(), self::$SIGNABLE_FIELDS);
+        // Validate $_GET values b/c subsequent code reads $_GET (via CRM_Utils_Request::retrieve)
+        if (! $signer->validate($signature, $_GET)) { 
+            CRM_Core_Error::fatal('Request signature is invalid');
+        }
 
-    // Note: Ensure this list matches self::$SIGNABLE_FIELDS
+        // Note: Ensure this list matches self::$SIGNABLE_FIELDS
     $daoName = CRM_Utils_Request::retrieve('dao', 'String', CRM_Core_DAO::$_nullObject);
     $id      = CRM_Utils_Request::retrieve('id', 'Integer', CRM_Core_DAO::$_nullObject);
     $idName  = CRM_Utils_Request::retrieve('idName', 'String', CRM_Core_DAO::$_nullObject);

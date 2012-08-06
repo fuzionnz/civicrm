@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +33,7 @@
  * @package CiviCRM_APIv3
  * @subpackage API_CustomField
  *
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * @version $Id: CustomField.php 30879 2010-11-22 15:45:55Z shot $
  */
 
@@ -51,12 +53,14 @@ require_once 'CRM/Core/BAO/CustomField.php';
  */
 
 /**
- * Defines 'custom field' within a group.
+ * Create a 'custom field' within a custom field group.
+ * We also empty the static var in the getfields
+ * function after deletion so that the field is available for us (getfields manages date conversion
+ * among other things
  *
+ * @param $params array  Associative array of property name/value pairs to create new custom field.
  *
- * @param $params       array  Associative array of property name/value pairs to create new custom field.
- *
- * @return Newly created custom_field id array
+ * @return Newly API success object
  *
  * @access public
  *
@@ -86,8 +90,8 @@ function civicrm_api3_custom_field_create($params) {
       $params['option_weight'][$key] = $value['weight'];
     }
   }
-
   $customField = CRM_Core_BAO_CustomField::create($params);
+  civicrm_api('custom_field', 'getfields', array('version' => 3, 'cache_clear' => 1));
   _civicrm_api3_object_to_array_unique_fields($customField, $values[$customField->id]);
   return civicrm_api3_create_success($values, $params, 'custom_field', $customField);
 }
@@ -116,9 +120,8 @@ function civicrm_api3_custom_field_delete($params) {
   $field = new CRM_Core_BAO_CustomField();
   $field->id = $params['id'];
   $field->find(TRUE);
-
-
   $customFieldDelete = CRM_Core_BAO_CustomField::deleteField($field);
+  civicrm_api('custom_field', 'getfields', array('version' => 3, 'cache_clear' => 1));
   return $customFieldDelete ? civicrm_api3_create_error('Error while deleting custom field') : civicrm_api3_create_success();
 }
 
@@ -145,43 +148,6 @@ function civicrm_api3_custom_field_get($params) {
  *                                     in params
  * @return Array  Validation errors
  */
-function _civicrm_api3_custom_field_validate_fields($params, $fields, $checkForDisallowed = FALSE, $checkForRequired = FALSE) {
-  $checkFields = $errors = $disallowedFields = $requiredFields = array();
-  foreach ($params as $fieldName => $value) {
-    if (substr($fieldName, 0, 6) === 'custom') {
-      $customFieldID = CRM_Core_BAO_CustomField::getKeyID($fieldName);
-      if ($customFieldID) {
-        $checkFields[$customFieldID] = $fieldName;
-        if (!in_array($customFieldID, array_keys($fields))) {
-          $disallowedFields[$customFieldID] = $fieldName;
-        }
-        elseif (CRM_Utils_Array::value('is_required', $fields[$customFieldID])) {
-          $requiredFields[$customFieldID] = $fieldName;
-        }
-      }
-    }
-  }
-
-  if (empty($checkFields)) {
-    return $errors;
-  }
-
-  if ($checkForDisallowed && !empty($disallowedFields)) {
-    $errors[] = "Can't use custom field(s) : " . implode(', ', $disallowedFields);
-    return $errors;
-  }
-
-  if ($checkForRequired && !empty($missingRequired)) {
-    $errors[] = 'Missing required field(s) : ' . implode(', ', $missingRequired);
-    return $errors;
-  }
-
-  foreach ($checkFields as $fieldId => $fieldName) {
-    _civicrm_api3_custom_field_validate_field($fieldName, $params[$fieldName], $fields[$fieldId], $errors);
-  }
-
-  return $errors;
-}
 
 /*
  * Helper function to validate custom field value
@@ -192,9 +158,13 @@ function _civicrm_api3_custom_field_validate_fields($params, $fields, $checkForD
  * @params Array  $errors       Collect validation  errors
  *
  * @return Array  Validation errors
+ * @todo remove this function - not in use but need to review functionality before
+ * removing as it might be useful in wrapper layer
  */
 function _civicrm_api3_custom_field_validate_field($fieldName, $value, $fieldDetails, &$errors = array(
   )) {
+    return;
+    //see comment block
   if (!$value) {
     return $errors;
   }

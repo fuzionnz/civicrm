@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,17 +28,16 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contribute/PseudoConstant.php';
-require_once 'CRM/Core/PseudoConstant.php';
 class CRM_Logging_Differ {
   private $db;
   private $log_conn_id;
-  private $log_date; function __construct($log_conn_id, $log_date) {
+  private $log_date;
+
+  function __construct($log_conn_id, $log_date) {
     $dsn               = defined('CIVICRM_LOGGING_DSN') ? DB::parseDSN(CIVICRM_LOGGING_DSN) : DB::parseDSN(CIVICRM_DSN);
     $this->db          = $dsn['database'];
     $this->log_conn_id = $log_conn_id;
@@ -56,7 +55,7 @@ class CRM_Logging_Differ {
     return $diffs;
   }
 
-  function diffsInTable($table) {
+  function diffsInTable($table, $contactID = null) {
     $diffs = array();
 
     $params = array(
@@ -64,8 +63,30 @@ class CRM_Logging_Differ {
       2 => array($this->log_date, 'String'),
     );
 
+    $contactIdClause = '';
+    if ( $contactID ) {
+      $params[3] = array($contactID, 'Integer');
+      switch ($table) {
+      case 'civicrm_contact':
+        $contactIdClause = "AND id = {$contactID}";
+        break;
+      case 'civicrm_note':
+      case 'civicrm_entity_tag':
+        $contactIdClause = "AND entity_id = {$contactID} AND entity_table = 'civicrm_contact'";
+        break;
+      case 'civicrm_relationship':
+        $contactIdClause = "AND (contact_id_a = {$contactID} OR contact_id_b = {$contactID})";
+        break;
+      default:
+        $contactIdClause = "AND contact_id = {$contactID}";
+        if ( strpos($table, 'civicrm_value') !== false ) {
+          $contactIdClause = "AND entity_id = {$contactID}";
+        }
+      }
+    }
+
     // find ids in this table that were affected in the given connection (based on connection id and a ±10 s time period around the date)
-    $sql = "SELECT DISTINCT id FROM `{$this->db}`.`log_$table` WHERE log_conn_id = %1 AND log_date BETWEEN DATE_SUB(%2, INTERVAL 10 SECOND) AND DATE_ADD(%2, INTERVAL 10 SECOND)";
+    $sql = "SELECT DISTINCT id FROM `{$this->db}`.`log_$table` WHERE log_conn_id = %1 AND log_date BETWEEN DATE_SUB(%2, INTERVAL 10 SECOND) AND DATE_ADD(%2, INTERVAL 10 SECOND) {$contactIdClause}";
     $dao = CRM_Core_DAO::executeQuery($sql, $params);
     while ($dao->fetch()) {
       $diffs = array_merge($diffs, $this->diffsInTableForId($table, $dao->id));
@@ -83,53 +104,57 @@ class CRM_Logging_Differ {
       3 => array($id, 'Integer'),
     );
 
-    // look for the last change in the given connection that happended less than 10 seconds later than log_date to the given id to catch multi-query changes
+    // look for all the changes in the given connection that happended less than 10 seconds later than log_date to the given id to catch multi-query changes
     $changedSQL = "SELECT * FROM `{$this->db}`.`log_$table` WHERE log_conn_id = %1 AND log_date < DATE_ADD(%2, INTERVAL 10 SECOND) AND id = %3 ORDER BY log_date DESC LIMIT 1";
-    $changed = $this->sqlToArray($changedSQL, $params);
 
-    // return early if nothing found
-    if (empty($changed)) {
-      return array();
-    }
+    $changedDAO = CRM_Core_DAO::executeQuery($changedSQL, $params);
+    while ($changedDAO->fetch( )) {
+      $changed = $changedDAO->toArray();
 
-    switch ($changed['log_action']) {
-      case 'Delete':
-        // the previous state is kept in the current state, current should keep the keys and clear the values
-        $original = $changed;
-        foreach ($changed as & $val) $val = NULL;
-        $changed['log_action'] = 'Delete';
-        break;
-
-      case 'Insert':
-        // the previous state does not exist
-        $original = array();
-        break;
-
-      case 'Update':
-        // look for the previous state (different log_conn_id) of the given id
-        $originalSQL = "SELECT * FROM `{$this->db}`.`log_$table` WHERE log_conn_id != %1 AND log_date < %2 AND id = %3 ORDER BY log_date DESC LIMIT 1";
-        $original = $this->sqlToArray($originalSQL, $params);
-        break;
-    }
-
-    // populate $diffs with only the differences between $changed and $original
-    $skipped = array('log_action', 'log_conn_id', 'log_date', 'log_user_id');
-    foreach (array_keys(array_diff_assoc($changed, $original)) as $diff) {
-      if (in_array($diff, $skipped)) {
+      // return early if nothing found
+      if (empty($changed)) {
         continue;
       }
 
-      if (CRM_Utils_Array::value($diff, $original) === CRM_Utils_Array::value($diff, $changed)) {
-        continue;
+      switch ($changed['log_action']) {
+        case 'Delete':
+          // the previous state is kept in the current state, current should keep the keys and clear the values
+          $original = $changed;
+          foreach ($changed as & $val) $val = NULL;
+          $changed['log_action'] = 'Delete';
+          break;
+
+        case 'Insert':
+          // the previous state does not exist
+          $original = array();
+          break;
+
+        case 'Update':
+          // look for the previous state (different log_conn_id) of the given id
+          $originalSQL = "SELECT * FROM `{$this->db}`.`log_$table` WHERE log_conn_id != %1 AND log_date < %2 AND id = %3 ORDER BY log_date DESC LIMIT 1";
+          $original = $this->sqlToArray($originalSQL, $params);
+          break;
       }
 
-      $diffs[] = array(
-        'action' => $changed['log_action'],
-        'id' => $id,
-        'field' => $diff,
-        'from' => CRM_Utils_Array::value($diff, $original),
-        'to' => CRM_Utils_Array::value($diff, $changed),
-      );
+      // populate $diffs with only the differences between $changed and $original
+      $skipped = array('log_action', 'log_conn_id', 'log_date', 'log_user_id');
+      foreach (array_keys(array_diff_assoc($changed, $original)) as $diff) {
+        if (in_array($diff, $skipped)) {
+          continue;
+        }
+
+        if (CRM_Utils_Array::value($diff, $original) === CRM_Utils_Array::value($diff, $changed)) {
+          continue;
+        }
+
+        $diffs[] = array(
+          'action' => $changed['log_action'],
+          'id' => $id,
+          'field' => $diff,
+          'from' => CRM_Utils_Array::value($diff, $original),
+          'to' => CRM_Utils_Array::value($diff, $changed),
+        );
+      }
     }
 
     return $diffs;
@@ -150,6 +175,8 @@ class CRM_Logging_Differ {
       'civicrm_phone' => 'CRM_Core_DAO_Phone',
       'civicrm_website' => 'CRM_Core_DAO_Website',
       'civicrm_contribution' => 'CRM_Contribute_DAO_Contribution',
+      'civicrm_note' => 'CRM_Core_DAO_Note',
+      'civicrm_relationship' => 'CRM_Contact_DAO_Relationship',
     );
 
     if (!isset($titles[$table]) or !isset($values[$table])) {
@@ -214,8 +241,14 @@ class CRM_Logging_Differ {
     $cgDao->fetch();
 
     $params[3] = array($cgDao->id, 'Integer');
-    $sql       = "SELECT column_name, data_type, label, name, option_group_id FROM `{$this->db}`.log_civicrm_custom_field WHERE log_date <= %2 AND custom_group_id = %3 ORDER BY log_date";
-    $cfDao     = CRM_Core_DAO::executeQuery($sql, $params);
+    $sql = "
+SELECT column_name, data_type, label, name, option_group_id
+FROM   `{$this->db}`.log_civicrm_custom_field
+WHERE  log_date <= %2
+AND    custom_group_id = %3
+ORDER BY log_date
+";
+    $cfDao = CRM_Core_DAO::executeQuery($sql, $params);
 
     while ($cfDao->fetch()) {
       $titles[$cfDao->column_name] = "{$cgDao->title}: {$cfDao->label}";
@@ -230,8 +263,8 @@ class CRM_Logging_Differ {
           if (!empty($cfDao->option_group_id)) {
             $params[3] = array($cfDao->option_group_id, 'Integer');
             $sql = "
-SELECT   label, value 
-FROM     `{$this->db}`.log_civicrm_option_value 
+SELECT   label, value
+FROM     `{$this->db}`.log_civicrm_option_value
 WHERE    log_date <= %2
 AND      option_group_id = %3
 ORDER BY log_date

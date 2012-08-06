@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once "CRM/Core/Form.php";
 
 /**
  * This class generates form components for OpenCase Activity
@@ -73,7 +71,6 @@ class CRM_Case_Form_Activity_ChangeCaseType {
     $form->removeElement('status_id');
     $form->removeElement('priority_id');
 
-    require_once 'CRM/Case/PseudoConstant.php';
     $form->_caseType = CRM_Case_PseudoConstant::caseType();
     $caseTypeId = explode(CRM_Case_BAO_Case::VALUE_SEPARATOR, CRM_Core_DAO::getFieldValue('CRM_Case_DAO_Case',
         $form->_caseId,
@@ -141,7 +138,6 @@ class CRM_Case_Form_Activity_ChangeCaseType {
       return;
     }
 
-    require_once 'CRM/Case/PseudoConstant.php';
     $caseTypes = CRM_Case_PseudoConstant::caseType('name');
     $allCaseTypes = CRM_Case_PseudoConstant::caseType('label', FALSE);
 

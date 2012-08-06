@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Logging/Differ.php';
 class CRM_Logging_Reverter {
   private $db;
   private $log_conn_id;
@@ -55,6 +53,8 @@ class CRM_Logging_Reverter {
       'civicrm_phone' => 'CRM_Core_DAO_Phone',
       'civicrm_website' => 'CRM_Core_DAO_Website',
       'civicrm_contribution' => 'CRM_Contribute_DAO_Contribution',
+      'civicrm_note' => 'CRM_Core_DAO_Note',
+      'civicrm_relationship' => 'CRM_Contact_DAO_Relationship',
     );
 
     // get custom data tables, columns and types
@@ -180,7 +180,6 @@ class CRM_Logging_Reverter {
         return;
       }
 
-      require_once 'CRM/Contact/DAO/Contact.php';
       $dao = new CRM_Contact_DAO_Contact;
       $dao->id = $cid;
       if ($dao->find(TRUE)) {

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page/Basic.php';
-require_once 'CRM/Core/DAO/Job.php';
 
 /**
  * Page for displaying list of jobs
@@ -101,7 +98,6 @@ class CRM_Admin_Page_JobLog extends CRM_Core_Page_Basic {
 
     $jid = CRM_Utils_Request::retrieve('jid', 'Positive', $this);
 
-    require_once 'CRM/Core/JobManager.php';
     $sj = new CRM_Core_JobManager();
 
     $jobName = NULL;
@@ -113,7 +109,6 @@ class CRM_Admin_Page_JobLog extends CRM_Core_Page_Basic {
 
     $this->assign('jobName', $jobName);
 
-    require_once 'CRM/Core/DAO/JobLog.php';
     $dao = new CRM_Core_DAO_JobLog();
     $dao->orderBy('id desc');
     if ($jobName) {

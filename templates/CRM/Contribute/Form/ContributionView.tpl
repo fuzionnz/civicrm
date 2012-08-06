@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -56,7 +56,11 @@
     {if $lineItem}
     <tr>
         <td class="label">{ts}Contribution Amount{/ts}</td>
-        <td>{include file="CRM/Price/Page/LineItem.tpl" context="Contribution"}</td>
+        <td>{include file="CRM/Price/Page/LineItem.tpl" context="Contribution"} 
+	    {if $contribution_recur_id}
+              <strong>{ts}Recurring Contribution{/ts}</strong> <br/>
+              {ts}Installments{/ts}: {if $recur_installments}{$recur_installments}{else}{ts}(ongoing){/ts}{/if}, {ts}Interval{/ts}: {$recur_frequency_interval} {$recur_frequency_unit}(s)
+            {/if}</td>
         </tr>
     {else}
     <tr>
@@ -90,7 +94,7 @@
 
 	<tr>
 	    <td class="label">{ts}Received{/ts}</td>
-    	<td>{if $receive_date}{$receive_date|crmDate}{else}({ts}pending{/ts}){/if}</td>
+    	<td>{if $receive_date}{$receive_date|crmDate}{else}({ts}not available{/ts}){/if}</td>
 	</tr>
 	<tr>
 	    <td class="label">{ts}Contribution Status{/ts}</td>

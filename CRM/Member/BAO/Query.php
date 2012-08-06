@@ -1,10 +1,9 @@
 <?php
-
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,15 +28,13 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 class CRM_Member_BAO_Query {
 
-  static
-  function &getFields() {
-    require_once 'CRM/Member/BAO/Membership.php';
+  static function &getFields() {
     $fields = CRM_Member_BAO_Membership::exportableFields();
     return $fields;
   }
@@ -48,8 +45,7 @@ class CRM_Member_BAO_Query {
    * @return void
    * @access public
    */
-  static
-  function select(&$query) {
+  static function select(&$query) {
     // if membership mode add membership id
     if ($query->_mode & CRM_Contact_BAO_Query::MODE_MEMBER ||
       CRM_Utils_Array::value('membership_id', $query->_returnProperties)
@@ -125,8 +121,7 @@ class CRM_Member_BAO_Query {
     }
   }
 
-  static
-  function where(&$query) {
+  static function where(&$query) {
     $isTest = FALSE;
     $grouping = NULL;
     foreach (array_keys($query->_params) as $id) {
@@ -153,8 +148,7 @@ class CRM_Member_BAO_Query {
     }
   }
 
-  static
-  function whereClauseSingle(&$values, &$query) {
+  static function whereClauseSingle(&$values, &$query) {
     list($name, $op, $value, $grouping, $wildcard) = $values;
     switch ($name) {
       case 'member_join_date_low':
@@ -203,7 +197,6 @@ class CRM_Member_BAO_Query {
         return;
 
       case 'member_status_id':
-        require_once 'CRM/Member/PseudoConstant.php';
         $status = implode(',', array_keys($value));
 
         if (count($value) > 1) {
@@ -241,9 +234,15 @@ class CRM_Member_BAO_Query {
         $op = "!=";
         if ($value) {
           $query->_where[$grouping][] = " civicrm_membership.contribution_recur_id IS NOT NULL";
-          $query->_where[$grouping][] = CRM_Contact_BAO_Query::buildClause("ccr.contribution_status_id",
+          $query->_where[$grouping][] = CRM_Contact_BAO_Query::buildClause(
+            "ccr.contribution_status_id",
             $op,
-            CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionValue', 'Cancelled', 'value', 'label'),
+            CRM_Core_DAO::getFieldValue(
+              'CRM_Core_DAO_OptionValue',
+              'Cancelled',
+              'value',
+              'name'
+            ),
             "Integer"
           );
           $query->_qill[$grouping][] = ts("Find Auto-renew Memberships");
@@ -264,7 +263,6 @@ class CRM_Member_BAO_Query {
         return;
 
       case 'member_membership_type_id':
-        require_once 'CRM/Member/PseudoConstant.php';
         $mType = implode(',', array_keys($value));
         if (count($value) > 1) {
           $op = 'IN';
@@ -310,7 +308,6 @@ class CRM_Member_BAO_Query {
         return;
 
       case 'member_campaign_id':
-        require_once 'CRM/Campaign/BAO/Query.php';
         $campParams = array(
           'op' => $op,
           'campaign' => $value,
@@ -322,8 +319,7 @@ class CRM_Member_BAO_Query {
     }
   }
 
-  static
-  function from($name, $mode, $side) {
+  static function from($name, $mode, $side) {
     $from = NULL;
     switch ($name) {
       case 'civicrm_membership':
@@ -356,8 +352,7 @@ class CRM_Member_BAO_Query {
     return $from;
   }
 
-  static
-  function defaultReturnProperties($mode,
+  static function defaultReturnProperties($mode,
     $includeCustomFields = TRUE
   ) {
     $properties = NULL;
@@ -383,7 +378,6 @@ class CRM_Member_BAO_Query {
 
       if ($includeCustomFields) {
         // also get all the custom membership properties
-        require_once "CRM/Core/BAO/CustomField.php";
         $fields = CRM_Core_BAO_CustomField::getFieldsForImport('Membership');
         if (!empty($fields)) {
           foreach ($fields as $name => $dontCare) {
@@ -396,9 +390,7 @@ class CRM_Member_BAO_Query {
     return $properties;
   }
 
-  static
-  function buildSearchForm(&$form) {
-    require_once 'CRM/Member/PseudoConstant.php';
+  static function buildSearchForm(&$form) {
     foreach (CRM_Member_PseudoConstant::membershipType() as $id => $Name) {
       $form->_membershipType = &$form->addElement('checkbox', "member_membership_type_id[$id]", NULL, $Name);
     }
@@ -414,25 +406,20 @@ class CRM_Member_BAO_Query {
 
     $form->addElement('text', 'member_source', ts('Source'));
 
-    $form->addDate('member_join_date_low', ts('Member Since - From'), FALSE, array('formatType' => 'searchDate'));
-    $form->addDate('member_join_date_high', ts('To'), FALSE, array('formatType' => 'searchDate'));
+    CRM_Core_Form_Date::buildDateRange($form, 'member_join_date', 1, '_low', '_high', ts('From'), FALSE, FALSE);
 
-    $form->addDate('member_start_date_low', ts('Start Date - From'), FALSE, array('formatType' => 'searchDate'));
-    $form->addDate('member_start_date_high', ts('To'), FALSE, array('formatType' => 'searchDate'));
+    CRM_Core_Form_Date::buildDateRange($form, 'member_start_date', 1, '_low', '_high', ts('From'), FALSE, FALSE);
 
-    $form->addDate('member_end_date_low', ts('End Date - From'), FALSE, array('formatType' => 'searchDate'));
-    $form->addDate('member_end_date_high', ts('To'), FALSE, array('formatType' => 'searchDate'));
+    CRM_Core_Form_Date::buildDateRange($form, 'member_end_date', 1, '_low', '_high', ts('From'), FALSE, FALSE);
 
     $form->addElement('checkbox', 'member_test', ts('Find Test Memberships?'));
     $form->addElement('checkbox', 'member_pay_later', ts('Find Pay Later Memberships?'));
     $form->addElement('checkbox', 'member_auto_renew', ts('Find Auto-renew Memberships?'));
 
     // add all the custom  searchable fields
-    require_once 'CRM/Custom/Form/CustomData.php';
     $extends = array('Membership');
     $groupDetails = CRM_Core_BAO_CustomGroup::getGroupDetail(NULL, TRUE, $extends);
     if ($groupDetails) {
-      require_once 'CRM/Core/BAO/CustomField.php';
       $form->assign('membershipGroupTree', $groupDetails);
       foreach ($groupDetails as $group) {
         foreach ($group['fields'] as $field) {
@@ -447,23 +434,19 @@ class CRM_Member_BAO_Query {
       }
     }
 
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     CRM_Campaign_BAO_Campaign::addCampaignInComponentSearch($form, 'member_campaign_id');
 
     $form->assign('validCiviMember', TRUE);
   }
 
-  static
-  function searchAction(&$row, $id) {}
+  static function searchAction(&$row, $id) {}
 
-  static
-  function addShowHide(&$showHide) {
+  static function addShowHide(&$showHide) {
     $showHide->addHide('memberForm');
     $showHide->addShow('memberForm_show');
   }
 
-  static
-  function tableNames(&$tables) {
+  static function tableNames(&$tables) {
     //add membership table
     if (CRM_Utils_Array::value('civicrm_membership_log', $tables) || CRM_Utils_Array::value('civicrm_membership_status', $tables) || CRM_Utils_Array::value('civicrm_membership_type', $tables)) {
       $tables = array_merge(array('civicrm_membership' => 1), $tables);

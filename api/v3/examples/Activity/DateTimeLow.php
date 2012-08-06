@@ -32,7 +32,7 @@ function activity_get_expectedresult(){
       '0' => array( 
           'id' => '2',
           'source_contact_id' => '17',
-          'activity_type_id' => '1',
+          'activity_type_id' => '40',
           'subject' => 'Make-it-Happen Meeting',
           'activity_date_time' => '2012-02-16 00:00:00',
           'duration' => '120',

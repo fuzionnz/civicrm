@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -36,8 +36,6 @@
 /**
  * Class to retrieve information about a contribution page
  */
-
-require_once 'CRM/Contribute/DAO/Widget.php';
 class CRM_Contribute_BAO_Widget extends CRM_Contribute_DAO_Widget {
 
   /**
@@ -62,7 +60,6 @@ class CRM_Contribute_BAO_Widget extends CRM_Contribute_DAO_Widget {
       return $data;
     }
 
-    require_once 'CRM/Contribute/DAO/Widget.php';
     $widget = new CRM_Contribute_DAO_Widget();
     $widget->contribution_page_id = $contributionPageID;
     if (!$widget->find(TRUE)) {
@@ -109,7 +106,6 @@ class CRM_Contribute_BAO_Widget extends CRM_Contribute_DAO_Widget {
     $data['campaign_start'] = '';
     $startDate = NULL;
     if ($dao->fetch()) {
-      require_once 'CRM/Utils/Date.php';
       $data['money_target'] = (int)$dao->goal_amount;
 
       // conditions that needs to be handled
@@ -168,7 +164,6 @@ class CRM_Contribute_BAO_Widget extends CRM_Contribute_DAO_Widget {
       $data['is_active'] = FALSE;
     }
 
-    require_once 'CRM/Utils/Money.php';
     $data['money_raised_percentage'] = 0;
     if ($data['money_target'] > 0) {
       $percent = $data['money_raised'] / $data['money_target'];
@@ -200,7 +195,6 @@ class CRM_Contribute_BAO_Widget extends CRM_Contribute_DAO_Widget {
     $data['colors']["bg"] = $widget->color_bg;
     $data['colors']["about_link"] = $widget->color_about_link;
 
-    require_once 'CRM/Core/Error.php';
     return $data;
   }
 }

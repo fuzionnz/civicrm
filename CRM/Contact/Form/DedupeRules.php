@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Admin/Form.php';
-require_once 'CRM/Dedupe/DAO/Rule.php';
-require_once 'CRM/Dedupe/BAO/RuleGroup.php';
 
 /**
  * This class generates form components for DedupeRules
@@ -55,7 +51,6 @@ class CRM_Contact_Form_DedupeRules extends CRM_Admin_Form {
    * @access public
    */ function preProcess() {
     // Ensure user has permission to be here
-    require_once 'CRM/Core/Permission.php';
     if (!CRM_Core_Permission::check('administer dedupe rules')) {
       CRM_Utils_System::permissionDenied();
       CRM_Utils_System::civiExit();
@@ -229,7 +224,6 @@ UPDATE civicrm_dedupe_rule_group
     // make sure name is set only during insert
     if ($this->_action & CRM_Core_Action::ADD) {
       // generate name based on title
-      require_once 'CRM/Utils/String.php';
       $rgDao->name = CRM_Utils_String::titleToVar($values['title']) . "_{$rgDao->id}";
       $rgDao->save();
     }
@@ -282,14 +276,12 @@ UPDATE civicrm_dedupe_rule_group
 
     // also create an index for this dedupe rule
     // CRM-3837
-    require_once 'CRM/Core/BAO/SchemaHandler.php';
     CRM_Core_BAO_SchemaHandler::createIndexes($tables, 'dedupe_index', $substrLenghts);
 
     //need to clear cache of deduped contacts
     //based on the previous rule
     $cacheKey = "merge {$this->_contactType}_{$this->_rgid}_%";
 
-    require_once 'CRM/Core/BAO/PrevNextCache.php';
     CRM_Core_BAO_PrevNextCache::deleteItem(NULL, $cacheKey);
 
     CRM_Core_Session::setStatus(ts('The rule \'%1\' has been saved.', array(1 => $rgDao->title)));

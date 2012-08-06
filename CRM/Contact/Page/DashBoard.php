@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 
 /**
  * CiviCRM Dashboard
@@ -51,7 +49,6 @@ class CRM_Contact_Page_DashBoard extends CRM_Core_Page {
     $resetCache = CRM_Utils_Request::retrieve('resetCache', 'Positive', CRM_Core_DAO::$_nullObject);
 
     if ($resetCache) {
-      require_once 'CRM/Core/BAO/Dashboard.php';
       CRM_Core_BAO_Dashboard::resetDashletCache();
     }
 
@@ -60,7 +57,6 @@ class CRM_Contact_Page_DashBoard extends CRM_Core_Page {
     $contactID = $session->get('userID');
 
     // call hook to get html from other modules
-    require_once 'CRM/Utils/Hook.php';
     // ignored but needed to prevent warnings
     $contentPlacement = CRM_Utils_Hook::DASHBOARD_BELOW;
     $html = CRM_Utils_Hook::dashboard($contactID, $contentPlacement);
@@ -75,7 +71,6 @@ class CRM_Contact_Page_DashBoard extends CRM_Core_Page {
     $defaultMailboxOK = TRUE;
 
     // Don't put up notices if user doesn't have administer CiviCRM permission
-    require_once 'CRM/Core/Permission.php';
     if (CRM_Core_Permission::check('administer CiviCRM')) {
       $destination = CRM_Utils_System::url('civicrm/dashboard',
         'reset=1',
@@ -84,11 +79,9 @@ class CRM_Contact_Page_DashBoard extends CRM_Core_Page {
 
       $destination = urlencode($destination);
 
-      require_once 'CRM/Core/BAO/Domain.php';
       list($domainEmailName, $domainEmailAddress) = CRM_Core_BAO_Domain::getNameAndEmail(TRUE);
 
       if (!$domainEmailAddress || $domainEmailAddress == 'info@FIXME.ORG') {
-        require_once 'CRM/Utils/System.php';
         $fixEmailUrl = CRM_Utils_System::url("civicrm/admin/domain", "action=update&reset=1&civicrmDestination={$destination}");
         $this->assign('fixEmailUrl', $fixEmailUrl);
         $fromEmailOK = FALSE;
@@ -102,7 +95,6 @@ class CRM_Contact_Page_DashBoard extends CRM_Core_Page {
         $ownerOrgOK = FALSE;
       }
 
-      require_once 'CRM/Core/BAO/MailSettings.php';
       $config = CRM_Core_Config::singleton();
       if (in_array('CiviMail', $config->enableComponents) &&
         CRM_Core_BAO_MailSettings::defaultDomain() == "FIXME.ORG"

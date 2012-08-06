@@ -1,10 +1,9 @@
 <?php
-
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +28,7 @@
 /**
  *
  * @package CiviCRM_Hook
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id: $
  *
  */
@@ -119,27 +118,39 @@ abstract class CRM_Utils_Hook {
     foreach ($civiModules as $module) {
       $fnName = "{$module}_{$fnSuffix}";
       if (function_exists($fnName)) {
-        if ($numParams == 1) {
-          $fResult = $fnName($arg1);
-        }
-        elseif ($numParams == 2) {
-          $fResult = $fnName($arg1, $arg2);
-        }
-        elseif ($numParams == 3) {
-          $fResult = $fnName($arg1, $arg2, $arg3);
-        }
-        elseif ($numParams == 4) {
-          $fResult = $fnName($arg1, $arg2, $arg3, $arg4);
-        }
-        elseif ($numParams == 5) {
-          $fResult = $fnName($arg1, $arg2, $arg3, $arg4, $arg5);
-        }
+        switch ($numParams) {
+          case 0:
+            $fResult = $fnName();
+            break;
 
-        if (!empty($fResult) &&
-          is_array($fResult)
-        ) {
-          $result = array_merge($result, $fResult);
+          case 1:
+            $fResult = $fnName($arg1);
+            break;
+
+          case 2:
+            $fResult = $fnName($arg1, $arg2);
+            break;
+
+          case 3:
+            $fResult = $fnName($arg1, $arg2, $arg3);
+            break;
+
+          case 4:
+            $fResult = $fnName($arg1, $arg2, $arg3, $arg4);
+            break;
+
+          case 5:
+            $fResult = $fnName($arg1, $arg2, $arg3, $arg4, $arg5);
+            break;
+
+          default:
+            CRM_Core_Error::fatal(ts('Invalid hook invocation'));
+            break;
         }
+      }
+
+      if (!empty($fResult)) {
+        $result = array_merge($result, $fResult);
       }
     }
 
@@ -147,17 +158,10 @@ abstract class CRM_Utils_Hook {
   }
 
   function requireCiviModules(&$moduleList) {
-    $config = CRM_Core_Config::singleton();
-    if (isset($config->extensionsDir) &&
-      !empty($config->civiModules)
-    ) {
-      foreach ($config->civiModules as $moduleName => $modulePath) {
-        include_once (
-          $config->extensionsDir . DIRECTORY_SEPARATOR .
-          $modulePath
-        );
-        $moduleList[$moduleName] = $moduleName;
-      }
+    $civiModules = CRM_Core_PseudoConstant::getModuleExtensions();
+    foreach ($civiModules as $civiModule) {
+      include_once $civiModule['filePath'];
+      $moduleList[$civiModule['prefix']] = $civiModule['prefix'];
     }
   }
 
@@ -249,7 +253,6 @@ abstract class CRM_Utils_Hook {
    * @param array  &$fields   the POST parameters as filtered by QF
    * @param array  &$files    the FILES parameters as sent in by POST
    * @param array  &$form     the form object
-   * @param array  $
    *
    * @return mixed             formRule hooks return a boolean or
    *                           an array of error messages which display a QF Error
@@ -258,6 +261,25 @@ abstract class CRM_Utils_Hook {
   static
   function validate($formName, &$fields, &$files, &$form) {
     return self::singleton()->invoke(4, $formName, $fields, $files, $form, $formName, 'civicrm_validate');
+  }
+
+  /**
+   * This hook is invoked during all CiviCRM form validation. An array of errors
+   * detected is returned. Else we assume validation succeeded.
+   *
+   * @param string $formName  the name of the form
+   * @param array  &$fields   the POST parameters as filtered by QF
+   * @param array  &$files    the FILES parameters as sent in by POST
+   * @param array  &$form     the form object
+   * @param array &$errors    the array of errors.
+   *
+   * @return mixed             formRule hooks return a boolean or
+   *                           an array of error messages which display a QF Error
+   * @access public
+   */
+  static
+  function validateForm($formName, &$fields, &$files, &$form, &$errors) {
+    return self::singleton()->invoke(5, $formName, $fields, $files, $form, $errors, 'civicrm_validateForm');
   }
 
   /**
@@ -347,7 +369,7 @@ abstract class CRM_Utils_Hook {
     /*
          * Note we need this seemingly unnecessary code because in the event that the implementation
          * of the hook declares the second parameter but doesn't set it, then it comes back unset even
-		 * though we have a default value in this function's declaration above. 
+		 * though we have a default value in this function's declaration above.
 		 */
 
 
@@ -945,5 +967,84 @@ abstract class CRM_Utils_Hook {
       'civicrm_alterContent'
     );
   }
+
+  /**
+   * This hook collects the trigger definition from all components
+   *
+   * @param $triggerInfo reference to an array of trigger information
+   *   each element has 4 fields:
+   *     table - array of tableName
+   *     when  - BEFORE or AFTER
+   *     event - array of eventName - INSERT OR UPDATE OR DELETE
+   *     sql   - array of statements optionally terminated with a ;
+   *             a statement can use the tokes {tableName} and {eventName}
+   *             to do token replacement with the table / event. This allows
+   *             templatizing logging and other hooks
+   * @param string $tableName (optional) the name of the table that we are interested in only
+   */
+  static
+  function triggerInfo(&$info, $tableName = NULL) {
+    return self::singleton()->invoke(2, $info, $tableName,
+      self::$_nullObject, self::$_nullObject,
+      self::$_nullObject,
+      'civicrm_triggerInfo'
+    );
+  }
+
+  static
+  function install() {
+    return self::singleton()->invoke(0, self::$_nullObject,
+      self::$_nullObject, self::$_nullObject,
+      self::$_nullObject, self::$_nullObject,
+      'civicrm_install'
+    );
+  }
+
+  static
+  function uninstall() {
+    return self::singleton()->invoke(0, self::$_nullObject,
+      self::$_nullObject, self::$_nullObject,
+      self::$_nullObject, self::$_nullObject,
+      'civicrm_uninstall'
+    );
+  }
+
+  static
+  function enable() {
+    return self::singleton()->invoke(0, self::$_nullObject,
+      self::$_nullObject, self::$_nullObject,
+      self::$_nullObject, self::$_nullObject,
+      'civicrm_enable'
+    );
+  }
+
+  static
+  function disable() {
+    return self::singleton()->invoke(0, self::$_nullObject,
+      self::$_nullObject, self::$_nullObject,
+      self::$_nullObject, self::$_nullObject,
+      'civicrm_disable'
+    );
+  }
+  
+  /**
+   * This hook is called to drive database upgrades for extension-modules.
+   *
+   * @param string $op         the type of operation being performed; 'check' or 'enqueue'
+   * @param string $queue      (for 'enqueue') the modifiable list of pending up upgrade tasks
+   *
+   * @return mixed             based on op. 'check' returns a array(boolean) (TRUE if upgrades are pending)
+   *                           'enqueue' returns void
+   * @access public
+   */
+  static
+  function upgrade($op, CRM_Queue_Queue $queue = NULL) {
+    return self::singleton()->invoke(2, $op, $queue,
+      self::$_nullObject, self::$_nullObject,
+      self::$_nullObject,
+      'civicrm_upgrade'
+    );
+  }
+
 }
 

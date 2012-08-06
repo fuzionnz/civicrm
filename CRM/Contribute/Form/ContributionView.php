@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 
 /**
  * This class generates form components for Payment-Instrument
@@ -54,7 +52,6 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
     $context = CRM_Utils_Request::retrieve('context', 'String', $this);
     $this->assign('context', $context);
 
-    require_once 'CRM/Contribute/BAO/Contribution.php';
     CRM_Contribute_BAO_Contribution::getValues($params, $values, $ids);
 
     $softParams = array('contribution_id' => $values['contribution_id']);
@@ -65,7 +62,7 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
 
     if (CRM_Utils_Array::value('contribution_page_id', $values)) {
       $contribPages = CRM_Contribute_PseudoConstant::contributionPage(NULL, TRUE);
-      $values["contribution_page_title"] = CRM_Utils_Array::value(CRM_Utils_Array::value('contribution_page_id', $values), $contribPages);
+      $values['contribution_page_title'] = CRM_Utils_Array::value(CRM_Utils_Array::value('contribution_page_id', $values), $contribPages);
     }
 
     if (CRM_Utils_Array::value('honor_contact_id', $values)) {
@@ -74,10 +71,10 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
       $dao    = CRM_Core_DAO::executeQuery($sql, $params);
       if ($dao->fetch()) {
         $url = CRM_Utils_System::url('civicrm/contact/view', "reset=1&cid=$values[honor_contact_id]");
-        $values["honor_display"] = "<A href = $url>" . $dao->display_name . "</A>";
+        $values['honor_display'] = "<A href = $url>" . $dao->display_name . "</A>";
       }
       $honor = CRM_Core_PseudoConstant::honor();
-      $values['honor_type'] = $honor[$values['honor_type_id']];
+      $values['honor_type'] = CRM_Utils_Array::value(CRM_Utils_Array::value('honor_type_id', $values), $honor);
     }
 
     if (CRM_Utils_Array::value('contribution_recur_id', $values)) {
@@ -85,9 +82,9 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
       $params = array(1 => array($values['contribution_recur_id'], 'Integer'));
       $dao    = CRM_Core_DAO::executeQuery($sql, $params);
       if ($dao->fetch()) {
-        $values["recur_installments"] = $dao->installments;
-        $values["recur_frequency_unit"] = $dao->frequency_unit;
-        $values["recur_frequency_interval"] = $dao->frequency_interval;
+        $values['recur_installments'] = $dao->installments;
+        $values['recur_frequency_unit'] = $dao->frequency_unit;
+        $values['recur_frequency_interval'] = $dao->frequency_interval;
       }
     }
 
@@ -96,7 +93,6 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
 
     $premiumId = NULL;
     if ($id) {
-      require_once 'CRM/Contribute/DAO/ContributionProduct.php';
       $dao = new CRM_Contribute_DAO_ContributionProduct();
       $dao->contribution_id = $id;
       if ($dao->find(TRUE)) {
@@ -106,7 +102,6 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
     }
 
     if ($premiumId) {
-      require_once 'CRM/Contribute/DAO/Product.php';
       $productDAO = new CRM_Contribute_DAO_Product();
       $productDAO->id = $productID;
       $productDAO->find(TRUE);
@@ -142,20 +137,16 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
       $values = array_merge($values, $softContribution);
     }
 
-    require_once 'CRM/Price/BAO/Set.php';
     $lineItems = array();
-    if ($id && (CRM_Price_BAO_Set::getFor('civicrm_contribution', $id, CRM_Core_Component::getComponentID('CiviContribute'))
-        || CRM_Price_BAO_Set::getFor('civicrm_contribution', $id, CRM_Core_Component::getComponentID('CiviMember'))
-      )) {
-      require_once 'CRM/Price/BAO/LineItem.php';
-      $lineItems[] = CRM_Price_BAO_LineItem::getLineItems($id, 'contribution');
+    if ($id) {
+      $lineItem = CRM_Price_BAO_LineItem::getLineItems($id, 'contribution', 1);
+      empty($lineItem) ? null :$lineItems[] =  $lineItem;
     }
     $this->assign('lineItem', empty($lineItems) ? FALSE : $lineItems);
     $values['totalAmount'] = $values['total_amount'];
 
     //do check for campaigns
     if ($campaignId = CRM_Utils_Array::value('campaign_id', $values)) {
-      require_once 'CRM/Campaign/BAO/Campaign.php';
       $campaigns = CRM_Campaign_BAO_Campaign::getCampaigns($campaignId);
       $values['campaign'] = $campaigns[$campaignId];
     }
@@ -164,9 +155,6 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
     $this->assign($values);
 
     // add viewed contribution to recent items list
-    require_once 'CRM/Utils/Recent.php';
-    require_once 'CRM/Utils/Money.php';
-    require_once 'CRM/Contact/BAO/Contact.php';
     $url = CRM_Utils_System::url('civicrm/contact/view/contribution',
       "action=view&reset=1&id={$values['id']}&cid={$values['contact_id']}&context=home"
     );
@@ -204,6 +192,7 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
    * @access public
    */
   public function buildQuickForm() {
+
     $this->addButtons(array(
         array(
           'type' => 'cancel',

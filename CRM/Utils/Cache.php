@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -51,8 +51,13 @@ class CRM_Utils_Cache {
   /**
    * Constructor
    *
+   * @param array   $config  an array of configuration params
+   *
    * @return void
-   */ function __construct() {}
+   */
+  function __construct(&$config) {
+    CRM_Core_Error::fatal(ts('this is just an interface and should not be called directly'));
+  }
 
   /**
    * singleton function used to manage this object
@@ -61,29 +66,29 @@ class CRM_Utils_Cache {
    * @static
    *
    */
-  static
-  function &singleton() {
+  static function &singleton() {
     if (self::$_singleton === NULL) {
-      if (defined('CIVICRM_USE_MEMCACHE') &&
-        CIVICRM_USE_MEMCACHE
-      ) {
-        require_once 'CRM/Utils/Cache/Memcache.php';
-        $settings = self::getCacheSettings();
-        self::$_singleton = new CRM_Utils_Cache_Memcache($settings['host'],
-          $settings['port'],
-          $settings['timeout'],
-          $settings['prefix']
-        );
+      $className = 'ArrayCache';   // default to ArrayCache for now
+
+      // Maintain backward compatibility for now.
+      // Setting CIVICRM_USE_MEMCACHE or CIVICRM_USE_ARRAYCACHE will
+      // override the CIVICRM_DB_CACHE_CLASS setting.
+      // Going forward, CIVICRM_USE_xxxCACHE should be deprecated.
+      if (defined('CIVICRM_USE_MEMCACHE') && CIVICRM_USE_MEMCACHE) {
+        $className = 'Memcache';
       }
-      elseif (defined('CIVICRM_USE_ARRAYCACHE') &&
-        CIVICRM_USE_ARRAYCACHE
-      ) {
-        require_once 'CRM/Utils/Cache/ArrayCache.php';
-        self::$_singleton = new CRM_Utils_Cache_ArrayCache();
+      else if (defined('CIVICRM_USE_ARRAYCACHE') && CIVICRM_USE_ARRAYCACHE) {
+        $className = 'ArrayCache';
       }
-      else {
-        self::$_singleton = new CRM_Utils_Cache();
+      else if (defined('CIVICRM_DB_CACHE_CLASS') && CIVICRM_DB_CACHE_CLASS) {
+        $className = CIVICRM_DB_CACHE_CLASS;
       }
+
+      // a generic method for utilizing any of the available db caches.
+      $dbCacheClass = 'CRM_Utils_Cache_' . $className;
+      require_once(str_replace('_', DIRECTORY_SEPARATOR, $dbCacheClass) . '.php');
+      $settings = self::getCacheSettings($className);
+      self::$_singleton = new $dbCacheClass($settings);
     }
     return self::$_singleton;
   }
@@ -95,9 +100,8 @@ class CRM_Utils_Cache {
    *   associative array of settings for the cache
    * @static
    */
-  static
-  function getCacheSettings() {
-    if (!defined('CIVICRM_USE_MEMCACHE') or !CIVICRM_USE_MEMCACHE) {
+  static function getCacheSettings($cachePlugin) {
+    if ($cachePlugin !== 'Memcache' && $cachePlugin !== 'Memcached') {
       return array();
     }
     $defaults = array(
@@ -124,22 +128,6 @@ class CRM_Utils_Cache {
     }
 
     return $defaults;
-  }
-
-  function set($key, &$value) {
-    return FALSE;
-  }
-
-  function get($key) {
-    return NULL;
-  }
-
-  function delete($key) {
-    return FALSE;
-  }
-
-  function flush() {
-    return FALSE;
   }
 }
 

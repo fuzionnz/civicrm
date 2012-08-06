@@ -1,10 +1,9 @@
 <?php
-
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,12 +28,11 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
-require_once 'CRM/Core/Payment.php';
 require_once 'Google/library/googlecart.php';
 require_once 'Google/library/googleitem.php';
 require_once 'Google/library/googlesubscription.php';
@@ -100,11 +98,11 @@ class CRM_Core_Payment_Google extends CRM_Core_Payment {
     $error = array();
 
     if (empty($this->_paymentProcessor['user_name'])) {
-      $error[] = ts('User Name is not set in the Administer CiviCRM &raquo; Payment Processor.');
+      $error[] = ts('User Name is not set in the Administer CiviCRM &raquo; System Settings &raquo; Payment Processors.');
     }
 
     if (empty($this->_paymentProcessor['password'])) {
-      $error[] = ts('Password is not set in the Administer CiviCRM &raquo; Payment Processor.');
+      $error[] = ts('Password is not set in the Administer CiviCRM &raquo; System Settings &raquo; Payment Processors.');
     }
 
     if (!empty($error)) {
@@ -303,7 +301,7 @@ class CRM_Core_Payment_Google extends CRM_Core_Payment {
     curl_setopt($ch, CURLOPT_VERBOSE, 1);
 
     //turning off the server and peer verification(TrustManager Concept).
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'verifySSL'));
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
 
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -390,59 +388,21 @@ class CRM_Core_Payment_Google extends CRM_Core_Payment {
     return $e;
   }
 
-  /**
-   * Set a field to the specified value.  Value must be a scalar (int,
-   * float, string, or boolean)
-   *
-   * @param string $field
-   * @param mixed $value
-   *
-   * @return bool false if value is not a scalar, true if successful
-   */
-  function _setParam($field, $value) {
-    if (!is_scalar($value)) {
-      return FALSE;
-    }
-    else {
-      $this->_params[$field] = $value;
-    }
+  function accountLoginURL() {
+    return ($this->_mode == 'test') ? 'https://sandbox.google.com/checkout/sell' : 'https://checkout.google.com/';
   }
 
-  /**
-   * Get the value of a field if set
-   *
-   * @param string $field the field
-   *
-   * @return mixed value of the field, or empty string if the field is
-   * not set
-   */
-  function _getParam($field) {
-    return CRM_Utils_Array::value($field, $this->_params, '');
-  }
-
-  function cancelSubscriptionURL($entityID = NULL, $entity = NULL) {
-    if ($entityID && $entity == 'membership') {
-      require_once 'CRM/Contact/BAO/Contact/Utils.php';
-      $contactID = CRM_Core_DAO::getFieldValue("CRM_Member_DAO_Membership", $entityID, "contact_id");
-      $checksumValue = CRM_Contact_BAO_Contact_Utils::generateChecksum($contactID, NULL, 'inf');
-
-      return CRM_Utils_System::url('civicrm/contribute/unsubscribe',
-        "reset=1&mid={$entityID}&cs={$checksumValue}", TRUE, NULL, FALSE, FALSE
-      );
-    }
-
-    return ($this->_mode == 'test') ? 'https://sandbox.google.com/checkout/' : 'https://checkout.google.com/';
-  }
-
-  function cancelSubscription() {
-    $orderNo = $this->_getParam('subscriptionId');
+  function cancelSubscription(&$message = '', $params = array(
+    )) {
+    $orderNo = CRM_Utils_Array::value('subscriptionId', $params);
 
     $merchant_id  = $this->_paymentProcessor['user_name'];
     $merchant_key = $this->_paymentProcessor['password'];
     $server_type  = ($this->_mode == 'test') ? 'sandbox' : '';
 
     $googleRequest = new GoogleRequest($merchant_id, $merchant_key, $server_type);
-    $result = $googleRequest->SendCancelItems($orderNo, array(), 'Cancelled by admin', '');
+    $result        = $googleRequest->SendCancelItems($orderNo, array(), 'Cancelled by admin', '');
+    $message       = "{$result[0]}: {$result[1]}";
 
     if ($result[0] != 200) {
       return self::error($result[0], $result[1]);

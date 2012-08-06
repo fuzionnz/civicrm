@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -36,9 +36,6 @@
 /**
  * this file contains functions to manage and manipulate task status
  */
-
-
-require_once 'CRM/Project/DAO/TaskStatus.php';
 class CRM_Project_BAO_TaskStatus {
 
   static
@@ -55,11 +52,9 @@ class CRM_Project_BAO_TaskStatus {
 
     if (!$taskStatusID) {
       // cache the status
-      require_once 'CRM/Core/OptionGroup.php';
       $status = CRM_Core_OptionGroup::values('task_status', TRUE);
 
       // get the task status object, if not there create one
-      require_once 'CRM/Project/DAO/TaskStatus.php';
       $dao = new CRM_Project_DAO_TaskStatus();
       $dao->responsible_entity_table = $ret;
       $dao->responsible_entity_id = $reid;
@@ -95,7 +90,6 @@ class CRM_Project_BAO_TaskStatus {
   ) {
 
     // update the task record
-    require_once 'CRM/Project/DAO/TaskStatus.php';
     $dao = new CRM_Project_DAO_TaskStatus();
     $dao->id = $form->get("{$prefix}ID");
     if (!$dao->id || !$dao->find(TRUE)) {
@@ -132,7 +126,6 @@ class CRM_Project_BAO_TaskStatus {
   ) {
 
     // update the task record
-    require_once 'CRM/Project/DAO/TaskStatus.php';
     $dao = new CRM_Project_DAO_TaskStatus();
     $dao->id = $form->get("{$prefix}ID");
     if (!$dao->id || !$dao->find(TRUE)) {
@@ -174,7 +167,6 @@ class CRM_Project_BAO_TaskStatus {
       $params['responsible_entity_table'] = 'civicrm_contact';
     }
 
-    require_once 'CRM/Project/DAO/TaskStatus.php';
     $dao = new CRM_Project_DAO_TaskStatus();
     $dao->target_entity_id = $params['target_entity_id'];
     $dao->responsible_entity_id = $params['responsible_entity_id'];

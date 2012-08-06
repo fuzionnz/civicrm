@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/UFField.php';
 
 /**
  * This class contains function for UFField
@@ -55,8 +53,7 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
    * @access public
    * @static
    */
-  static
-  function retrieve(&$params, &$defaults) {
+  static function retrieve(&$params, &$defaults) {
     return CRM_Core_DAO::commonRetrieve('CRM_Core_DAO_UFField', $params, $defaults);
   }
 
@@ -85,8 +82,7 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
    * @access public
    * @static
    */
-  static
-  function setIsActive($id, $is_active) {
+  static function setIsActive($id, $is_active) {
     //check if custom data profile field is disabled
     if ($is_active) {
       if (CRM_Core_BAO_UFField::checkUFStatus($id)) {
@@ -156,8 +152,7 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
    * @static
    *
    */
-  static
-  function add(&$params, &$ids) {
+  static function add(&$params, &$ids) {
     // set values for uf field properties and save
     $ufField             = new CRM_Core_DAO_UFField();
     $ufField->field_type = $params['field_name'][0];
@@ -193,7 +188,6 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
       $oldWeight = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_UFField', $params['field_id'], 'weight', 'id');
     }
     $fieldValues = array('uf_group_id' => $params['group_id']);
-    require_once 'CRM/Utils/Weight.php';
     $ufField->weight = CRM_Utils_Weight::updateOtherWeights('CRM_Core_DAO_UFField', $oldWeight, $params['weight'], $fieldValues);
 
     // need the FKEY - uf group id
@@ -213,8 +207,7 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
    * @static
    * @access public
    */
-  static
-  function setUFField($customFieldId, $is_active) {
+  static function setUFField($customFieldId, $is_active) {
     //find the profile id given custom field
     $ufField = new CRM_Core_DAO_UFField();
     $ufField->field_name = "custom_" . $customFieldId;
@@ -237,8 +230,7 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
    * @static
    * @access public
    */
-  static
-  function copy($old_id, $new_id) {
+  static function copy($old_id, $new_id) {
     $ufField = new CRM_Core_DAO_UFField();
     $ufField->uf_group_id = $old_id;
     $ufField->find();
@@ -306,16 +298,13 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
    * @static
    * @access public
    */
-  static
-  function checkUFStatus($UFFieldId) {
+  static function checkUFStatus($UFFieldId) {
     $fieldName = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_UFField', $UFFieldId, 'field_name');
     // return if field is not a custom field
-    require_once 'CRM/Core/BAO/CustomField.php';
     if (!$customFieldId = CRM_Core_BAO_CustomField::getKeyID($fieldName)) {
       return TRUE;
     }
 
-    require_once "CRM/Core/DAO/CustomField.php";
     $customField = new CRM_Core_DAO_CustomField();
     $customField->id = $customFieldId;
     // if uf field is custom field
@@ -330,12 +319,10 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
   }
 
   /*
-     * Function to find out whether given profile group using Activity
-     * Profile fields with contact fields
-     */
-
-  static
-  function checkContactActivityProfileType($ufGroupId) {
+   * Function to find out whether given profile group using Activity
+   * Profile fields with contact fields
+   */
+  static function checkContactActivityProfileType($ufGroupId) {
     $ufGroup = new CRM_Core_DAO_UFGroup();
     $ufGroup->id = $ufGroupId;
     $ufGroup->find(TRUE);
@@ -365,7 +352,6 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
     }
 
     $contactTypes = array('Individual', 'Household', 'Organization');
-    require_once 'CRM/Contact/BAO/ContactType.php';
     $subTypes = CRM_Contact_BAO_ContactType::subTypes();
 
     $profileTypeComponent = array_intersect($components, $profileTypes);
@@ -380,23 +366,20 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
   }
 
   /* Function to find out whether given profile group uses $required 
-     * and/or $optionalprofile types
-     *  
-     * @param integer $ufGroupId  profile id
-     * @param array   $required   array of types those are required
-     * @param array   $optional   array of types those are optional
-     *
-     * @return boolean $valid  
-     * @static
-     */
-
-  static
-  function checkValidProfileType($ufGroupId, $required, $optional = NULL) {
+   * and/or $optionalprofile types
+   *  
+   * @param integer $ufGroupId  profile id
+   * @param array   $required   array of types those are required
+   * @param array   $optional   array of types those are optional
+   *
+   * @return boolean $valid  
+   * @static
+   */
+  static function checkValidProfileType($ufGroupId, $required, $optional = NULL) {
     if (!is_array($required) || empty($required)) {
       return;
     }
 
-    require_once 'CRM/Core/DAO/UFGroup.php';
     $ufGroup = new CRM_Core_DAO_UFGroup();
     $ufGroup->id = $ufGroupId;
     $ufGroup->find(TRUE);
@@ -442,8 +425,7 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
    * @acess public
    * @static
    */
-  static
-  function checkProfileType($ufGroupId) {
+  static function checkProfileType($ufGroupId) {
     $ufGroup = new CRM_Core_DAO_UFGroup();
     $ufGroup->id = $ufGroupId;
     $ufGroup->find(TRUE);
@@ -468,7 +450,6 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
     }
 
     // suppress any subtypes if present
-    require_once "CRM/Contact/BAO/ContactType.php";
     CRM_Contact_BAO_ContactType::suppressSubTypes($profileTypes);
 
     $contactTypes = array('Contact', 'Individual', 'Household', 'Organization');
@@ -510,16 +491,13 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
    * @acess public
    * @static
    */
-  static
-  function getProfileType($ufGroupId, $returnMixType = TRUE, $onlyPure = FALSE, $skipComponentType = FALSE) {
+  static function getProfileType($ufGroupId, $returnMixType = TRUE, $onlyPure = FALSE, $skipComponentType = FALSE) {
     // profile types
     $contactTypes = array('Contact', 'Individual', 'Household', 'Organization');
-    require_once 'CRM/Contact/BAO/ContactType.php';
     $subTypes = CRM_Contact_BAO_ContactType::subTypes();
 
     $components = array('Contribution', 'Participant', 'Membership', 'Activity');
 
-    require_once 'CRM/Core/DAO/UFGroup.php';
     $ufGroup            = new CRM_Core_DAO_UFGroup();
     $ufGroup->id        = $ufGroupId;
     $ufGroup->is_active = 1;
@@ -620,8 +598,7 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField {
    * @acess public
    * @static
    */
-  static
-  function checkProfileGroupType($ctype) {
+  static function checkProfileGroupType($ctype) {
     $ufGroup = new CRM_Core_DAO_UFGroup();
 
     $query = "
@@ -689,6 +666,42 @@ SELECT  id
     }
     $query = "UPDATE civicrm_uf_field SET in_selector = 0, is_searchable = 0 WHERE  uf_group_id = {$profileID}";
     CRM_Core_DAO::executeQuery($query);
+  }
+
+  /**
+   * Add fields to $profileAddressFields as appropriate.
+   * profileAddressFields is assigned to the template to tell it
+   * what fields are in the profile address
+   * that potentially should be copied to the Billing fields
+   * we want to give precedence to 
+   *   1) Billing & 
+   *   2) then Primary designated as 'Primary
+   *   3) location_type is primary
+   *   4) if none of these apply then it just uses the first one
+   *   
+   *   as this will be used to
+   * transfer profile address data to billing fields
+   * http://issues.civicrm.org/jira/browse/CRM-5869
+   * @param string $key Field key - e.g. street_address-Primary, first_name
+   * @params array $profileAddressFields array of profile fields that relate to address fields
+   */
+  static function assignAddressField($key, &$profileAddressFields) {
+    $billing_id = CRM_Core_BAO_LocationType::getBilling();
+    list($prefixName, $index) = CRM_Utils_System::explode('-', $key, 2);
+    if (!empty($index) && (
+        // it's empty so we set it OR
+        !CRM_Utils_array::value($prefixName, $profileAddressFields)
+        //we are dealing with billing id (precedence)
+        || $index == $billing_id
+        // we are dealing with primary & billing not set
+        || ($index == 'Primary' && $profileAddressFields[$prefixName] != $billing_id)
+        || ($index == CRM_Core_BAO_LocationType::getDefault()->id
+          && $profileAddressFields[$prefixName] != $billing_id
+          && $profileAddressFields[$prefixName] != 'Primary'
+        )
+      )) {
+      $profileAddressFields[$prefixName] = $index;
+    }
   }
 }
 

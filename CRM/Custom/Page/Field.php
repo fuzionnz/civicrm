@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 
 /**
  * Create a page for displaying Custom Fields.
@@ -68,7 +66,8 @@ class CRM_Custom_Page_Field extends CRM_Core_Page {
    *
    * @return array  array of action links that we need to display for the browse screen
    * @access public
-   */ function &actionLinks() {
+   */ 
+  function &actionLinks() {
     if (!isset(self::$_actionLinks)) {
       $deleteExtra = ts('Are you sure you want to delete this custom data field?');
       self::$_actionLinks = array(
@@ -92,13 +91,13 @@ class CRM_Custom_Page_Field extends CRM_Core_Page {
         ),
         CRM_Core_Action::DISABLE => array(
           'name' => ts('Disable'),
-          'extra' => 'onclick = "enableDisable( %%id%%,\'' . 'CRM_Core_BAO_CustomField' . '\',\'' . 'enable-disable' . '\' );"',
+          'extra' => 'onclick = "enableDisable( %%id%%,\'' . 'CRM_Core_BAO_CustomField' . '\',\'' . 'enable-disable' . '\',0,\'CustomField\' );"',
           'ref' => 'disable-action',
           'title' => ts('Disable Custom Field'),
         ),
         CRM_Core_Action::ENABLE => array(
           'name' => ts('Enable'),
-          'extra' => 'onclick = "enableDisable( %%id%%,\'' . 'CRM_Core_BAO_CustomField' . '\',\'' . 'disable-enable' . '\' );"',
+          'extra' => 'onclick = "enableDisable( %%id%%,\'' . 'CRM_Core_BAO_CustomField' . '\',\'' . 'disable-enable' . '\',0,\'CustomField\'  );"',
           'ref' => 'enable-action',
           'title' => ts('Enable Custom Field'),
         ),
@@ -129,7 +128,6 @@ class CRM_Custom_Page_Field extends CRM_Core_Page {
    * @access public
    */
   function browse() {
-    require_once 'CRM/Core/BAO/CustomField.php';
     $customField = array();
     $customFieldBAO = new CRM_Core_BAO_CustomField();
 
@@ -185,7 +183,6 @@ class CRM_Custom_Page_Field extends CRM_Core_Page {
 
     $returnURL = CRM_Utils_System::url('civicrm/admin/custom/group/field', "reset=1&action=browse&gid={$this->_gid}");
     $filter = "custom_group_id = {$this->_gid}";
-    require_once 'CRM/Utils/Weight.php';
     CRM_Utils_Weight::addOrder($customField, 'CRM_Core_DAO_CustomField',
       'id', $returnURL, $filter
     );
@@ -229,7 +226,6 @@ class CRM_Custom_Page_Field extends CRM_Core_Page {
    * @access public
    */
   function run() {
-    require_once 'CRM/Core/BAO/CustomGroup.php';
 
     // get the group id
     $this->_gid = CRM_Utils_Request::retrieve('gid', 'Positive',
@@ -279,8 +275,6 @@ class CRM_Custom_Page_Field extends CRM_Core_Page {
       $this->preview($id);
     }
     else {
-      require_once 'CRM/Core/BAO/CustomField.php';
-      require_once 'CRM/Core/BAO/UFField.php';
       $this->browse();
     }
 

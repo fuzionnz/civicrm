@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Core/DAO/MappingField.php';
 
 /**
  * This class gets the name of the file to upload
@@ -84,7 +81,6 @@ class CRM_Export_Form_Map extends CRM_Core_Form {
   }
 
   public function buildQuickForm() {
-    require_once 'CRM/Core/BAO/Mapping.php';
     CRM_Core_BAO_Mapping::buildMappingForm($this,
       'Export',
       $this->_mappingId,
@@ -139,7 +135,6 @@ class CRM_Export_Form_Map extends CRM_Core_Form {
 
     if (!empty($errors)) {
       $_flag = 1;
-      require_once 'CRM/Core/Page.php';
       $assignError = new CRM_Core_Page();
       $assignError->assign('mappingDetailsError', $_flag);
       return $errors;
@@ -159,7 +154,6 @@ class CRM_Export_Form_Map extends CRM_Core_Form {
     $params = $this->controller->exportValues($this->_name);
     $exportParams = $this->controller->exportValues('Select');
 
-    require_once 'CRM/Export/Form/Select.php';
     $greetingOptions = CRM_Export_Form_Select::getGreetingOptions();
 
     if (!empty($greetingOptions)) {
@@ -179,7 +173,6 @@ class CRM_Export_Form_Map extends CRM_Core_Form {
 
     $urlParams = NULL;
     $qfKey = CRM_Utils_Request::retrieve('qfKey', 'String', $this);
-    require_once 'CRM/Utils/Rule.php';
     if (CRM_Utils_Rule::qfKey($qfKey)) {
       $urlParams = "&qfKey=$qfKey";
     }
@@ -209,7 +202,6 @@ class CRM_Export_Form_Map extends CRM_Core_Form {
 
     if (!$checkEmpty) {
       $this->set('mappingId', NULL);
-      require_once 'CRM/Utils/System.php';
       CRM_Utils_System::redirect(CRM_Utils_System::url($currentPath, '_qf_Map_display=true' . $urlParams));
     }
 
@@ -234,7 +226,6 @@ class CRM_Export_Form_Map extends CRM_Core_Form {
     }
 
     //get the csv file
-    require_once 'CRM/Export/BAO/Export.php';
     CRM_Export_BAO_Export::exportComponents($this->get('selectAll'),
       $this->get('componentIds'),
       $this->get('queryParams'),

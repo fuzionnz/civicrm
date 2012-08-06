@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +30,7 @@
  * by every scheduled job (cron task) in CiviCRM.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -55,7 +55,6 @@ class CRM_Core_JobManager {
      */
 
   public function __construct() {
-    require_once 'CRM/Core/Config.php';
     $config = CRM_Core_Config::singleton();
     $config->fatalErrorHandler = 'CRM_Core_JobManager_scheduledJobFatalErrorHandler';
 
@@ -72,7 +71,6 @@ class CRM_Core_JobManager {
   public function execute($auth = TRUE) {
 
     $this->logEntry('Starting scheduled jobs execution');
-    require_once 'CRM/Utils/System.php';
 
     if ($auth && !CRM_Utils_System::authenticateKey(TRUE)) {
       $this->logEntry('Could not authenticate the site key.');
@@ -146,12 +144,9 @@ class CRM_Core_JobManager {
 
   private function _getJobs() {
     $jobs = array();
-    require_once 'CRM/Core/DAO/Job.php';
-    require_once 'CRM/Core/DAO/JobLog.php';
     $dao = new CRM_Core_DAO_Job();
     $dao->orderBy('name');
     $dao->find();
-    require_once 'CRM/Core/ScheduledJob.php';
     while ($dao->fetch()) {
       $temp = array();
       CRM_Core_DAO::storeValues($dao, $temp);
@@ -173,13 +168,11 @@ class CRM_Core_JobManager {
     if (is_null($id) && is_null($action)) {
       CRM_Core_Error::fatal('You need to provide either id or name to use this method');
     }
-    require_once 'CRM/Core/DAO/Job.php';
     $dao             = new CRM_Core_DAO_Job();
     $dao->id         = $id;
     $dao->api_entity = $entity;
     $dao->api_action = $action;
     $dao->find();
-    require_once 'CRM/Core/ScheduledJob.php';
     while ($dao->fetch()) {
       CRM_Core_DAO::storeValues($dao, $temp);
       $job = new CRM_Core_ScheduledJob($temp);
@@ -204,7 +197,6 @@ class CRM_Core_JobManager {
 
   public function logEntry($message) {
     $domainID = CRM_Core_Config::domainID();
-    require_once 'CRM/Core/DAO/JobLog.php';
     $dao = new CRM_Core_DAO_JobLog();
 
     $dao->domain_id = $domainID;

@@ -8,11 +8,14 @@
 function activity_create_example(){
 $params = array( 
   'source_contact_id' => 17,
-  'activity_type_id' => 1,
+  'activity_type_id' => 40,
   'subject' => 'test activity type id',
   'activity_date_time' => '2011-06-02 14:36:13',
   'status_id' => 2,
   'priority_id' => 1,
+  'duration' => 120,
+  'location' => 'Pensulvania',
+  'details' => 'a test activity',
   'version' => 3,
   'custom_2' => '17',
 );
@@ -37,9 +40,12 @@ function activity_create_expectedresult(){
       '1' => array( 
           'id' => '1',
           'source_contact_id' => '17',
-          'activity_type_id' => '1',
+          'activity_type_id' => '40',
           'subject' => 'test activity type id',
           'activity_date_time' => '2011-06-02 14:36:13',
+          'duration' => '120',
+          'location' => 'Pensulvania',
+          'details' => 'a test activity',
           'status_id' => '2',
           'priority_id' => '1',
           'is_test' => 0,

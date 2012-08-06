@@ -1,5 +1,4 @@
 <?php
-require_once 'CRM/Dedupe/BAO/QueryBuilder.php';
 
 // TODO: How to handle NULL values/records?
 class CRM_Dedupe_BAO_QueryBuilder_IndividualComplete extends CRM_Dedupe_BAO_QueryBuilder {

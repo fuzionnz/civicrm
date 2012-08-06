@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Utils/System/Base.php';
 
 /**
  * WordPress specific stuff goes here
@@ -120,7 +118,25 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
    * @access public
    * @static
    */
-  function addHTMLHead($head) {}
+  function addHTMLHead($head) {
+    static $registered = FALSE;
+    if (!$registered) {
+      // front-end view
+      add_action('wp_head', array(__CLASS__, '_showHTMLHead'));
+      // back-end views
+      add_action('admin_head', array(__CLASS__, '_showHTMLHead'));
+    }
+    CRM_Core_Region::instance('wp_head')->add(array(
+      'markup' => $head,
+    ));
+  }
+
+  static function _showHTMLHead() {
+    $region = CRM_Core_Region::instance('wp_head', FALSE);
+    if ($region) {
+      echo $region->render('');
+    }
+  }
 
   /**
    * rewrite various system urls to https
@@ -169,8 +185,12 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
    * @access public
    *
    */
-  function url($path = NULL, $query = NULL, $absolute = FALSE,
-    $fragment = NULL, $htmlize = TRUE,
+  function url(
+    $path = NULL,
+    $query = NULL,
+    $absolute = FALSE,
+    $fragment = NULL,
+    $htmlize = TRUE,
     $frontend = FALSE
   ) {
     $config    = CRM_Core_Config::singleton();
@@ -178,11 +198,11 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
     $separator = $htmlize ? '&amp;' : '&';
     $pageID    = '';
 
-    require_once 'CRM/Utils/String.php';
     $path = CRM_Utils_String::stripPathChars($path);
 
+    $permlinkStructure = get_option('permalink_structure');
     if ($config->userFrameworkFrontend) {
-      if (get_option('permalink_structure') != '') {
+      if ($permlinkStructure != '') {
         global $post;
         $script = get_permalink($post->ID);
       }
@@ -190,7 +210,7 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
       // when shortcode is inlcuded in page
       // also make sure we have valid query object
       global $wp_query;
-      if (method_exists($wp_query, 'get')) {
+      if ( method_exists( $wp_query, 'get' ) ) {
         if (get_query_var('page_id')) {
           $pageID = "{$separator}page_id=" . get_query_var('page_id');
         }
@@ -217,17 +237,17 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
     }
 
     if (isset($path)) {
-      if (get_option('permalink_structure') != '' && $pageID) {
-        if (isset($query)) {
+      if (isset($query)) {
+        if ( $permlinkStructure != '' && $pageID ) {
           return $script . '?page=CiviCRM&q=' . $path . $pageID . $separator . $query . $fragment;
         }
         else {
-          return $script . '?page=CiviCRM&q=' . $path . $pageID . $fragment;
+          return $base . '?page=CiviCRM&q=' . $path . $pageID . $separator . $query . $fragment;
         }
       }
       else {
-        if (isset($query)) {
-          return $base . '?page=CiviCRM&q=' . $path . $pageID . $separator . $query . $fragment;
+        if ( $permlinkStructure != '' && $pageID ) {
+          return $script . '?page=CiviCRM&q=' . $path . $pageID . $fragment;
         }
         else {
           return $base . '?page=CiviCRM&q=' . $path . $pageID . $fragment;
@@ -235,21 +255,16 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
       }
     }
     else {
-      if (get_option('permalink_structure') != '') {
-        if (isset($query)) {
+      if (isset($query)) {
+        if ( $permlinkStructure != '' && $pageID ) {
           return $script . '?' . $query . $pageID . $fragment;
         }
         else {
-          return $base . $fragment;
+          return $base . $script . '?' . $query . $pageID . $fragment;
         }
       }
       else {
-        if (isset($query)) {
-          return $base . $script . '?' . $query . $pageID . $fragment;
-        }
-        else {
-          return $base . $fragment;
-        }
+        return $base . $fragment;
       }
     }
   }
@@ -279,7 +294,6 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
     }
 
     // need to change this to make sure we matched only one row
-    require_once 'CRM/Core/BAO/UFMatch.php';
 
     CRM_Core_BAO_UFMatch::synchronizeUFMatch($user->data, $user->data->ID, $user->data->user_email, 'WordPress');
     $contactID = CRM_Core_BAO_UFMatch::getContactId($user->data->ID);
@@ -297,10 +311,11 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
    * @access public
    * @static
    */
-  function setMessage($message) {}
+  function setMessage($message) {
+  }
 
-  function loadUser($user) {
-    return TRUE;
+  function loadUser( $user ) {
+    return true;
   }
 
   function permissionDenied() {
@@ -336,13 +351,13 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
   function loadBootStrap($name = NULL, $pass = NULL) {
     global $wp, $wp_rewrite, $wp_the_query, $wp_query, $wpdb;
 
-    $cmsRootPath = self::cmsRootPath();
+    $cmsRootPath = $this->cmsRootPath();
     if (!$cmsRootPath) {
       CRM_Core_Error::fatal("Could not find the install directory for WordPress");
     }
 
     require_once ($cmsRootPath . DIRECTORY_SEPARATOR . 'wp-load.php');
-    return TRUE;
+    return true;
   }
 
   function cmsRootPath() {
@@ -381,7 +396,6 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
       'role' => get_option('default_role'),
     );
     if (isset($params['contactID'])) {
-      require_once 'CRM/Contact/BAO/Contact.php';
       $contactType = CRM_Contact_BAO_Contact::getContactType($params['contactID']);
       if ($contactType == 'Individual') {
         $user_data['first_name'] = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
@@ -403,6 +417,25 @@ class CRM_Utils_System_WordPress extends CRM_Utils_System_Base {
 
     wp_new_user_notification($uid, $user_data['user_pass']);
     return $uid;
+  }
+
+  /*
+   * Change user name in host CMS
+   *
+   * @param integer $ufID User ID in CMS
+   * @param string $ufName User name
+   */
+  function updateCMSName($ufID, $ufName) {
+    // CRM-10620
+    if (function_exists('wp_update_user')) {
+      $ufID   = CRM_Utils_Type::escape($ufID, 'Integer');
+      $ufName = CRM_Utils_Type::escape($ufName, 'String');
+
+      $values = array ('ID' => $ufID, 'user_email' => $ufName);
+      if( $ufID ) {
+        wp_update_user( $values ) ;
+      }
+    }
   }
 
   function checkUserNameEmailExists(&$params, &$errors, $emailName = 'email') {

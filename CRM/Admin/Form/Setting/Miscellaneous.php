@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Admin/Form/Setting.php';
 
 /**
  * This class generates form components for Miscellaneous
@@ -56,7 +54,6 @@ class CRM_Admin_Form_Setting_Miscellaneous extends CRM_Admin_Form_Setting {
     $validTriggerPermission = CRM_Core_DAO::checkTriggerViewPermission(FALSE);
 
     // FIXME: for now, disable logging for multilingual sites OR if triggers are not permittted
-    require_once 'CRM/Core/DAO/Domain.php';
     $domain = new CRM_Core_DAO_Domain;
     $domain->find(TRUE);
     $attribs = $domain->locales || !$validTriggerPermission ? array(
@@ -68,6 +65,10 @@ class CRM_Admin_Form_Setting_Miscellaneous extends CRM_Admin_Form_Setting {
     $this->addYesNo('versionCheck', ts('Version Check & Statistics Reporting'));
 
     $this->addYesNo('doNotAttachPDFReceipt', ts('Attach PDF copy to receipts'));
+
+    $this->addElement('text', 'wkhtmltopdfPath', ts('Path to wkhtmltopdf executable'),
+      array('size' => 64, 'maxlength' => 256)
+    );
 
     $this->addElement('text', 'maxAttachments', ts('Maximum Attachments'),
       array('size' => 2, 'maxlength' => 8)
@@ -102,7 +103,6 @@ class CRM_Admin_Form_Setting_Miscellaneous extends CRM_Admin_Form_Setting {
   function setDefaultValues() {
     parent::setDefaultValues();
 
-    require_once 'CRM/Core/BAO/Setting.php';
     $this->_defaults['checksumTimeout'] = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
       'checksum_timeout',
       NULL,
@@ -112,14 +112,27 @@ class CRM_Admin_Form_Setting_Miscellaneous extends CRM_Admin_Form_Setting {
   }
 
   public function postProcess() {
+    // store the submitted values in an array
+    $params = $this->controller->exportValues($this->_name);
+
+
+    // get current logging status
+    $values = $this->exportValues();
+
     parent::postProcess();
 
-    // handle logging
-    // FIXME: do it only if the setting changed
-    require_once 'CRM/Logging/Schema.php';
-    $values = $this->exportValues();
-    $logging = new CRM_Logging_Schema;
-    $values['logging'] ? $logging->enableLogging() : $logging->disableLogging();
+    $config = CRM_Core_Config::singleton();
+    if ($config->logging != $values['logging']) {
+      $logging = new CRM_Logging_Schema;
+      if ($values['logging']) {
+        $config->logging = TRUE;
+        $logging->enableLogging();
+      }
+      else {
+        $config->logging = FALSE;
+        $logging->disableLogging();
+      }
+    }
   }
 }
 

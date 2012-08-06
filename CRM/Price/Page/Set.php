@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 
 /**
  * Create a page for displaying Price Sets.
@@ -142,7 +140,6 @@ class CRM_Price_Page_Set extends CRM_Core_Page {
     );
 
     if ($sid) {
-      require_once 'CRM/Price/BAO/Set.php';
       CRM_Price_BAO_Set::checkPermission($sid);
     }
     // what action to take ?
@@ -158,8 +155,6 @@ class CRM_Price_Page_Set extends CRM_Core_Page {
       $this->copy();
     }
     else {
-      require_once 'CRM/Price/BAO/Set.php';
-      require_once 'CRM/Price/BAO/Field.php';
 
       // if action is delete do the needful.
       if ($action & (CRM_Core_Action::DELETE)) {
@@ -261,18 +256,16 @@ class CRM_Price_Page_Set extends CRM_Core_Page {
   function browse($action = NULL) {
     // get all price sets
     $priceSet = array();
-    require_once 'CRM/Core/Component.php';
     $comps = array('CiviEvent' => ts('Event'),
       'CiviContribute' => ts('Contribution'),
       'CiviMember' => ts('Membership'),
     );
 
-    require_once 'CRM/Price/BAO/Set.php';
     $dao = new CRM_Price_DAO_Set();
     if (CRM_Price_BAO_Set::eventPriceSetDomainID()) {
       $dao->domain_id = CRM_Core_Config::domainID();
     }
-
+    $dao->is_quick_config = 0;
     $dao->find();
     while ($dao->fetch()) {
       $priceSet[$dao->id] = array();
@@ -289,14 +282,23 @@ class CRM_Price_Page_Set extends CRM_Core_Page {
       $action = array_sum(array_keys($this->actionLinks()));
 
       // update enable/disable links depending on price_set properties.
-      if ($dao->is_active) {
-        $action -= CRM_Core_Action::ENABLE;
+      if ($dao->is_reserved) {
+        $action -= CRM_Core_Action::UPDATE + CRM_Core_Action::DISABLE + CRM_Core_Action::ENABLE + CRM_Core_Action::DELETE + CRM_Core_Action::COPY;
       }
       else {
-        $action -= CRM_Core_Action::DISABLE;
+        if ($dao->is_active) {
+          $action -= CRM_Core_Action::ENABLE;
+        }
+        else {
+          $action -= CRM_Core_Action::DISABLE;
+        }
       }
-
-      $priceSet[$dao->id]['action'] = CRM_Core_Action::formLink(self::actionLinks(), $action,
+      $actionLinks = self::actionLinks();
+      //CRM-10117
+      if ($dao->is_reserved) {
+        $actionLinks[CRM_Core_Action::BROWSE]['name'] = 'View Price Fields';
+      }
+      $priceSet[$dao->id]['action'] = CRM_Core_Action::formLink($actionLinks, $action,
         array('sid' => $dao->id)
       );
     }
@@ -315,7 +317,6 @@ class CRM_Price_Page_Set extends CRM_Core_Page {
       $this, TRUE, 0, 'GET'
     );
 
-    require_once 'CRM/Price/BAO/Set.php';
     CRM_Price_BAO_Set::copy($id);
 
     CRM_Utils_System::redirect(CRM_Utils_System::url(CRM_Utils_System::currentPath(), 'reset=1'));

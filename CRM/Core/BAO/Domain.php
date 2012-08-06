@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/Domain.php';
 
 /**
  *
@@ -89,11 +87,13 @@ class CRM_Core_BAO_Domain extends CRM_Core_DAO_Domain {
   }
 
   static
-  function version() {
+  function version( $skipUsingCache = false ) {
     return CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Domain',
-      CRM_Core_Config::domainID(),
-      'version'
-    );
+                                       CRM_Core_Config::domainID(),
+                                       'version',
+                                       'id',
+                                       $skipUsingCache
+                                       );
   }
 
   /**
@@ -163,13 +163,12 @@ class CRM_Core_BAO_Domain extends CRM_Core_DAO_Domain {
 
   static
   function getNameAndEmail($skipFatal = FALSE) {
-    require_once 'CRM/Core/OptionGroup.php';
     $fromEmailAddress = CRM_Core_OptionGroup::values('from_email_address', NULL, NULL, NULL, ' AND is_default = 1');
     if (!empty($fromEmailAddress)) {
-      require_once 'CRM/Utils/Mail.php';
       foreach ($fromEmailAddress as $key => $value) {
-        $email = CRM_Utils_Mail::pluckEmailFromHeader($value);
-        $fromName = CRM_Utils_Array::value(1, explode('"', $value));
+        $email     = CRM_Utils_Mail::pluckEmailFromHeader($value);
+        $fromArray = explode('"', $value);
+        $fromName  = CRM_Utils_Array::value(1, $fromArray);
         break;
       }
       return array($fromName, $email);
@@ -192,7 +191,6 @@ class CRM_Core_BAO_Domain extends CRM_Core_DAO_Domain {
 
     if ($groupID) {
       $contactIDs = array($contactID);
-      require_once 'CRM/Contact/DAO/GroupContact.php';
       CRM_Contact_BAO_GroupContact::addContactsToGroup($contactIDs, $groupID);
 
       return $groupID;
@@ -208,7 +206,6 @@ class CRM_Core_BAO_Domain extends CRM_Core_DAO_Domain {
       return $groupID;
     }
 
-    require_once 'CRM/Core/BAO/Setting.php';
     $domainGroupID = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::MULTISITE_PREFERENCES_NAME,
       'domain_group_id'
     );
@@ -233,7 +230,6 @@ class CRM_Core_BAO_Domain extends CRM_Core_DAO_Domain {
           'is_active' => 1,
           'no_parent' => 1,
         );
-        require_once 'CRM/Contact/BAO/Group.php';
         $group = CRM_Contact_BAO_Group::create($groupParams);
         $groupID = $group->id;
       }
@@ -253,7 +249,6 @@ class CRM_Core_BAO_Domain extends CRM_Core_DAO_Domain {
     $childGrps = array();
 
     if ($domainGroupID) {
-      require_once 'CRM/Contact/BAO/GroupNesting.php';
       $childGrps = CRM_Contact_BAO_GroupNesting::getChildGroupIds($domainGroupID);
       $childGrps[] = $domainGroupID;
     }

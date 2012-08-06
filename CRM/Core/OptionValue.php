@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/BAO/OptionValue.php';
-require_once 'CRM/Core/BAO/OptionGroup.php';
 class CRM_Core_OptionValue {
 
   /**
@@ -102,7 +99,6 @@ class CRM_Core_OptionValue {
     if ($optionGroupID) {
       $dao->option_group_id = $optionGroupID;
 
-      require_once 'CRM/Core/OptionGroup.php';
       if (in_array($groupName, CRM_Core_OptionGroup::$_domainIDGroups)) {
         $dao->domain_id = CRM_Core_Config::domainID();
       }
@@ -111,7 +107,6 @@ class CRM_Core_OptionValue {
       $dao->find();
     }
 
-    require_once 'CRM/Case/BAO/Case.php';
     if ($groupName == 'case_type') {
       $caseTypeIds = CRM_Case_BAO_Case::getUsedCaseType();
     }
@@ -119,7 +114,6 @@ class CRM_Core_OptionValue {
       $caseStatusIds = CRM_Case_BAO_Case::getUsedCaseStatuses();
     }
 
-    require_once 'CRM/Core/Component.php';
     $componentNames = CRM_Core_Component::getNames();
     $visibilityLabels = CRM_Core_PseudoConstant::visibility();
     while ($dao->fetch()) {
@@ -186,7 +180,6 @@ class CRM_Core_OptionValue {
    */
   static
   function addOptionValue(&$params, &$groupParams, &$action, &$optionValueID) {
-    require_once 'CRM/Utils/Weight.php';
     $params['is_active'] = CRM_Utils_Array::value('is_active', $params, FALSE);
     // checking if the group name with the given id or name (in $groupParams) exists
     if (!empty($groupParams)) {
@@ -214,7 +207,6 @@ class CRM_Core_OptionValue {
     }
     $params['option_group_id'] = $optionGroupID;
 
-    require_once 'CRM/Core/Action.php';
     if (($action & CRM_Core_Action::ADD) && !CRM_Utils_Array::value('value', $params)) {
       $fieldValues = array('option_group_id' => $optionGroupID);
       // use the next available value
@@ -288,7 +280,6 @@ class CRM_Core_OptionValue {
     if (empty(self::$_fields[$key]) || !self::$_fields[$key]) {
       self::$_fields[$key] = array();
 
-      require_once "CRM/Core/DAO/OptionValue.php";
       $option = CRM_Core_DAO_OptionValue::import();
 
       foreach (array_keys($option) as $id) {
@@ -298,33 +289,10 @@ class CRM_Core_OptionValue {
       $nameTitle = array();
       if ($mode == 'contribute') {
         $nameTitle = array(
-          'payment_instrument' => array('name' => 'payment_instrument',
+          'payment_instrument' => array(
+            'name' => 'payment_instrument',
             'title' => ts('Payment Instrument'),
             'headerPattern' => '/^payment|(p(ayment\s)?instrument)$/i',
-          ),
-          'honor_contact_name' => array(
-            'name' => 'honor_contact_name',
-            'title' => 'Honor Contact Name',
-            'headerPattern' => '/^honor_contact_name$/i',
-            'where' => 'civicrm_contact_c.display_name',
-          ),
-          'honor_contact_email' => array(
-            'name' => 'honor_contact_email',
-            'title' => 'Honor Contact Email',
-            'headerPattern' => '/^honor_contact_email$/i',
-            'where' => 'honor_email.email',
-          ),
-          'honor_contact_id' => array(
-            'name' => 'honor_contact_id',
-            'title' => 'Honor Contact ID',
-            'headerPattern' => '/^honor_contact_id$/i',
-            'where' => 'civicrm_contribution.honor_contact_id',
-          ),
-          'honor_type_label' => array(
-            'name' => 'honor_type_label',
-            'title' => 'Honor Type Label',
-            'headerPattern' => '/^honor_type_label$/i',
-            'where' => 'honor_type.label',
           ),
         );
       }
@@ -437,7 +405,7 @@ class CRM_Core_OptionValue {
       return NULL;
     }
     $select = "
-SELECT 
+SELECT
    option_value.id          as id,
    option_value.label       as label,
    option_value.value       as value,
@@ -478,7 +446,6 @@ FROM
       $params[2] = array($groupName, 'String');
     }
 
-    require_once 'CRM/Core/OptionGroup.php';
     if (in_array($groupName, CRM_Core_OptionGroup::$_domainIDGroups)) {
       $where .= " AND option_value.domain_id = " . CRM_Core_Config::domainID();
     }

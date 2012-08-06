@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -43,7 +43,6 @@ class CRM_Admin_Page_AJAX {
    */
   static
   function getNavigationList() {
-    require_once 'CRM/Core/BAO/Navigation.php';
     echo CRM_Core_BAO_Navigation::buildNavigation(TRUE, FALSE);
     CRM_Utils_System::civiExit();
   }
@@ -53,7 +52,6 @@ class CRM_Admin_Page_AJAX {
    */
   static
   function menuTree() {
-    require_once 'CRM/Core/BAO/Navigation.php';
     echo CRM_Core_BAO_Navigation::processNavigation($_GET);
     CRM_Utils_System::civiExit();
   }
@@ -209,8 +207,12 @@ class CRM_Admin_Page_AJAX {
           break;
 
         case 'CRM_Contribute_BAO_ContributionRecur':
-          $status = ts('Are you sure you want to cancel this recurring contribution?');
+          $recurDetails = CRM_Contribute_BAO_ContributionRecur::getSubscriptionDetails($recordID);
+          $status = ts('Are you sure you want to mark this recurring contribution as cancelled?');
           $status .= '<br /><br /><strong>' . ts('WARNING - This action sets the CiviCRM recurring contribution status to Cancelled, but does NOT send a cancellation request to the payment processor. You will need to ensure that this recurring payment (subscription) is cancelled by the payment processor.') . '</strong>';
+          if ($recurDetails->membership_id) {
+            $status .= '<br /><br /><strong>' . ts('This recurring contribution is linked to an auto-renew membership. If you cancel it, the associated membership will no longer renew automatically. However, the current membership status will not be affected.') . '</strong>';
+          }
           break;
 
         default:
@@ -338,7 +340,6 @@ LIMIT $limit";
       $createNewTag = TRUE;
     }
 
-    require_once 'CRM/Core/BAO/EntityTag.php';
     $tagInfo = array();
     // if action is select
     if ($action == 'select') {
@@ -351,7 +352,6 @@ LIMIT $limit";
           'parent_id' => $parentId,
         );
 
-        require_once 'CRM/Core/BAO/Tag.php';
         $tagObject = CRM_Core_BAO_Tag::add($params, CRM_Core_DAO::$_nullArray);
 
         $tagInfo = array(
@@ -409,7 +409,6 @@ LIMIT $limit";
       CRM_Utils_System::civiExit();
     }
 
-    require_once 'CRM/Core/BAO/ActionSchedule.php';
     $selectionOptions = CRM_Core_BAO_ActionSchedule::getSelection1($mappingID);
     extract($selectionOptions);
 
@@ -421,7 +420,6 @@ LIMIT $limit";
       );
     }
 
-    require_once 'CRM/Utils/JSON.php';
     echo json_encode($elements);
     CRM_Utils_System::civiExit();
   }
@@ -437,7 +435,6 @@ LIMIT $limit";
       CRM_Utils_System::civiExit();
     }
 
-    require_once 'CRM/Core/BAO/ActionSchedule.php';
     $selectionOptions = CRM_Core_BAO_ActionSchedule::getSelection1($mappingID);
     extract($selectionOptions);
 
@@ -450,7 +447,6 @@ LIMIT $limit";
     }
     $elements['recipientMapping'] = $recipientMapping;
 
-    require_once 'CRM/Utils/JSON.php';
     echo json_encode($elements);
     CRM_Utils_System::civiExit();
   }
@@ -460,11 +456,9 @@ LIMIT $limit";
     $tagAId = CRM_Utils_Type::escape($_POST['fromId'], 'Integer');
     $tagBId = CRM_Utils_Type::escape($_POST['toId'], 'Integer');
 
-    require_once 'CRM/Core/BAO/EntityTag.php';
     $result = CRM_Core_BAO_EntityTag::mergeTags($tagAId, $tagBId);
 
     if (!empty($result['tagB_used_for'])) {
-      require_once 'CRM/Core/OptionGroup.php';
       $usedFor = CRM_Core_OptionGroup::values('tag_used_for');
       foreach ($result['tagB_used_for'] as & $val) {
         $val = $usedFor[$val];
@@ -487,7 +481,6 @@ LIMIT $limit";
       CRM_Utils_System::civiExit();
     }
 
-    require_once 'CRM/Event/PseudoConstant.php';
     switch ($recipient) {
       case 'Participant Status':
         $values = CRM_Event_PseudoConstant::participantStatus();
@@ -509,7 +502,6 @@ LIMIT $limit";
       );
     }
 
-    require_once 'CRM/Utils/JSON.php';
     echo json_encode($elements);
     CRM_Utils_System::civiExit();
   }

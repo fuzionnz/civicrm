@@ -7,7 +7,7 @@
  */
 function pledge_delete_example(){
 $params = array( 
-  'id' => 17,
+  'id' => 1,
   'version' => 3,
 );
 
@@ -28,7 +28,7 @@ function pledge_delete_expectedresult(){
   'count' => 1,
   'id' => '',
   'values' => array( 
-      '' => 17,
+      '' => 1,
     ),
 );
 

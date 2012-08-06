@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +33,7 @@
  * @package CiviCRM_APIv3
  * @subpackage API_Pledge_Payment
  *
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * @version $Id: PledgePayment.php
  *
  */
@@ -104,7 +106,7 @@ function _civicrm_api3_pledge_payment_create_spec(&$params) {
 function civicrm_api3_pledge_payment_delete($params) {
 
   if (CRM_Pledge_BAO_PledgePayment::del($params['id'])) {
-    return civicrm_api3_create_success(array('id' => $id), $params);
+    return civicrm_api3_create_success(array('id' => $params['id']), $params,'pledge_payment','delete');
   }
   else {
     return civicrm_api3_create_error('Could not delete payment');

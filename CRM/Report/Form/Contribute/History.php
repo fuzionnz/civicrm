@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,16 +30,12 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
-require_once 'CRM/Contribute/PseudoConstant.php';
 class CRM_Report_Form_Contribute_History extends CRM_Report_Form {
-  // Primary Contacts count limit
-  CONST ROW_COUNT_LIMIT = 10;
+  // Primary Contacts count limitCONSTROW_COUNT_LIMIT = 10;
 
   protected $_addressField = FALSE;
   protected $_emailField = FALSE;
@@ -685,7 +683,6 @@ class CRM_Report_Form_Contribute_History extends CRM_Report_Form {
       return;
     }
 
-    require_once 'CRM/Utils/Money.php';
 
     $last_primary = NULL;
     foreach ($rows as $rowNum => $row) {

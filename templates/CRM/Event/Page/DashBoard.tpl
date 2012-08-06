@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -104,16 +104,18 @@
             {/if}
             {if $values.configure}
               <div class="crm-configure-actions">
-		 <span id="{$id}" class="btn-slide">{ts}Configure{/ts}
+		            <span id="{$id}" class="btn-slide">{ts}Configure{/ts}
         	    	<ul class="panel" id="panel_info_{$id}">
         		    <li><a title="Info and Settings" class="action-item-wrap" href="{crmURL p='civicrm/event/manage/settings' q="reset=1&action=update&id=`$id`"}">{ts}Info and Settings{/ts}</a></li>
         		    <li><a title="Location" class="action-item-wrap {if NOT $values.is_show_location} disabled{/if}" href="{crmURL p='civicrm/event/manage/location' q="reset=1&action=update&id=`$id`"}">{ts}Location{/ts}</a></li>
         		    <li><a title="Fees" class="action-item {if NOT $values.is_monetary} disabled{/if}" href="{crmURL p='civicrm/event/manage/fee' q="reset=1&action=update&id=`$id`"}">{ts}Fees{/ts}</a></li>
         		    <li><a title="Online Registration" class="action-item-wrap {if NOT $values.is_online_registration} disabled{/if}" href="{crmURL p='civicrm/event/manage/registration' q="reset=1&action=update&id=`$id`"}">{ts}Online Registration{/ts}</a></li>
+			    <li><a title="Schedule Reminders" class="action-item-wrap {if NOT $values.reminder} disabled{/if}" href="{crmURL p='civicrm/event/manage/reminder' q="reset=1&action=update&id=`$id`"}">{ts}Schedule Reminders{/ts}</a></li>
         		    <li><a title="Conference Slots" class="action-item-wrap {if NOT $values.is_subevent} disabled{/if}" href="{crmURL p='civicrm/event/manage/conference' q="reset=1&action=update&id=`$id`"}">{ts}Conference Slots{/ts}</a></li>
         		    <li><a title="Tell a Friend" class="action-item-wrap {if NOT $values.friend} disabled{/if}" href="{crmURL p='civicrm/event/manage/friend' q="reset=1&action=update&id=`$id`"}">{ts}Tell a Friend{/ts}</a></li>
-        	 </span>
-        	 </div>
+			    <li><a title="{ts}Personal Campaign Pages{/ts}" class="action-item-wrap {if NOT $values.is_pcp_enabled} disabled{/if}" href="{crmURL p='civicrm/event/manage/pcp' q="reset=1&action=update&id=`$id`"}">{ts}Personal Campaign Pages{/ts}</a></li>
+        	      </span>
+        	    </div>
             {/if}
         </td>
 	{/if}

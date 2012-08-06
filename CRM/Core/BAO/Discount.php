@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/Discount.php';
 class CRM_Core_BAO_Discount extends CRM_Core_DAO_Discount {
 
   /**
@@ -54,10 +52,11 @@ class CRM_Core_BAO_Discount extends CRM_Core_DAO_Discount {
    *
    */
   static
-  function del($id) {
+  function del($entityId,$entityTable) {
     // delete all discount records with the selected discounted id
     $discount = new CRM_Core_DAO_Discount();
-    $discount->id = $id;
+    $discount->entity_id    = $entityId;
+    $discount->entity_table = $entityTable;
     if ($discount->delete()) {
       return TRUE;
     }
@@ -96,8 +95,7 @@ class CRM_Core_BAO_Discount extends CRM_Core_DAO_Discount {
    */
   static
   function getOptionGroup($entityId, $entityTable) {
-    $optionGroupIDs = array();
-    require_once 'CRM/Core/DAO/Discount.php';
+    $optionGroupIDs    = array();
     $dao               = new CRM_Core_DAO_Discount();
     $dao->entity_id    = $entityId;
     $dao->entity_table = $entityTable;
@@ -127,13 +125,11 @@ class CRM_Core_BAO_Discount extends CRM_Core_DAO_Discount {
       return NULL;
     }
 
-    require_once 'CRM/Core/DAO/Discount.php';
     $dao               = new CRM_Core_DAO_Discount();
     $dao->entity_id    = $entityID;
     $dao->entity_table = $entityTable;
     $dao->find();
 
-    require_once "CRM/Utils/Date.php";
     while ($dao->fetch()) {
       $endDate = $dao->end_date;
       // if end date is not we consider current date as end date
@@ -147,5 +143,7 @@ class CRM_Core_BAO_Discount extends CRM_Core_DAO_Discount {
     }
     return FALSE;
   }
+
+
 }
 

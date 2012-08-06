@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Member/Form.php';
 
 /**
  * This class generates form components for Membership Type
@@ -117,7 +115,6 @@ class CRM_Member_Form_MembershipStatus extends CRM_Member_Form {
    * @return None
    */
   public function postProcess() {
-    require_once 'CRM/Member/BAO/MembershipStatus.php';
     if ($this->_action & CRM_Core_Action::DELETE) {
       $wt = CRM_Utils_Weight::delWeight('CRM_Member_DAO_MembershipStatus', $this->_id);
       CRM_Member_BAO_MembershipStatus::del($this->_id);

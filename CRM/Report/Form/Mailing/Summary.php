@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
 class CRM_Report_Form_Mailing_Summary extends CRM_Report_Form {
 
   protected $_summary = NULL;
@@ -226,12 +226,11 @@ class CRM_Report_Form_Mailing_Summary extends CRM_Report_Form {
   }
 
   function mailing_select() {
-    require_once ('CRM/Mailing/BAO/Mailing.php');
 
     $data = array();
 
     $mailing = new CRM_Mailing_BAO_Mailing();
-    $query = "SELECT name FROM civicrm_mailing ";
+    $query = "SELECT name FROM civicrm_mailing WHERE sms_provider_id IS NULL";
     $mailing->query($query);
 
     while ($mailing->fetch()) {
@@ -326,6 +325,9 @@ class CRM_Report_Form_Mailing_Summary extends CRM_Report_Form {
 
   function where() {
     $clauses = array();
+    //to avoid the sms listings
+    $clauses[] = "{$this->_aliases['civicrm_mailing']}.sms_provider_id IS NULL";
+
     foreach ($this->_columns as $tableName => $table) {
       if (array_key_exists('filters', $table)) {
         foreach ($table['filters'] as $fieldName => $field) {
@@ -339,6 +341,7 @@ class CRM_Report_Form_Mailing_Summary extends CRM_Report_Form {
           }
           else {
             $op = CRM_Utils_Array::value("{$fieldName}_op", $this->_params);
+
             if ($op) {
               if ($fieldName == 'relationship_type_id') {
                 $clause = "{$this->_aliases['civicrm_relationship']}.relationship_type_id=" . $this->relationshipId;
@@ -496,7 +499,6 @@ class CRM_Report_Form_Mailing_Summary extends CRM_Report_Form {
     $chartInfo['xSize'] = ((count($rows) * 125) + (count($rows) * count($criterias) * 40));
 
     // build the chart.
-    require_once 'CRM/Utils/OpenFlashChart.php';
     CRM_Utils_OpenFlashChart::buildChart($chartInfo, $this->_params['charts']);
     $this->assign('chartType', $this->_params['charts']);
   }

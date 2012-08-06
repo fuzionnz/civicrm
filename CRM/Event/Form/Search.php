@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -36,10 +36,6 @@
 /**
  * Files required
  */
-require_once 'CRM/Event/PseudoConstant.php';
-require_once 'CRM/Event/Selector/Search.php';
-require_once 'CRM/Core/Selector/Controller.php';
-require_once 'CRM/Contact/BAO/SavedSearch.php';
 
 /**
  * This file is for civievent search
@@ -199,7 +195,6 @@ class CRM_Event_Form_Search extends CRM_Core_Form {
       );
     }
 
-    require_once 'CRM/Contact/BAO/Query.php';
     $this->_queryParams = CRM_Contact_BAO_Query::convertFormValues($this->_formValues);
     $selector = new CRM_Event_Selector_Search($this->_queryParams,
       $this->_action,
@@ -240,7 +235,6 @@ class CRM_Event_Form_Search extends CRM_Core_Form {
   function buildQuickForm() {
     $this->addElement('text', 'sort_name', ts('Participant Name or Email'), CRM_Core_DAO::getAttribute('CRM_Contact_DAO_Contact', 'sort_name'));
 
-    require_once 'CRM/Event/BAO/Query.php';
     CRM_Event_BAO_Query::buildSearchForm($this);
 
     /* 
@@ -251,8 +245,6 @@ class CRM_Event_Form_Search extends CRM_Core_Form {
     $rows = $this->get('rows');
     if (is_array($rows)) {
       $lineItems = $eventIds = array();
-      require_once 'CRM/Event/BAO/Event.php';
-      require_once 'CRM/Event/BAO/Participant.php';
       if (!$this->_single) {
         $this->addElement('checkbox',
           'toggleSelect',
@@ -271,7 +263,6 @@ class CRM_Event_Form_Search extends CRM_Core_Form {
         }
         if (CRM_Event_BAO_Event::usesPriceSet($row['event_id'])) {
           // add line item details if applicable
-          require_once 'CRM/Price/BAO/LineItem.php';
           $lineItems[$row['participant_id']] = CRM_Price_BAO_LineItem::getLineItems($row['participant_id']);
         }
       }
@@ -302,14 +293,11 @@ class CRM_Event_Form_Search extends CRM_Core_Form {
 
       $total = $cancel = 0;
 
-      require_once "CRM/Core/Permission.php";
       $permission = CRM_Core_Permission::getPermission();
 
-      require_once 'CRM/Event/Task.php';
       $tasks = array('' => ts('- actions -')) + CRM_Event_Task::permissionedTaskTitles($permission);
       if (isset($this->_ssID)) {
         if ($permission == CRM_Core_Permission::EDIT) {
-          require_once "CRM/Contact/Task.php";
           $tasks = $tasks + CRM_Event_Task::optionalTaskTitle();
         }
 
@@ -403,10 +391,8 @@ class CRM_Event_Form_Search extends CRM_Core_Form {
       $this->_formValues["participant_test"] = 0;
     }
 
-    require_once 'CRM/Core/BAO/CustomValue.php';
     CRM_Core_BAO_CustomValue::fixFieldValueOfTypeMemo($this->_formValues);
 
-    require_once 'CRM/Contact/BAO/Query.php';
     $this->_queryParams = CRM_Contact_BAO_Query::convertFormValues($this->_formValues);
 
     $this->set('formValues', $this->_formValues);
@@ -430,7 +416,6 @@ class CRM_Event_Form_Search extends CRM_Core_Form {
       );
     }
 
-    require_once 'CRM/Contact/BAO/Query.php';
     $this->_queryParams = CRM_Contact_BAO_Query::convertFormValues($this->_formValues);
 
     $selector = new CRM_Event_Selector_Search($this->_queryParams,
@@ -529,7 +514,6 @@ class CRM_Event_Form_Search extends CRM_Core_Form {
       CRM_Core_DAO::$_nullObject
     );
     if ($event) {
-      require_once 'CRM/Event/PseudoConstant.php';
       $this->_formValues['event_id'] = $event;
       $this->_formValues['event_name'] = CRM_Event_PseudoConstant::event($event, TRUE);
     }
@@ -539,7 +523,6 @@ class CRM_Event_Form_Search extends CRM_Core_Form {
     );
 
     if (isset($status)) {
-      require_once 'CRM/Event/PseudoConstant.php';
       if ($status === 'true') {
         $statusTypes = CRM_Event_PseudoConstant::participantStatus(NULL, "is_counted = 1");
       }
@@ -562,7 +545,6 @@ class CRM_Event_Form_Search extends CRM_Core_Form {
     );
 
     if (isset($role)) {
-      require_once 'CRM/Event/PseudoConstant.php';
       if ($role === 'true') {
         $roleTypes = CRM_Event_PseudoConstant::participantRole(NULL, "filter = 1");
       }

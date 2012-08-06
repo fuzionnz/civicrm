@@ -1,44 +1,37 @@
 <?php
 /*
- +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
- +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
- +--------------------------------------------------------------------+
- | This file is a part of CiviCRM.                                    |
- |                                                                    |
- | CiviCRM is free software; you can copy, modify, and distribute it  |
- | under the terms of the GNU Affero General Public License           |
- | Version 3, 19 November 2007 and the CiviCRM Licensing Exception.   |
- |                                                                    |
- | CiviCRM is distributed in the hope that it will be useful, but     |
- | WITHOUT ANY WARRANTY; without even the implied warranty of         |
- | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.               |
- | See the GNU Affero General Public License for more details.        |
- |                                                                    |
- | You should have received a copy of the GNU Affero General Public   |
- | License and the CiviCRM Licensing Exception along                  |
- | with this program; if not, contact CiviCRM LLC                     |
- | at info[AT]civicrm[DOT]org. If you have questions about the        |
- | GNU Affero General Public License or the licensing of CiviCRM,     |
- | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
- +--------------------------------------------------------------------+
+  +--------------------------------------------------------------------+
+  | CiviCRM version 4.2                                                |
+  +--------------------------------------------------------------------+
+  | Copyright CiviCRM LLC (c) 2004-2012                                |
+  +--------------------------------------------------------------------+
+  | This file is a part of CiviCRM.                                    |
+  |                                                                    |
+  | CiviCRM is free software; you can copy, modify, and distribute it  |
+  | under the terms of the GNU Affero General Public License           |
+  | Version 3, 19 November 2007 and the CiviCRM Licensing Exception.   |
+  |                                                                    |
+  | CiviCRM is distributed in the hope that it will be useful, but     |
+  | WITHOUT ANY WARRANTY; without even the implied warranty of         |
+  | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.               |
+  | See the GNU Affero General Public License for more details.        |
+  |                                                                    |
+  | You should have received a copy of the GNU Affero General Public   |
+  | License and the CiviCRM Licensing Exception along                  |
+  | with this program; if not, contact CiviCRM LLC                     |
+  | at info[AT]civicrm[DOT]org. If you have questions about the        |
+  | GNU Affero General Public License or the licensing of CiviCRM,     |
+  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
+  +--------------------------------------------------------------------+
 */
 
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/BAO/Phone.php';
-require_once 'CRM/Core/BAO/Email.php';
-require_once 'CRM/Core/BAO/IM.php';
-require_once 'CRM/Core/BAO/OpenID.php';
-require_once 'CRM/Core/BAO/Address.php';
-require_once 'CRM/Core/BAO/Block.php';
 
 /**
  * This class handle creation of location block elements
@@ -61,8 +54,7 @@ class CRM_Core_BAO_Location extends CRM_Core_DAO {
    * @access public
    * @static
    */
-  static
-  function create(&$params, $fixAddress = TRUE, $entity = NULL) {
+  static function create(&$params, $fixAddress = TRUE, $entity = NULL) {
     $location = array();
     if (!self::dataExists($params)) {
       return $location;
@@ -88,8 +80,13 @@ class CRM_Core_BAO_Location extends CRM_Core_DAO {
       $location['id'] = self::createLocBlock($location, $entityElements);
     }
     else {
-      // make sure contact should have only one primary block, CRM-5051
-      self::checkPrimaryBlocks(CRM_Utils_Array::value('contact_id', $params));
+      // when we come from a form which displays all the location elements (like the edit form or the inline block
+      // elements, we can skip the below check. The below check adds quite a feq queries to an already overloaded
+      // form
+      if (!CRM_Utils_Array::value('updateBlankLocInfo', $params, FALSE)) {
+        // make sure contact should have only one primary block, CRM-5051
+        self::checkPrimaryBlocks(CRM_Utils_Array::value('contact_id', $params));
+      }
     }
 
     return $location;
@@ -99,8 +96,7 @@ class CRM_Core_BAO_Location extends CRM_Core_DAO {
    * Creates the entry in the civicrm_loc_block
    *
    */
-  static
-  function createLocBlock(&$location, &$entityElements) {
+  static function createLocBlock(&$location, &$entityElements) {
     $locId = self::findExisting($entityElements);
     $locBlock = array();
 
@@ -136,8 +132,7 @@ class CRM_Core_BAO_Location extends CRM_Core_DAO {
    * @access public
    * @static
    */
-  static
-  function findExisting($entityElements) {
+  static function findExisting($entityElements) {
     $eid    = $entityElements['entity_id'];
     $etable = $entityElements['entity_table'];
     $query  = "
@@ -162,9 +157,7 @@ WHERE e.id = %1";
    * @access public
    * @static
    */
-  static
-  function addLocBlock(&$params) {
-    require_once 'CRM/Core/DAO/LocBlock.php';
+  static function addLocBlock(&$params) {
     $locBlock = new CRM_Core_DAO_LocBlock();
 
     $locBlock->copyValues($params);
@@ -187,7 +180,6 @@ WHERE e.id = %1";
       return;
     }
 
-    require_once 'CRM/Core/DAO/LocBlock.php';
     $locBlock = new CRM_Core_DAO_LocBlock();
     $locBlock->id = $locBlockId;
 
@@ -226,8 +218,7 @@ WHERE e.id = %1";
    * @access public
    * @static
    */
-  static
-  function dataExists(&$params) {
+  static function dataExists(&$params) {
     // return if no data present
     $dataExists = FALSE;
     foreach (self::$blocks as $block) {
@@ -251,15 +242,24 @@ WHERE e.id = %1";
    * @access public
    * @static
    */
-  static
-  function &getValues($entityBlock, $microformat = FALSE) {
+  static function &getValues($entityBlock, $microformat = FALSE) {
     if (empty($entityBlock)) {
       return NULL;
     }
 
+    $name_map = array(
+      'im' => 'IM',
+      'openid' => 'OpenID',
+    );
+
     //get all the blocks for this contact
     foreach (self::$blocks as $block) {
-      $name = ucfirst($block);
+      if (array_key_exists($block, $name_map)) {
+        $name = $name_map[$block];
+      }
+      else {
+        $name = ucfirst($block);
+      }
       eval('$blocks[$block] = CRM_Core_BAO_' . $name . '::getValues( $entityBlock, $microformat );');
     }
     return $blocks;
@@ -275,8 +275,7 @@ WHERE e.id = %1";
    * @access public
    * @static
    */
-  static
-  function deleteLocationBlocks($contactId, $locationTypeId) {
+  static function deleteLocationBlocks($contactId, $locationTypeId) {
     // ensure that contactId has a value
     if (empty($contactId) ||
       !CRM_Utils_Rule::positiveInteger($contactId)
@@ -294,22 +293,20 @@ WHERE e.id = %1";
 
     static $blocks = array('Address', 'Phone', 'IM', 'OpenID', 'Email');
 
-    require_once "CRM/Core/BAO/Block.php";
     $params = array('contact_id' => $contactId, 'location_type_id' => $locationTypeId);
     foreach ($blocks as $name) {
       CRM_Core_BAO_Block::blockDelete($name, $params);
     }
   }
 
-  /* Function to copy or update location block. 
+  /* Function to copy or update location block.
      *
      * @param  int  $locBlockId  location block id.
      * @param  int  $updateLocBlockId update location block id
      * @return int  newly created/updated location block id.
      */
 
-  static
-  function copyLocBlock($locBlockId, $updateLocBlockId = NULL) {
+  static function copyLocBlock($locBlockId, $updateLocBlockId = NULL) {
     //get the location info.
     $defaults = $updateValues = array();
     $locBlock = array('id' => $locBlockId);
@@ -357,14 +354,12 @@ WHERE e.id = %1";
    * @access public
    * @static
    */
-  static
-  function checkPrimaryBlocks($contactId) {
+  static function checkPrimaryBlocks($contactId) {
     if (!$contactId) {
       return;
     }
 
     // get the loc block ids.
-    require_once 'CRM/Contact/BAO/Contact.php';
     $primaryLocBlockIds = CRM_Contact_BAO_Contact::getLocBlockIds($contactId, array('is_primary' => 1));
     $nonPrimaryBlockIds = CRM_Contact_BAO_Contact::getLocBlockIds($contactId, array('is_primary' => 0));
 

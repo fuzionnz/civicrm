@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id: $
  *
  */
@@ -107,6 +107,7 @@ class CRM_Utils_File {
    * @access public
    * @static
    */
+  static
   function createDir($path, $abort = TRUE) {
     if (is_dir($path) || empty($path)) {
       return;
@@ -115,10 +116,9 @@ class CRM_Utils_File {
     CRM_Utils_File::createDir(dirname($path), $abort);
     if (@mkdir($path, 0777) == FALSE) {
       if ($abort) {
-        $docLink = CRM_Utils_System::docURL2('Moving an Existing Installation to a New Server or Location', FALSE, 'Moving an Existing Installation to a New Server or Location');
+        $docLink = CRM_Utils_System::docURL2('Moving an Existing Installation to a New Server or Location', NULL, NULL, NULL, NULL, "wiki");
         echo "Error: Could not create directory: $path.<p>If you have moved an existing CiviCRM installation from one location or server to another there are several steps you will need to follow. They are detailed on this CiviCRM wiki page - {$docLink}. A fix for the specific problem that caused this error message to be displayed is to set the value of the config_backend column in the civicrm_domain table to NULL. However we strongly recommend that you review and follow all the steps in that document.</p>";
 
-        require_once 'CRM/Utils/System.php';
         CRM_Utils_System::civiExit();
       }
       else {
@@ -138,8 +138,11 @@ class CRM_Utils_File {
    * @access public
    * @static
    */
-  public function cleanDir($target, $rmdir = TRUE) {
+  public static function cleanDir($target, $rmdir = TRUE) {
     static $exceptions = array('.', '..');
+    if ($target == '' || $target == '/') {
+      throw new Exception("Overly broad deletion");
+    }
 
     if ($sourcedir = @opendir($target)) {
       while (FALSE !== ($sibling = readdir($sourcedir))) {
@@ -150,14 +153,22 @@ class CRM_Utils_File {
             CRM_Utils_File::cleanDir($object, $rmdir);
           }
           elseif (is_file($object)) {
-            $result = @unlink($object);
+            if (!unlink($object)) {
+              CRM_Core_Session::setStatus(ts('Unable to remove file %1', array(1 => $object)) . '<br/>');
+            }
           }
         }
       }
       closedir($sourcedir);
 
       if ($rmdir) {
-        $result = @rmdir($target);
+        if (rmdir($target)) {
+          CRM_Core_Session::setStatus(ts('Removed directory %1', array(1 => $target)) . '<br/>');
+          return TRUE;
+        }
+        else {
+          CRM_Core_Session::setStatus(ts('Unable to remove directory %1', array(1 => $target)) . '<br/>');
+        }
       }
     }
   }
@@ -189,7 +200,6 @@ class CRM_Utils_File {
    */
   static
   function toUtf8($name) {
-    require_once 'CRM/Core/Config.php';
     static $config = NULL;
     static $legacyEncoding = NULL;
     if ($config == NULL) {
@@ -271,6 +281,7 @@ class CRM_Utils_File {
     foreach ($queries as $query) {
       $query = trim($query);
       if (!empty($query)) {
+        CRM_Core_Error::debug_query($query);
         $res = &$db->query($query);
         if (PEAR::isError($res)) {
           if ($dieOnErrors) {
@@ -288,15 +299,12 @@ class CRM_Utils_File {
   function isExtensionSafe($ext) {
     static $extensions = NULL;
     if (!$extensions) {
-      require_once 'CRM/Core/OptionGroup.php';
       $extensions = CRM_Core_OptionGroup::values('safe_file_extension', TRUE);
 
       //make extensions to lowercase
       $extensions = array_change_key_case($extensions, CASE_LOWER);
       // allow html/htm extension ONLY if the user is admin
       // and/or has access CiviMail
-      require_once 'CRM/Mailing/Info.php';
-      require_once 'CRM/Core/Permission.php';
       if (!(CRM_Core_Permission::check('access CiviMail') ||
           CRM_Core_Permission::check('administer CiviCRM') ||
           (CRM_Mailing_Info::workflowEnabled() &&
@@ -393,7 +401,6 @@ class CRM_Utils_File {
 HTACCESS;
       $file = $dir . '.htaccess';
       if (file_put_contents($file, $htaccess) === FALSE) {
-        require_once 'CRM/Core/Error.php';
         CRM_Core_Error::movedSiteError($file);
       }
     }
@@ -468,6 +475,25 @@ HTACCESS;
     $basePath = self::baseFilePath();
 
     return $basePath . $directory;
+  }
+
+  /**
+   * Create a path to a temporary file which can endure for multiple requests
+   *
+   * TODO: Automatic file cleanup using, eg, TTL policy
+   *
+   * @param $prefix string
+   *
+   * @return string, path to an openable/writable file
+   * @see tempnam
+   */
+  static
+  function tempnam($prefix = 'tmp-') {
+    //$config = CRM_Core_Config::singleton();
+    //$nonce = md5(uniqid() . $config->dsn . $config->userFrameworkResourceURL);
+    //$fileName = "{$config->configAndLogDir}" . $prefix . $nonce . $suffix;
+    $fileName = tempnam(sys_get_temp_dir(), $prefix);
+    return $fileName;
   }
 }
 

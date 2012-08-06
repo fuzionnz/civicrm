@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 
 /**
  * This class generates form components for building activity to a case
@@ -70,7 +68,6 @@ class CRM_Case_Form_ActivityToCase extends CRM_Core_Form {
     $targetContactValues = $defaults = array();
     $params = array('id' => $this->_activityId);
 
-    require_once 'CRM/Activity/BAO/Activity.php';
     CRM_Activity_BAO_Activity::retrieve($params, $defaults);
     $defaults['case_activity_subject'] = $defaults['subject'];
     if (!CRM_Utils_Array::crmIsEmptyArray($defaults['target_contact'])) {

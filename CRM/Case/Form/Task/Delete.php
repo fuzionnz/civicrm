@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Case/Form/Task.php';
 
 /**
  * This class provides the functionality to delete a group of
@@ -90,7 +88,6 @@ class CRM_Case_Form_Task_Delete extends CRM_Case_Form_Task {
    */
   public function postProcess() {
     $deletedCases = 0;
-    require_once 'CRM/Case/BAO/Case.php';
     foreach ($this->_caseIds as $caseId) {
       if (CRM_Case_BAO_Case::deleteCase($caseId, $this->_moveToTrash)) {
         $deletedCases++;

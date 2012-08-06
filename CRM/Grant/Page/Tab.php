@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contact/Page/View.php';
 
 /**
  * This class handle grant related functions
@@ -66,7 +64,6 @@ class CRM_Grant_Page_Tab extends CRM_Contact_Page_View {
     $controller->run();
 
     if ($this->_contactId) {
-      require_once 'CRM/Contact/BAO/Contact.php';
       $displayName = CRM_Contact_BAO_Contact::displayName($this->_contactId);
       $this->assign('displayName', $displayName);
     }
@@ -118,13 +115,11 @@ class CRM_Grant_Page_Tab extends CRM_Contact_Page_View {
     }
     else {
       $this->_contactId = CRM_Utils_Request::retrieve('cid', 'Positive', $this, TRUE);
-      require_once 'CRM/Contact/BAO/Contact.php';
       $displayName = CRM_Contact_BAO_Contact::displayName($this->_contactId);
       $this->assign('contactId', $this->_contactId);
       $this->assign('displayName', $displayName);
 
       // check logged in url permission
-      require_once 'CRM/Contact/Page/View.php';
       CRM_Contact_Page_View::checkUserPermission($this);
 
       // set page title
@@ -170,7 +165,6 @@ class CRM_Grant_Page_Tab extends CRM_Contact_Page_View {
 
     $qfKey = CRM_Utils_Request::retrieve('key', 'String', $this);
     //validate the qfKey
-    require_once 'CRM/Utils/Rule.php';
     if (!CRM_Utils_Rule::qfKey($qfKey)) {
       $qfKey = NULL;
     }
@@ -215,7 +209,6 @@ class CRM_Grant_Page_Tab extends CRM_Contact_Page_View {
     if (CRM_Utils_Request::retrieve('confirmed', 'Boolean',
         CRM_Core_DAO::$_nullObject
       )) {
-      require_once 'CRM/Grant/BAO/Grant.php';
       CRM_Grant_BAO_Grant::del($this->_id);
       CRM_Utils_System::redirect($url);
     }

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,20 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
-require_once 'CRM/Core/BAO/CustomGroup.php';
-require_once 'CRM/Core/BAO/CustomOption.php';
-
-require_once 'CRM/Utils/Recent.php';
-
-require_once 'CRM/Contact/BAO/Contact.php';
-require_once 'CRM/Core/BAO/UFMatch.php';
-require_once 'CRM/Core/Menu.php';
 
 /**
  * Main page for viewing contact.
@@ -88,14 +78,14 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
    * @return void
    * @access public
    *
-   */ function preProcess() {
+   */ 
+  function preProcess() {
     // process url params
     $this->_id = CRM_Utils_Request::retrieve('id', 'Positive', $this);
     $this->assign('id', $this->_id);
 
     $qfKey = CRM_Utils_Request::retrieve('key', 'String', $this);
     //validate the qfKey
-    require_once 'CRM/Utils/Rule.php';
     if (!CRM_Utils_Rule::qfKey($qfKey)) {
       $qfKey = NULL;
     }
@@ -112,8 +102,20 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
     }
 
     if (!$this->_contactId) {
-      CRM_Core_Error::statusBounce(ts('We could not find a contact id.'));
+      CRM_Core_Error::statusBounce(
+        ts('We could not find a contact id.'),
+        CRM_Utils_System::url('civicrm/dashboard', 'reset=1')
+      );
     }
+
+    // ensure that the id does exist
+    if ( CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_Contact', $this->_contactId, 'id' ) != $this->_contactId ) {
+      CRM_Core_Error::statusBounce(
+        ts('A Contact with that ID does not exist: %1', array(1 => $this->_contactId)),
+        CRM_Utils_System::url('civicrm/dashboard', 'reset=1')
+      );
+    }
+
     $this->assign('contactId', $this->_contactId);
 
     // see if we can get prev/next positions from qfKey
@@ -125,7 +127,6 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
       'nextPrevError' => 0,
     );
     if ($qfKey) {
-      require_once 'CRM/Core/BAO/PrevNextCache.php';
       $pos = CRM_Core_BAO_PrevNextCache::getPositions("civicrm search $qfKey",
         $this->_contactId,
         $this->_contactId
@@ -168,7 +169,7 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
       //CRM-7265 --time being fix.
       $config = CRM_Core_Config::singleton();
       $image_URL = str_replace('https://', 'http://', $image_URL);
-      if (isset($config->enableSSL) && $config->enableSSL) {
+      if (CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'enableSSL')) {
         $image_URL = str_replace('http://', 'https://', $image_URL);
       }
 
@@ -188,7 +189,7 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
     $this->_action = CRM_Utils_Request::retrieve('action', 'String', $this, FALSE, 'browse');
     $this->assign('action', $this->_action);
 
-    // check logged in url permission
+    // check logged in user permission
     self::checkUserPermission($this);
 
     list($displayName, $contactImage,
@@ -200,7 +201,6 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
     $this->set('contactSubtype', $contactSubtype);
 
     // see if other modules want to add a link activtity bar
-    require_once 'CRM/Utils/Hook.php';
     $hookLinks = CRM_Utils_Hook::links('view.contact.activity',
       'Contact',
       $this->_contactId,
@@ -220,7 +220,6 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
       'isDeleted' => $isDeleted,
     );
 
-    require_once 'CRM/Contact/BAO/Contact/Permission.php';
 
     if (($session->get('userID') == $this->_contactId) ||
       CRM_Contact_BAO_Contact_Permission::allow($this->_contactId, CRM_Core_Permission::EDIT)
@@ -248,7 +247,6 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
     self::setTitle($this->_contactId, $isDeleted);
 
     $config = CRM_Core_Config::singleton();
-    require_once 'CRM/Core/BAO/UFMatch.php';
     $uid = CRM_Core_BAO_UFMatch::getUFId($this->_contactId);
     if ($uid) {
       // To do: we should also allow drupal users with CRM_Core_Permission::check( 'view user profiles' ) true to access $userRecordUrl
@@ -292,14 +290,12 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
       $this->assign('dashboardURL', $dashboardURL);
     }
 
-    require_once 'CRM/Core/BAO/Setting.php';
     if ($contactType == 'Organization' &&
       CRM_Core_Permission::check('administer Multiple Organizations') &&
       CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::MULTISITE_PREFERENCES_NAME,
         'is_enabled'
       )
     ) {
-      require_once 'CRM/Contact/BAO/GroupOrganization.php';
       //check is any relationship between the organization and groups
       $groupOrg = CRM_Contact_BAO_GroupOrganization::hasGroupAssociated($this->_contactId);
       if ($groupOrg) {
@@ -335,7 +331,6 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
     $this->assign('context', $context);
 
     //validate the qfKey
-    require_once 'CRM/Utils/Rule.php';
     if (!CRM_Utils_Rule::qfKey($qfKey)) {
       $qfKey = NULL;
     }
@@ -393,7 +388,6 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
     // things easier in dashboard
     $session = CRM_Core_Session::singleton();
 
-    require_once 'CRM/Contact/BAO/Contact/Permission.php';
     if ($session->get('userID') == $contactID) {
       $page->assign('permission', 'edit');
       $page->_permission = CRM_Core_Permission::EDIT;

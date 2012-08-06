@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,16 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Selector/Base.php';
-require_once 'CRM/Core/Selector/API.php';
-
-require_once 'CRM/Utils/Pager.php';
-require_once 'CRM/Utils/Sort.php';
 
 /**
  * This class is used to retrieve and display a range of
@@ -173,8 +167,6 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
     $context            = 'search',
     $compContext        = NULL
   ) {
-    require_once 'CRM/Contact/BAO/Query.php';
-    require_once 'CRM/Contribute/BAO/Query.php';
 
     // submitted form values
     $this->_queryParams = &$queryParams;
@@ -309,8 +301,6 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
     );
     // process the result of the query
     $rows = array();
-    require_once 'CRM/Event/BAO/Participant.php';
-    require_once 'CRM/Contact/BAO/Contact/Utils.php';
 
     //CRM-4418 check for view/edit/delete
     $permissions = array(CRM_Core_Permission::VIEW);
@@ -344,7 +334,6 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
     );
 
     //get all campaigns.
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     $allCampaigns = CRM_Campaign_BAO_Campaign::getCampaigns(NULL, NULL, FALSE, FALSE, FALSE, TRUE);
 
     While ($result->fetch()) {
@@ -366,14 +355,14 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
       );
 
       if ($result->is_pay_later && CRM_Utils_Array::value('contribution_status_name', $row) == 'Pending') {
-        $row['contribution_status'] .= ' (Pay Later)';
+        $row['contribution_status'] .= ' (' . ts('Pay Later') . ')';
       }
       elseif (CRM_Utils_Array::value('contribution_status_name', $row) == 'Pending') {
-        $row['contribution_status'] .= ' (Incomplete Transaction)';
+        $row['contribution_status'] .= ' (' . ts('Incomplete Transaction') . ')';
       }
 
       if ($row['is_test']) {
-        $row['contribution_type'] = $row['contribution_type'] . ' (test)';
+        $row['contribution_type'] = $row['contribution_type'] . ' (' . ts('test') . ')';
       }
 
       $row['checkbox'] = CRM_Core_Form::CB_PREFIX . $result->contribution_id;

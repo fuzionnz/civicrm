@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,11 +28,9 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  *
  */
-
-require_once 'CRM/Utils/Type.php';
 
 /**
  * This class contains all contact related functions that are called using AJAX (jQuery)
@@ -135,7 +133,6 @@ class CRM_Contact_Page_AJAX {
       }
     }
 
-    require_once 'CRM/Core/BAO/Setting.php';
     $list = array_keys(CRM_Core_BAO_Setting::valueOptions(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
         'contact_reference_options'
       ), '1');
@@ -272,7 +269,6 @@ class CRM_Contact_Page_AJAX {
     $optionGroupID = CRM_Utils_Type::escape($_GET['ogid'], 'Integer');
     $label         = CRM_Utils_Type::escape($_GET['s'], 'String');
 
-    require_once 'CRM/Core/BAO/CustomOption.php';
     $selectOption = CRM_Core_BAO_CustomOption::valuesByID($fieldID, $optionGroupID);
 
     $completeList = NULL;
@@ -307,7 +303,6 @@ class CRM_Contact_Page_AJAX {
       $relationIds['contactTarget'] = $relContactID;
     }
 
-    require_once "CRM/Contact/BAO/Relationship.php";
     $return = CRM_Contact_BAO_Relationship::create($relationParams, $relationIds);
     $status = 'process-relationship-fail';
     if (CRM_Utils_Array::value(0, $return[4])) {
@@ -318,7 +313,6 @@ class CRM_Contact_Page_AJAX {
     $caseRelationship = array();
     if ($relationshipID && $relationshipID != 'null') {
       // we should return phone and email
-      require_once "CRM/Case/BAO/Case.php";
       $caseRelationship = CRM_Case_BAO_Case::getCaseRoles($sourceContactID,
         $caseID, $relationshipID
       );
@@ -358,7 +352,6 @@ class CRM_Contact_Page_AJAX {
     $name = trim(CRM_Utils_Type::escape($_GET['s'], 'String'));
     $name = str_replace('*', '%', $name);
 
-    require_once 'CRM/Contact/BAO/Relationship.php';
     $elements = CRM_Contact_BAO_Relationship::getPermissionedEmployer($cid, $name);
 
     if (!empty($elements)) {
@@ -373,7 +366,6 @@ class CRM_Contact_Page_AJAX {
   static
   function groupTree() {
     $gids = CRM_Utils_Type::escape($_GET['gids'], 'String');
-    require_once 'CRM/Contact/BAO/GroupNestingCache.php';
     echo CRM_Contact_BAO_GroupNestingCache::json($gids);
     CRM_Utils_System::civiExit();
   }
@@ -553,7 +545,6 @@ ORDER BY sort_name ";
     }
 
     if ($json) {
-      require_once "CRM/Utils/JSON.php";
       echo json_encode($elements);
     }
     CRM_Utils_System::civiExit();
@@ -591,15 +582,12 @@ WHERE sort_name LIKE '%$name%'";
     $customValueID = CRM_Utils_Type::escape($_POST['valueID'], 'Positive');
     $customGroupID = CRM_Utils_Type::escape($_POST['groupID'], 'Positive');
 
-    require_once "CRM/Core/BAO/CustomValue.php";
     CRM_Core_BAO_CustomValue::deleteCustomValue($customValueID, $customGroupID);
     if ($contactId = CRM_Utils_Array::value('contactId', $_POST)) {
-      require_once 'CRM/Contact/BAO/Contact.php';
       echo CRM_Contact_BAO_Contact::getCountComponent('custom_' . $_POST['groupID'], $contactId);
     }
 
     // reset the group contact cache for this group
-    require_once 'CRM/Contact/BAO/GroupContactCache.php';
     CRM_Contact_BAO_GroupContactCache::remove();
     CRM_Utils_System::civiExit();
   }
@@ -684,7 +672,6 @@ WHERE sort_name LIKE '%$name%'";
   function getContactEmail() {
     if (CRM_Utils_Array::value('contact_id', $_POST)) {
       $contactID = CRM_Utils_Type::escape($_POST['contact_id'], 'Positive');
-      require_once 'CRM/Contact/BAO/Contact/Location.php';
       list($displayName,
         $userEmail
       ) = CRM_Contact_BAO_Contact_Location::getEmailDetails($contactID);
@@ -718,7 +705,6 @@ WHERE sort_name LIKE '%$name%'";
         $rowCount = CRM_Utils_Array::value('rowcount', $_GET, 20);
 
         // add acl clause here
-        require_once 'CRM/Contact/BAO/Contact/Permission.php';
         list($aclFrom, $aclWhere) = CRM_Contact_BAO_Contact_Permission::cacheClause('cc');
         if ($aclWhere) {
           $aclWhere = " AND $aclWhere";
@@ -734,7 +720,6 @@ LIMIT {$offset}, {$rowCount}
 ";
 
           // send query to hook to be modified if needed
-          require_once 'CRM/Utils/Hook.php';
           CRM_Utils_Hook::contactListQuery($query,
             $name,
             CRM_Utils_Array::value('context', $_GET),
@@ -760,7 +745,6 @@ LIMIT {$offset}, {$rowCount}
 ";
 
           // send query to hook to be modified if needed
-          require_once 'CRM/Utils/Hook.php';
           CRM_Utils_Hook::contactListQuery($query,
             $name,
             CRM_Utils_Array::value('context', $_GET),
@@ -787,6 +771,70 @@ LIMIT {$offset}, {$rowCount}
   }
 
   static
+  function getContactPhone() {
+
+    $queryString = NULL;
+    //check for mobile type
+    $phoneTypes = CRM_Core_PseudoConstant::phoneType();
+    $mobileType = CRM_Utils_Array::key('Mobile', $phoneTypes);
+
+    if ($name = CRM_Utils_Array::value('name', $_GET)) {
+      $name = CRM_Utils_Type::escape($name, 'String');
+      $queryString = " ( cc.sort_name LIKE '%$name%' OR cp.phone LIKE '%$name%' ) ";
+    }
+    elseif ($cid = CRM_Utils_Array::value('cid', $_GET)) {
+      //check cid for interger
+      $contIDS = explode(',', $cid);
+      foreach ($contIDS as $contID) {
+        CRM_Utils_Type::escape($contID, 'Integer');
+      }
+      $queryString = " cc.id IN ( $cid )";
+    }
+
+    if ($queryString) {
+      $offset = CRM_Utils_Array::value('offset', $_GET, 0);
+      $rowCount = CRM_Utils_Array::value('rowcount', $_GET, 20);
+
+      // add acl clause here
+      list($aclFrom, $aclWhere) = CRM_Contact_BAO_Contact_Permission::cacheClause('cc');
+      if ($aclWhere) {
+        $aclWhere = " AND $aclWhere";
+      }
+
+      $query = "
+SELECT sort_name name, cp.phone, cc.id
+FROM   civicrm_phone cp INNER JOIN civicrm_contact cc ON cc.id = cp.contact_id 
+       {$aclFrom}
+WHERE  cc.is_deceased = 0 AND cc.do_not_sms = 0 AND cp.phone_type_id = {$mobileType} AND {$queryString}
+       {$aclWhere}
+LIMIT {$offset}, {$rowCount}
+";
+
+      // send query to hook to be modified if needed
+      CRM_Utils_Hook::contactListQuery($query,
+        $name,
+        CRM_Utils_Array::value('context', $_GET),
+        CRM_Utils_Array::value('cid', $_GET)
+      );
+
+      $dao = CRM_Core_DAO::executeQuery($query);
+
+      while ($dao->fetch()) {
+        $result[] = array(
+          'name' => '"' . $dao->name . '" &lt;' . $dao->phone . '&gt;',
+          'id' => (CRM_Utils_Array::value('id', $_GET)) ? "{$dao->id}::{$dao->phone}" : '"' . $dao->name . '" <' . $dao->phone . '>',
+        );
+      }
+    }
+
+    if ($result) {
+      echo json_encode($result);
+    }
+    CRM_Utils_System::civiExit();
+  }
+
+
+  static
   function buildSubTypes() {
     $parent = CRM_Utils_Array::value('parentId', $_POST);
 
@@ -804,7 +852,6 @@ LIMIT {$offset}, {$rowCount}
         break;
     }
 
-    require_once 'CRM/Contact/BAO/ContactType.php';
     $subTypes = CRM_Contact_BAO_ContactType::subTypePairs($contactType, FALSE, NULL);
     asort($subTypes);
     echo json_encode($subTypes);
@@ -829,7 +876,6 @@ LIMIT {$offset}, {$rowCount}
         break;
     }
 
-    require_once 'CRM/Dedupe/BAO/RuleGroup.php';
     $dedupeRules = CRM_Dedupe_BAO_RuleGroup::getByType($contactType);
 
     echo json_encode($dedupeRules);
@@ -848,24 +894,20 @@ LIMIT {$offset}, {$rowCount}
         // This would normally be coming from either the database (this user's settings) or a default/initial dashboard configuration.
         // get contact id of logged in user
 
-        require_once 'CRM/Core/BAO/Dashboard.php';
         $dashlets = CRM_Core_BAO_Dashboard::getContactDashlets();
         break;
 
       case 'get_widget':
         $dashletID = CRM_Utils_Type::escape($_GET['id'], 'Positive');
 
-        require_once 'CRM/Core/BAO/Dashboard.php';
         $dashlets = CRM_Core_BAO_Dashboard::getDashletInfo($dashletID);
         break;
 
       case 'save_columns':
-        require_once 'CRM/Core/BAO/Dashboard.php';
         CRM_Core_BAO_Dashboard::saveDashletChanges($_POST['columns']);
         CRM_Utils_System::civiExit();
       case 'delete_dashlet':
         $dashletID = CRM_Utils_Type::escape($_POST['dashlet_id'], 'Positive');
-        require_once 'CRM/Core/BAO/Dashboard.php';
         CRM_Core_BAO_Dashboard::deleteDashlet($dashletID);
         CRM_Utils_System::civiExit();
     }
@@ -924,9 +966,6 @@ LIMIT {$offset}, {$rowCount}
     $searchValues[] = array('sort_name', 'LIKE', $relContact, 0, 1);
 
     list($rid, $direction) = explode('_', $relType, 2);
-    require_once 'CRM/Contact/DAO/RelationshipType.php';
-    require_once 'CRM/Contact/BAO/Contact.php';
-    require_once 'CRM/Contact/BAO/Query.php';
 
     $relationshipType = new CRM_Contact_DAO_RelationshipType();
 
@@ -976,7 +1015,6 @@ LIMIT {$offset}, {$rowCount}
         $duplicateRelationship = 0;
 
         $contact_type = '<img src="' . $config->resourceBase . 'i/contact_';
-        require_once ('CRM/Contact/BAO/Contact/Utils.php');
         $typeImage = CRM_Contact_BAO_Contact_Utils::getImage($result->contact_sub_type ?
           $result->contact_sub_type : $result->contact_type,
           FALSE, $contactID
@@ -1002,7 +1040,6 @@ LIMIT {$offset}, {$rowCount}
       }
     }
 
-    require_once "CRM/Utils/JSON.php";
     $selectorElements = array('check', 'name');
     if ($typeName == 'Employee of') {
       $selectorElements[] = 'employee_of';
@@ -1033,7 +1070,6 @@ LIMIT {$offset}, {$rowCount}
 
     }
 
-    require_once 'CRM/Dedupe/DAO/Exception.php';
     $exception = new CRM_Dedupe_DAO_Exception();
     $exception->contact_id1 = $cid;
     $exception->contact_id2 = $oid;
@@ -1075,7 +1111,6 @@ LIMIT {$offset}, {$rowCount}
     $searchRows       = array();
     $selectorElements = array('src', 'dst', 'weight', 'actions');
 
-    require_once 'CRM/Core/BAO/PrevNextCache.php';
 
     $join = "LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND 
                                                              pn.entity_id2 = de.contact_id2 )";
@@ -1103,7 +1138,6 @@ LIMIT {$offset}, {$rowCount}
       }
     }
 
-    require_once 'CRM/Utils/JSON.php';
     echo CRM_Utils_JSON::encodeDataTableSelector($searchRows, $sEcho, $iTotal, $iFilteredTotal, $selectorElements);
 
     CRM_Utils_System::civiExit();
@@ -1113,10 +1147,8 @@ LIMIT {$offset}, {$rowCount}
    * Function to retrieve a PDF Page Format for the PDF Letter form
    */
   function pdfFormat() {
-    require_once 'CRM/Utils/Type.php';
     $formatId = CRM_Utils_Type::escape($_POST['formatId'], 'Integer');
 
-    require_once "CRM/Core/BAO/PdfFormat.php";
     $pdfFormat = CRM_Core_BAO_PdfFormat::getById($formatId);
 
     echo json_encode($pdfFormat);
@@ -1127,10 +1159,8 @@ LIMIT {$offset}, {$rowCount}
    * Function to retrieve Paper Size dimensions
    */
   function paperSize() {
-    require_once 'CRM/Utils/Type.php';
     $paperSizeName = CRM_Utils_Type::escape($_POST['paperSizeName'], 'String');
 
-    require_once "CRM/Core/BAO/PaperSize.php";
     $paperSize = CRM_Core_BAO_PaperSize::getByName($paperSizeName);
 
     echo json_encode($paperSize);
@@ -1141,7 +1171,6 @@ LIMIT {$offset}, {$rowCount}
   function relationshipContactTypeList() {
     $relType = CRM_Utils_Array::value('relType', $_POST);
 
-    require_once "CRM/Contact/BAO/Relationship.php";
     $types = CRM_Contact_BAO_Relationship::getValidContactTypeList($relType);
 
     $elements = array();
@@ -1152,9 +1181,70 @@ LIMIT {$offset}, {$rowCount}
       );
     }
 
-    require_once "CRM/Utils/JSON.php";
     echo json_encode($elements);
-    CRM_Utils_System::civiExit();
+    CRM_Utils_System::civiExit();  
   }
+
+  static
+  function selectUnselectContacts() {
+    $name         = CRM_Utils_Array::value('name', $_POST);
+    $cacheKey     = CRM_Utils_Array::value('qfKey', $_POST);
+    $state        = CRM_Utils_Array::value('state', $_POST, 'checked');
+    $variableType = CRM_Utils_Array::value('variableType', $_POST, 'single');
+
+    $actionToPerform = CRM_Utils_Array::value('action', $_POST, 'select');
+    if ($actionToPerform == 'countSelection') {
+      $contactIds = CRM_Core_BAO_PrevNextCache::getSelection($cacheKey);
+      $countSelectionCids = count($contactIds[$cacheKey]);
+
+      $arrRet = array('getCount' => $countSelectionCids);
+      echo json_encode($arrRet);
+      CRM_Utils_System::civiExit();
+    }
+    elseif ($variableType == 'multiple') {
+      // action post value only works with multiple type variable
+      if ($name) {
+        //multiple names like mark_x_1-mark_x_2 where 1,2 are cids
+        $elements = explode('-', $name);
+        foreach ($elements as $key => $element) {
+          $elements[$key] = self::_convertToId($element);
+        }
+        CRM_Core_BAO_PrevNextCache::markSelection($cacheKey, $actionToPerform, $elements);
+      }
+      else {
+        CRM_Core_BAO_PrevNextCache::markSelection($cacheKey, $actionToPerform);
+      }
+    }
+    elseif ($variableType == 'single') {
+      $cId = self::_convertToId($name);
+      $action = ($state == 'checked') ? 'select' : 'unselect';
+      CRM_Core_BAO_PrevNextCache::markSelection($cacheKey, $action, $cId);
+    }
+  }
+
+  protected function _convertToId($name) {
+    if (substr($name, 0, CRM_Core_Form::CB_PREFIX_LEN) == CRM_Core_Form::CB_PREFIX) {
+      $cId = substr($name, CRM_Core_Form::CB_PREFIX_LEN);
+    }
+    return $cId;
+  }
+
+  static
+  function getAddressDisplay() {
+    $contactId = CRM_Utils_Array::value('contact_id', $_POST);
+    if (!$contactId) {
+      $addressVal["error_message"] = "no contact id found";
+    } else {
+      $entityBlock = 
+        array(
+          'contact_id' => $contactId,
+          'entity_id' => $contactId
+        );
+      $addressVal = CRM_Core_BAO_Address::getValues($entityBlock);
+    }
+    echo json_encode($addressVal);
+    CRM_Utils_System::civiExit();  
+  }
+
 }
 

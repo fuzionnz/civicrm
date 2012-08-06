@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -37,7 +37,11 @@
  * Date time utilties
  */
 class CRM_Utils_Time {
-  static private $_time = NULL;
+
+  /**
+   * @var int, the seconds offset from the real world time
+   */
+  static private $_delta = 0;
 
   /**
    * get the time
@@ -49,10 +53,17 @@ class CRM_Utils_Time {
    * @static
    */
   static function getTime($returnFormat = 'YmdHis') {
-    if (!isset(self::$_time)) {
-      self::$_time = date('YmdHis');
-    }
-    return date($returnFormat, strtotime(self::$_time));
+    return date($returnFormat, self::getTimeRaw());
+  }
+
+  /**
+   * Get the time
+   *
+   * @return int, seconds since epoch
+   */
+  static
+  function getTimeRaw() {
+    return time() + self::$_delta;
   }
 
   /**
@@ -67,9 +78,16 @@ class CRM_Utils_Time {
    */
   static
   function setTime($newDateTime, $returnFormat = 'YmdHis') {
-    self::$_time = date('YmdHis', $newDateTime);
-
+    self::$_delta = strtotime($newDateTime) - time();
     return self::getTime($returnFormat);
+  }
+
+  /**
+   * Remove any time overrides
+   */
+  static
+  function resetTime() {
+    self::$_delta = 0;
   }
 }
 

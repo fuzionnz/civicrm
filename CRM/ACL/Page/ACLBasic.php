@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,17 +30,15 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
-require_once 'CRM/Core/Page/Basic.php';
-
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -136,7 +136,6 @@ class CRM_ACL_Page_ACLBasic extends CRM_Core_Page_Basic {
    * @static
    */
   function browse() {
-    require_once 'CRM/ACL/DAO/ACL.php';
 
     // get all acl's sorted by weight
     $acl = array();
@@ -150,10 +149,8 @@ ORDER BY entity_id
       CRM_Core_DAO::$_nullArray
     );
 
-    require_once 'CRM/Core/OptionGroup.php';
     $roles = CRM_Core_OptionGroup::values('acl_role');
 
-    require_once 'CRM/Core/Permission.php';
     $permissions = CRM_Core_Permission::basicPermissions();
     while ($dao->fetch()) {
       if (!array_key_exists($dao->entity_id, $acl)) {

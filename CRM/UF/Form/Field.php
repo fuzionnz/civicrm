@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,16 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Contact/BAO/Contact.php';
-require_once 'CRM/Activity/BAO/Activity.php';
-require_once 'CRM/Core/BAO/UFField.php';
-require_once 'CRM/Core/BAO/UFGroup.php';
 
 /**
  * form to process actions on the field aspect of Custom
@@ -102,6 +96,16 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
   protected $_hasSearchableORInSelector;
 
   /**
+   * Batch entry fields
+   */
+  protected $_contriBatchEntryFields;
+
+  /**
+   * Batch entry fields
+   */
+  protected $_memberBatchEntryFields;
+
+  /**
    * Function to set variables up before form is built
    *
    * @return void
@@ -134,6 +138,60 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
     $this->_fields = CRM_Contact_BAO_Contact::importableFields('All', TRUE, TRUE, TRUE);
     $this->_fields = array_merge(CRM_Activity_BAO_Activity::exportableFields('Activity'), $this->_fields);
 
+    $this->_contriBatchEntryFields = array(
+      'send_receipt' => array(
+        'name' => 'send_receipt',
+        'title' => ts('Send Receipt'),
+      ),
+      'soft_credit' => array(
+        'name' => 'soft_credit',
+        'title' => ts('Soft Credit'),
+      ),
+      'product_name' => array(
+        'name' => 'product_name',
+        'title' => ts('Premiums'),
+      ),
+      'contribution_note' => array(
+        'name' => 'contribution_note',
+        'title' => ts('Contribution Note'),
+      ),
+    );
+
+    $this->_memberBatchEntryFields = array(
+      'send_receipt' => array(
+        'name' => 'send_receipt',
+        'title' => ts('Send Receipt'),
+      ),
+      'soft_credit' => array(
+        'name' => 'soft_credit',
+        'title' => ts('Soft Credit'),
+      ),
+      'product_name' => array(
+        'name' => 'product_name',
+        'title' => ts('Premiums'),
+      ),
+      'contribution_type' => array(
+        'name' => 'contribution_type',
+        'title' => ts('Contribution Type'),
+      ),
+      'total_amount' => array(
+        'name' => 'total_amount',
+        'title' => ts('Total Amount'),
+      ),
+      'receive_date' => array(
+        'name' => 'receive_date',
+        'title' => ts('Receive Date'),
+      ),
+      'payment_instrument' => array(
+        'name' => 'payment_instrument',
+        'title' => ts('Payment Instrument'),
+      ),
+      'contribution_status_id' => array(
+        'name' => 'contribution_status_id',
+        'title' => ts('Contribution Status'),
+      ),
+    );
+
     //unset campaign related fields.
     if (isset($this->_fields['activity_campaign_id'])) {
       $this->_fields['activity_campaign_id']['title'] = ts('Campaign');
@@ -143,22 +201,19 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
     }
 
     if (CRM_Core_Permission::access('CiviContribute')) {
-      require_once "CRM/Contribute/BAO/Contribution.php";
-      $this->_fields = array_merge(CRM_Contribute_BAO_Contribution::getContributionFields(), $this->_fields);
+      $this->_fields = array_merge(CRM_Contribute_BAO_Contribution::getContributionFields(FALSE), $this->_fields);
+      $this->_fields = array_merge($this->_contriBatchEntryFields, $this->_fields);
     }
 
     if (CRM_Core_Permission::access('CiviMember')) {
-      require_once 'CRM/Member/BAO/Membership.php';
       $this->_fields = array_merge(CRM_Member_BAO_Membership::getMembershipFields(), $this->_fields);
     }
 
     if (CRM_Core_Permission::access('CiviEvent')) {
-      require_once 'CRM/Event/BAO/Query.php';
       $this->_fields = array_merge(CRM_Event_BAO_Query::getParticipantFields(TRUE), $this->_fields);
     }
 
     if (CRM_Core_Permission::access('Quest')) {
-      require_once 'CRM/Quest/BAO/Student.php';
       $this->_fields = array_merge(CRM_Quest_BAO_Student::exportableFields(), $this->_fields);
     }
 
@@ -182,7 +237,6 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
 
     $this->assign('fieldId', $this->_id);
     if ($this->_id) {
-      require_once 'CRM/Core/DAO.php';
       $fieldTitle = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_UFField', $this->_id, 'label');
       $this->assign('fieldTitle', $fieldTitle);
     }
@@ -230,6 +284,7 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
       );
 
       if (!$defaults['location_type_id'] &&
+        $defaults["field_type"] != "Formatting" &&
         in_array($defaults['field_name'], $specialFields)
       ) {
         $defaults['location_type_id'] = 0;
@@ -237,7 +292,7 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
 
       $defaults['field_name'] = array(
         $defaults['field_type'],
-        $defaults['field_name'],
+        ($defaults['field_type'] == "Formatting" ? "" : $defaults['field_name']),
         $defaults['location_type_id'],
         CRM_Utils_Array::value('phone_type_id', $defaults),
       );
@@ -275,7 +330,6 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
       'title' => ts('Current Employer'),
     );
 
-    require_once 'CRM/Core/BAO/Setting.php';
     $addressOptions = CRM_Core_BAO_Setting::valueOptions(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
       'address_options', TRUE, NULL, TRUE
     );
@@ -330,7 +384,6 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
     }
 
     //group selected and unwanted fields list
-    require_once 'CRM/Core/BAO/UFGroup.php';
     $groupFieldList = array_merge(CRM_Core_BAO_UFGroup::getFields($this->_gid, FALSE, NULL, NULL, NULL, TRUE, NULL, TRUE),
       array('note', 'email_greeting_custom', 'postal_greeting_custom', 'addressee_custom', 'id')
     );
@@ -351,22 +404,31 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
     unset($subTypes);
 
     if (CRM_Core_Permission::access('Quest')) {
-      require_once 'CRM/Quest/BAO/Student.php';
       $fields['Student'] = CRM_Quest_BAO_Student::exportableFields();
     }
 
+    // add current employer for individuals
+    $fields['Contact']['id'] = array(
+      'name' => 'id',
+      'title' => ts('Internal Contact ID'),
+    );
+
     if (CRM_Core_Permission::access('CiviContribute')) {
-      $contribFields = CRM_Contribute_BAO_Contribution::getContributionFields();
+      $contribFields = CRM_Contribute_BAO_Contribution::getContributionFields(FALSE);
       if (!empty($contribFields)) {
         unset($contribFields['is_test']);
         unset($contribFields['is_pay_later']);
         unset($contribFields['contribution_id']);
-        $fields['Contribution'] = &$contribFields;
+        if ($this->_gid && CRM_Core_DAO::getFieldValue('CRM_Core_DAO_UFGroup', $this->_gid, 'name') == 'contribution_batch_entry') {
+          $fields['Contribution'] = &array_merge($contribFields, $this->_contriBatchEntryFields);
+        }
+        else {
+          $fields['Contribution'] = &$contribFields;
+        }
       }
     }
 
     if (CRM_Core_Permission::access('CiviEvent')) {
-      require_once 'CRM/Event/BAO/Query.php';
       $participantFields = CRM_Event_BAO_Query::getParticipantFields(TRUE);
       if (!empty($participantFields)) {
         unset($participantFields['external_identifier']);
@@ -389,18 +451,23 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
     }
 
     if (CRM_Core_Permission::access('CiviMember')) {
-      require_once 'CRM/Member/BAO/Membership.php';
       $membershipFields = CRM_Member_BAO_Membership::getMembershipFields();
       unset($membershipFields['membership_id']);
-      unset($membershipFields['join_date']);
-      unset($membershipFields['membership_start_date']);
+      //unset( $membershipFields['join_date'] );
+      //unset( $membershipFields['membership_start_date'] );
       unset($membershipFields['membership_type_id']);
-      unset($membershipFields['membership_end_date']);
+      //unset( $membershipFields['membership_end_date'] );
       unset($membershipFields['member_is_test']);
       unset($membershipFields['is_override']);
       unset($membershipFields['status_id']);
       unset($membershipFields['member_is_pay_later']);
-      $fields['Membership'] = &$membershipFields;
+
+      if ($this->_gid && CRM_Core_DAO::getFieldValue('CRM_Core_DAO_UFGroup', $this->_gid, 'name') == 'membership_batch_entry') {
+        $fields['Membership'] = &array_merge($membershipFields, $this->_memberBatchEntryFields);
+      }
+      else {
+        $fields['Membership'] = &$membershipFields;
+      }
     }
 
     $activityFields = CRM_Activity_BAO_Activity::getProfileFields();
@@ -413,13 +480,20 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
       $fields['Activity'] = $activityFields;
     }
 
+    $formattingFields["format_free_html_" . rand(1000, 9999)] = array(
+      "name" => "free_html",
+      "import" => FALSE,
+      "export" => FALSE,
+      "title" => "Free HTML",
+    );
+    $fields["Formatting"] = $formattingFields;
+
     $noSearchable = array();
     $addressCustomFields = array_keys(CRM_Core_BAO_CustomField::getFieldsForImport('Address'));
 
     foreach ($fields as $key => $value) {
       foreach ($value as $key1 => $value1) {
         //CRM-2676, replacing the conflict for same custom field name from different custom group.
-        require_once 'CRM/Core/BAO/CustomField.php';
         if ($customFieldId = CRM_Core_BAO_CustomField::getKeyID($key1)) {
           $customGroupId = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_CustomField', $customFieldId, 'custom_group_id');
           $customGroupName = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_CustomGroup', $customGroupId, 'title');
@@ -448,7 +522,6 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
     }
     $this->assign('noSearchable', $noSearchable);
 
-    require_once 'CRM/Core/BAO/LocationType.php';
     $this->_location_types = CRM_Core_PseudoConstant::locationType();
     $defaultLocationType = CRM_Core_BAO_LocationType::getDefault();
 
@@ -489,6 +562,10 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
 
     if (!empty($membershipFields)) {
       $sel1['Membership'] = 'Membership';
+    }
+
+    if (!empty($formattingFields)) {
+      $sel1['Formatting'] = 'Formatting';
     }
 
     foreach ($sel1 as $key => $sel) {
@@ -658,7 +735,7 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
       );
     }
 
-    if (CRM_Utils_Array::value(1, $defaults['field_name']) == 'url-1') {
+    if (isset($defaults['field_name']) && CRM_Utils_Array::value(1, $defaults['field_name']) == 'url-1') {
       $defaults['field_name'][1] = 'url';
     }
 
@@ -699,7 +776,17 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
       $ids['uf_field'] = $this->_id;
     }
 
-    $name = $this->_selectFields[$params['field_name'][1]];
+
+    $name = NULL;
+    if (isset($params['field_name'][1])) {
+      // we dont get a name for a html formatting element
+      $name = $this->_selectFields[$params['field_name'][1]];
+    }
+
+    //Hack for Formatting Field Name
+    if ($params['field_name'][0] == 'Formatting') {
+      $params['field_name'][1] = 'formatting_' . rand(1000, 9999);
+    }
 
     // temporary hack to for website
     if ($params['field_name'][1] == 'url') {
@@ -707,7 +794,7 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
     }
 
     //check for duplicate fields
-    if (CRM_Core_BAO_UFField::duplicateField($params, $ids)) {
+    if ($params["field_name"][0] != "Formatting" && CRM_Core_BAO_UFField::duplicateField($params, $ids)) {
       CRM_Core_Session::setStatus(ts('The selected field was not added. It already exists in this profile.'));
       return;
     }
@@ -834,7 +921,6 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
     // fix me : check object $customField
     if (in_array($fieldType, array(
       'Participant', 'Contribution', 'Membership', 'Activity'))) {
-      require_once 'CRM/Core/BAO/CustomGroup.php';
       $params = array('id' => $customField->custom_group_id);
       $customGroup = array();
       CRM_Core_BAO_CustomGroup::retrieve($params, $customGroup);
@@ -925,7 +1011,6 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
     //fixed for  issue CRM-2861 & CRM-4153
     if (CRM_Core_BAO_UFGroup::isProfileDoubleOptin()) {
       if ($fields['field_name'][1] == 'group') {
-        require_once 'CRM/Core/BAO/UFField.php';
         $dao = new CRM_Core_BAO_UFField();
         $dao->uf_group_id = $fields['group_id'];
         $dao->find();
@@ -934,11 +1019,17 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
           //check email field is present in the group
           if ($dao->field_name == 'email') {
             $emailField = TRUE;
+            break;
           }
         }
+
         if (!$emailField) {
-          $disableSetting = "define( 'CIVICRM_PROFILE_DOUBLE_OPTIN' , 0 );";
-          $errors['field_name'] = ts('Your site is currently configured to require double-opt in when users join (subscribe) to Group(s) via a Profile form. In this mode, you need to include an Email field in a Profile BEFORE you can add the Group(s) field. This ensures that an opt-in confirmation email can be sent. Your site administrator can disable double opt-in by adding this line to the CiviCRM settings file: <em>%1</em>', array(1 => $disableSetting));
+          $disableSettingURL = CRM_Utils_System::url(
+            'civicrm/admin/setting/preferences/mailing',
+            'reset=1'
+          );
+
+          $errors['field_name'] = ts('Your site is currently configured to require double-opt in when users join (subscribe) to Group(s) via a Profile form. In this mode, you need to include an Email field in a Profile BEFORE you can add the Group(s) field. This ensures that an opt-in confirmation email can be sent. Your site administrator can disable double opt-in on the civimail admin settings: <em>%1</em>', array(1 => $disableSettingURL));
         }
       }
     }
@@ -1098,7 +1189,6 @@ class CRM_UF_Form_Field extends CRM_Core_Form {
           $errors['field_name'] = ts('Cannot add or update profile field Contact Subtype as profile type is not one of Individual, Household or Organization.');
         }
     }
-
     return empty($errors) ? TRUE : $errors;
   }
 }

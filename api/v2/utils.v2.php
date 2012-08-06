@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +33,7 @@
  * @package CiviCRM_APIv2
  * @subpackage API_utils
  *
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * @version $Id: utils.php 31877 2011-01-19 04:23:54Z shot $
  *
  */
@@ -84,7 +86,13 @@ function &civicrm_create_error($msg, $data = NULL) {
  * @return <type>
  */
 function civicrm_create_success($result = 1) {
-  return CRM_Core_Error::createAPISuccess($result);
+
+  $values = array();
+
+  $values['is_error'] = 0;
+  $values['result'] = $result;
+
+  return $values;
 }
 
 /**
@@ -184,7 +192,9 @@ function _civicrm_add_formatted_param(&$values, &$params) {
      */
 
 
+
   /* Cache the various object fields */
+
 
   static $fields = NULL;
 
@@ -199,6 +209,7 @@ function _civicrm_add_formatted_param(&$values, &$params) {
 
   if (isset($values['contact_type'])) {
     /* we're an individual/household/org property */
+
 
 
     $fields[$values['contact_type']] = CRM_Contact_DAO_Contact::fields();
@@ -338,6 +349,7 @@ function _civicrm_add_formatted_param(&$values, &$params) {
   if (isset($values['note'])) {
     /* add a note field */
 
+
     if (!isset($params['note'])) {
       $params['note'] = array();
     }
@@ -363,6 +375,7 @@ function _civicrm_add_formatted_param(&$values, &$params) {
 
   /* Check for custom field values */
 
+
   if (!CRM_Utils_Array::value('custom', $fields)) {
     $fields['custom'] = CRM_Core_BAO_CustomField::getFields(CRM_Utils_Array::value('contact_type', $values));
   }
@@ -370,6 +383,7 @@ function _civicrm_add_formatted_param(&$values, &$params) {
   foreach ($values as $key => $value) {
     if ($customFieldID = CRM_Core_BAO_CustomField::getKeyID($key)) {
       /* check if it's a valid custom field id */
+
 
       if (!array_key_exists($customFieldID, $fields['custom'])) {
         return civicrm_create_error('Invalid custom field ID');
@@ -474,6 +488,7 @@ function _civicrm_add_formatted_location_blocks(&$values, &$params) {
     if ($customFieldID = CRM_Core_BAO_CustomField::getKeyID($key)) {
       /* check if it's a valid custom field id */
 
+
       if (array_key_exists($customFieldID, $fields['address_custom'])) {
         $type = $fields['address_custom'][$customFieldID]['html_type'];
         _civicrm_add_custom_formatted_param($customFieldID, $key, $value, $params['address'][$addressCnt], $type);
@@ -487,7 +502,6 @@ function _civicrm_add_formatted_location_blocks(&$values, &$params) {
   if ($addressCnt == 1) {
 
     $params['address'][$addressCnt]['is_primary'] = TRUE;
-
   }
 
   return TRUE;
@@ -603,6 +617,7 @@ function _civicrm_duplicate_formatted_contact(&$params,
 function _civicrm_validate_formatted_contact(&$params) {
   /* Look for offending email addresses */
 
+
   if (array_key_exists('email', $params)) {
     foreach ($params['email'] as $count => $values) {
       if (!is_array($values)) {
@@ -623,6 +638,7 @@ function _civicrm_validate_formatted_contact(&$params) {
   }
 
   /* Validate custom data fields */
+
 
   if (array_key_exists('custom', $params) && is_array($params['custom'])) {
     foreach ($params['custom'] as $key => $custom) {

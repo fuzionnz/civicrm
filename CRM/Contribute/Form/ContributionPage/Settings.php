@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contribute/Form/ContributionPage.php';
-require_once 'CRM/Contribute/PseudoConstant.php';
 class CRM_Contribute_Form_ContributionPage_Settings extends CRM_Contribute_Form_ContributionPage {
 
   /**
@@ -66,7 +63,6 @@ class CRM_Contribute_Form_ContributionPage_Settings extends CRM_Contribute_Form_
       CRM_Utils_System::setTitle(ts('Title and Settings (%1)',
           array(1 => $title)
         ));
-      require_once 'CRM/Core/BAO/UFJoin.php';
 
       $ufJoinParams = array(
         'module' => 'OnBehalf',
@@ -89,7 +85,6 @@ class CRM_Contribute_Form_ContributionPage_Settings extends CRM_Contribute_Form_
    * @access public
    */
   public function buildQuickForm() {
-    require_once 'CRM/Utils/Money.php';
 
     $this->_first = TRUE;
     $attributes = CRM_Core_DAO::getAttribute('CRM_Contribute_DAO_ContributionPage');
@@ -104,7 +99,6 @@ class CRM_Contribute_Form_ContributionPage_Settings extends CRM_Contribute_Form_
     );
 
     //CRM-7362 --add campaigns.
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     CRM_Campaign_BAO_Campaign::addCampaign($this, CRM_Utils_Array::value('campaign_id', $this->_values));
 
     $this->addWysiwyg('intro_text', ts('Introductory Message'), $attributes['intro_text']);
@@ -116,8 +110,18 @@ class CRM_Contribute_Form_ContributionPage_Settings extends CRM_Contribute_Form_
 
     $required = array('Contact', 'Organization');
     $optional = array('Contribution', 'Membership');
-    require_once "CRM/Core/BAO/UFGroup.php";
+
     $profiles = CRM_Core_BAO_UFGroup::getValidProfiles($required, $optional);
+    //Check profiles for Organization subtypes
+    $contactSubType = CRM_Contact_BAO_ContactType::subTypes('Organization');
+    foreach ($contactSubType as $type) {
+      $required = array('Contact', $type);
+      $subTypeProfiles = CRM_Core_BAO_UFGroup::getValidProfiles($required, $optional);
+      foreach ($subTypeProfiles as $profileId => $profileName) {
+        $profiles[$profileId] = $profileName;
+      }
+    }
+
     $requiredProfileFields = array('organization_name', 'email');
 
     if (!empty($profiles)) {
@@ -140,14 +144,17 @@ class CRM_Contribute_Form_ContributionPage_Settings extends CRM_Contribute_Form_
     );
 
     $options   = array();
-    $options[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('Optional'), 1);
-    $options[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('Required'), 2);
+    $options[] = $this->createElement('radio', NULL, NULL, ts('Optional'), 1);
+    $options[] = $this->createElement('radio', NULL, NULL, ts('Required'), 2);
     $this->addGroup($options, 'is_for_organization', ts(''));
     $this->add('textarea', 'for_organization', ts('On behalf of Label'), $attributes['for_organization']);
 
     // collect goal amount
     $this->add('text', 'goal_amount', ts('Goal Amount'), array('size' => 8, 'maxlength' => 12));
     $this->addRule('goal_amount', ts('Please enter a valid money value (e.g. %1).', array(1 => CRM_Utils_Money::format('99.99', ' '))), 'money');
+
+    // is confirmation page enabled?
+    $this->addElement('checkbox', 'is_confirm_enabled', ts('Use a confirmation page?'));
 
     // is this page shareable through social media ?
     $this->addElement('checkbox', 'is_share', ts('Allow sharing through social media?'));
@@ -220,6 +227,7 @@ class CRM_Contribute_Form_ContributionPage_Settings extends CRM_Contribute_Form_
       $params['currency'] = $config->defaultCurrency;
     }
 
+    $params['is_confirm_enabled'] = CRM_Utils_Array::value('is_confirm_enabled', $params, FALSE);
     $params['is_share'] = CRM_Utils_Array::value('is_share', $params, FALSE);
     $params['is_active'] = CRM_Utils_Array::value('is_active', $params, FALSE);
     $params['is_credit_card_only'] = CRM_Utils_Array::value('is_credit_card_only', $params, FALSE);
@@ -236,7 +244,6 @@ class CRM_Contribute_Form_ContributionPage_Settings extends CRM_Contribute_Form_
       $params['honor_block_text'] = NULL;
     }
 
-    require_once 'CRM/Contribute/BAO/ContributionPage.php';
     $dao = CRM_Contribute_BAO_ContributionPage::create($params);
 
     // make entry in UF join table for onbehalf of org profile
@@ -247,7 +254,6 @@ class CRM_Contribute_Form_ContributionPage_Settings extends CRM_Contribute_Form_
       'entity_id' => $dao->id,
     );
 
-    require_once 'CRM/Core/BAO/UFJoin.php';
     // first delete all past entries
     CRM_Core_BAO_UFJoin::deleteAll($ufJoinParams);
 

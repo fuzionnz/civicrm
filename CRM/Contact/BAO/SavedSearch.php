@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contact/DAO/SavedSearch.php';
 
 /**
  * Business object for Saved searches
@@ -139,14 +137,12 @@ class CRM_Contact_BAO_SavedSearch extends CRM_Contact_DAO_SavedSearch {
     $fv = self::getFormValues($id);
     //check if the saved seach has mapping id
     if (CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_SavedSearch', $id, 'mapping_id')) {
-      require_once 'CRM/Core/BAO/Mapping.php';
       return CRM_Core_BAO_Mapping::formattedFields($fv);
     }
     elseif (CRM_Utils_Array::value('customSearchID', $fv)) {
       return $fv;
     }
     else {
-      require_once 'CRM/Contact/BAO/Query.php';
       return CRM_Contact_BAO_Query::convertFormValues($fv);
     }
   }
@@ -177,7 +173,6 @@ class CRM_Contact_BAO_SavedSearch extends CRM_Contact_DAO_SavedSearch {
     if ($params &&
       CRM_Utils_Array::value('customSearchID', $params)
     ) {
-      require_once 'CRM/Contact/BAO/SearchCustom.php';
       return CRM_Contact_BAO_SearchCustom::contactIDSQL(NULL, $id);
     }
     else {
@@ -200,7 +195,6 @@ WHERE  $where";
 
     if ($params) {
       if (CRM_Utils_Array::value('customSearchID', $params)) {
-        require_once 'CRM/Contact/BAO/SearchCustom.php';
         return CRM_Contact_BAO_SearchCustom::fromWhereEmail(NULL, $id);
       }
       else {
@@ -213,7 +207,7 @@ WHERE  $where";
     else {
       // fix for CRM-7240
       $from = "
-FROM      civicrm_contact contact_a 
+FROM      civicrm_contact contact_a
 LEFT JOIN civicrm_email ON (contact_a.id = civicrm_email.contact_id AND civicrm_email.is_primary = 1)
 ";
       $where = " ( 1 ) ";
@@ -231,11 +225,9 @@ LEFT JOIN civicrm_email ON (contact_a.id = civicrm_email.contact_id AND civicrm_
     $fv = unserialize($this->form_values);
 
     if ($this->mapping_id) {
-      require_once 'CRM/Core/BAO/Mapping.php';
       $params = CRM_Core_BAO_Mapping::formattedFields($fv);
     }
     else {
-      require_once 'CRM/Contact/BAO/Query.php';
       $params = CRM_Contact_BAO_Query::convertFormValues($fv);
     }
 
@@ -271,13 +263,39 @@ LEFT JOIN civicrm_email ON (contact_a.id = civicrm_email.contact_id AND civicrm_
    */
   static
   function getName($id, $value = 'name') {
-    require_once 'CRM/Contact/DAO/Group.php';
     $group = new CRM_Contact_DAO_Group();
     $group->saved_search_id = $id;
     if ($group->find(TRUE)) {
       return $group->$value;
     }
     return NULL;
+  }
+
+  /**
+   * Given a label and a set of normalized POST
+   * formValues, create a smart group with that
+   */
+  static
+  function create(&$params) {
+
+    $savedSearch = new CRM_Contact_DAO_SavedSearch();
+    if (isset($params['formValues']) &&
+      !empty($params['formValues'])
+    ) {
+      $savedSearch->form_values = serialize($params['formValues']);
+    }
+    else {
+      $savedSearch->form_values = 'null';
+    }
+
+    $savedSearch->is_active = CRM_Utils_Array::value('is_active', $params, 1);
+    $savedSearch->mapping_id = CRM_Utils_Array::value('mapping_id', $params, 'null');
+    $savedSearch->custom_search_id = CRM_Utils_Array::value('custom_search_id', $params, 'null');
+    $savedSearch->id = CRM_Utils_Array::value('id', $params, NULL);
+
+    $savedSearch->save();
+
+    return $savedSearch;
   }
 }
 

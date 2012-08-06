@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Dedupe/DAO/RuleGroup.php';
 
 /**
  * The CiviCRM duplicate discovery engine is based on an
@@ -63,7 +61,7 @@ class CRM_Dedupe_BAO_RuleGroup extends CRM_Dedupe_DAO_RuleGroup {
    *
    * @return array  a table-keyed array of field-keyed arrays holding supported fields' titles
    */
-  function &supportedFields($requestedType) {
+  static function &supportedFields($requestedType) {
     static $fields = NULL;
     if (!$fields) {
       // this is needed, as we're piggy-backing importableFields() below
@@ -84,8 +82,6 @@ class CRM_Dedupe_BAO_RuleGroup extends CRM_Dedupe_DAO_RuleGroup {
         'civicrm_im', 'civicrm_note', 'civicrm_openid', 'civicrm_phone',
       );
 
-      require_once 'CRM/Contact/BAO/Contact.php';
-      require_once 'CRM/Core/BAO/CustomGroup.php';
       foreach (array(
         'Individual', 'Organization', 'Household') as $ctype) {
         // take the table.field pairs and their titles from importableFields() if the table is supported
@@ -148,7 +144,6 @@ class CRM_Dedupe_BAO_RuleGroup extends CRM_Dedupe_DAO_RuleGroup {
 
       // Find all rules contained by this script sorted by weight so that
       // their execution can be short circuited on RuleGroup::fillTable()
-      require_once 'CRM/Dedupe/BAO/Rule.php';
       $bao = new CRM_Dedupe_BAO_Rule();
       $bao->dedupe_rule_group_id = $this->id;
       $bao->orderBy('rule_weight DESC');
@@ -338,7 +333,6 @@ class CRM_Dedupe_BAO_RuleGroup extends CRM_Dedupe_DAO_RuleGroup {
    *
    */
   function thresholdQuery($checkPermission = TRUE) {
-    require_once 'CRM/Contact/BAO/Contact/Permission.php';
     $this->_aclFrom = '';
     // CRM-6603: anonymous dupechecks side-step ACLs
     $this->_aclWhere = ' AND is_deleted = 0 ';
@@ -381,7 +375,6 @@ class CRM_Dedupe_BAO_RuleGroup extends CRM_Dedupe_DAO_RuleGroup {
    * @access public
    */
   function dedupeRuleFieldsWeight($params) {
-    require_once 'CRM/Dedupe/BAO/Rule.php';
     $rgBao               = new CRM_Dedupe_BAO_RuleGroup();
     $rgBao->level        = $params['level'];
     $rgBao->contact_type = $params['contact_type'];

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id: PaymentProcessor.php 9702 2007-05-29 23:57:16Z lobo $
  *
  */
-
-require_once 'CRM/Admin/Form.php';
 
 /**
  * This class generates form components for Location Type
@@ -68,7 +66,6 @@ class CRM_Admin_Form_PaymentProcessor extends CRM_Admin_Form {
     }
 
     $this->assign('ppType', $this->_ppType);
-    require_once 'CRM/Core/DAO/PaymentProcessorType.php';
     $this->_ppDAO = new CRM_Core_DAO_PaymentProcessorType();
     $this->_ppDAO->name = $this->_ppType;
 
@@ -336,15 +333,11 @@ class CRM_Admin_Form_PaymentProcessor extends CRM_Admin_Form {
   function updatePaymentProcessor(&$values, $domainID, $test) {
     $dao = new CRM_Core_DAO_PaymentProcessor();
 
-    $dao->id        = $test ? $this->_testID : $this->_id;
-    $dao->domain_id = $domainID;
-    $dao->is_test   = $test;
-    if (!$test) {
-      $dao->is_default = CRM_Utils_Array::value('is_default', $values, 0);
-    }
-    else {
-      $dao->is_default = 0;
-    }
+    $dao->id         = $test ? $this->_testID : $this->_id;
+    $dao->domain_id  = $domainID;
+    $dao->is_test    = $test;
+    $dao->is_default = CRM_Utils_Array::value('is_default', $values, 0);
+
     $dao->is_active = CRM_Utils_Array::value('is_active', $values, 0);
 
     $dao->name = $values['name'];

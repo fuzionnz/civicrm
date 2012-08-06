@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,16 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contact/Form/Task.php';
-require_once 'CRM/Contact/Form/Task/EmailCommon.php';
-require_once 'CRM/Core/Menu.php';
-require_once 'CRM/Core/BAO/CustomGroup.php';
-require_once 'CRM/Contact/BAO/Contact.php';
 
 /**
  * This class provides the functionality to email a group of
@@ -80,7 +74,6 @@ class CRM_Contact_Form_Task_Email extends CRM_Contact_Form_Task {
 
     $cid = CRM_Utils_Request::retrieve('cid', 'Positive', $this, FALSE);
     if ($cid) {
-      require_once 'CRM/Contact/Page/View.php';
       CRM_Contact_Page_View::setTitle($cid);
     }
 
@@ -96,7 +89,6 @@ class CRM_Contact_Form_Task_Email extends CRM_Contact_Form_Task {
     }
 
     $this->assign('single', $this->_single);
-    require_once 'CRM/Core/Permission.php';
     if (CRM_Core_Permission::check('administer CiviCRM')) {
       $this->assign('isAdmin', 1);
     }

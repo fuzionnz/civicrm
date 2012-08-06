@@ -1,15 +1,13 @@
 <?php
 /*
    +----------------------------------------------------------------------------+
-   | PayflowPro Core Payment Module for CiviCRM version 4.1                     |
+   | PayflowPro Core Payment Module for CiviCRM version 4.2                     |
    +----------------------------------------------------------------------------+
    | Licensed to CiviCRM under the Academic Free License version 3.0            |
    |                                                                            |
    | Written & Contributed by Eileen McNaughton - 2009                          |
    +---------------------------------------------------------------------------+
   */
-
-require_once 'CRM/Core/Payment.php';
 class CRM_Core_Payment_PayflowPro extends CRM_Core_Payment {
   // (not used, implicit in the API, might need to convert?)
   CONST
@@ -57,7 +55,7 @@ class CRM_Core_Payment_PayflowPro extends CRM_Core_Payment {
 
   /*
      * This function  sends request and receives response from
-     * the processor. It is the main function for processing on-server 
+     * the processor. It is the main function for processing on-server
 	 * credit card transactions
      */
   function doDirectPayment(&$params) {
@@ -375,7 +373,6 @@ class CRM_Core_Payment_PayflowPro extends CRM_Core_Payment {
    */
   function _checkDupe($invoiceId) {
     //copied from Eway but not working and not really sure it should!
-    require_once 'CRM/Contribute/DAO/Contribution.php';
     $contribution = new CRM_Contribute_DAO_Contribution();
     $contribution->invoice_id = $invoiceId;
     return $contribution->find();
@@ -452,7 +449,7 @@ class CRM_Core_Payment_PayflowPro extends CRM_Core_Payment {
      * Submit transaction using CuRL
      * @submiturl string Url to direct HTTPS GET to
      * @payflow_query value string to be posted
-     * 
+     *
      */
   function submit_transaction($submiturl, $payflow_query) {
     /*
@@ -504,7 +501,7 @@ class CRM_Core_Payment_PayflowPro extends CRM_Core_Payment {
     curl_setopt($ch, CURLOPT_TIMEOUT, 90);
     // times out after 90 secs
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'verifySSL'));
     // this line makes it work under https
     curl_setopt($ch, CURLOPT_POSTFIELDS, $payflow_query);
     //adding POST data
@@ -536,7 +533,7 @@ class CRM_Core_Payment_PayflowPro extends CRM_Core_Payment {
 
 
     /*
-         * Transaction submitted - 
+         * Transaction submitted -
          * See if we had a curl error - if so tell 'em and bail out
          *
          * NOTE: curl_error does not return a logical value (see its documentation), but
@@ -576,7 +573,7 @@ class CRM_Core_Payment_PayflowPro extends CRM_Core_Payment {
 
     if (($responseData === FALSE) || (strlen($responseData) == 0)) {
       curl_close($ch);
-      return self::errorExit(9006, "Error: Connection to payment gateway failed - no data 
+      return self::errorExit(9006, "Error: Connection to payment gateway failed - no data
                                            returned. Gateway url set to $submiturl");
     }
 

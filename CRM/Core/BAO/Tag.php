@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/Tag.php';
 class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
 
   /**
@@ -57,8 +55,7 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
    * @access public
    * @static
    */
-  static
-  function retrieve(&$params, &$defaults) {
+  static function retrieve(&$params, &$defaults) {
     $tag = new CRM_Core_DAO_Tag();
     $tag->copyValues($params);
     if ($tag->find(TRUE)) {
@@ -185,8 +182,7 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
     return $tags;
   }
 
-  static
-  function getTags($usedFor = 'civicrm_contact',
+  static function getTags($usedFor = 'civicrm_contact',
     &$tags = array(),
     $parentId  = NULL,
     $separator = '&nbsp;&nbsp;',
@@ -264,10 +260,8 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
    * @static
    *
    */
-  static
-  function del($id) {
+  static function del($id) {
     // delete all crm_entity_tag records with the selected tag id
-    require_once 'CRM/Core/DAO/EntityTag.php';
     $entityTag = new CRM_Core_DAO_EntityTag();
     $entityTag->tag_id = $id;
     if ($entityTag->find()) {
@@ -280,7 +274,6 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
     $tag = new CRM_Core_DAO_Tag();
     $tag->id = $id;
 
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::pre('delete', 'Tag', $id, $tag);
 
     if ($tag->delete()) {
@@ -305,8 +298,7 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
    * @access public
    * @static
    */
-  static
-  function add(&$params, &$ids) {
+  static function add(&$params, &$ids) {
     if (!self::dataExists($params)) {
       return NULL;
     }
@@ -322,7 +314,6 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
     $tag->copyValues($params);
     $tag->id = CRM_Utils_Array::value('tag', $ids);
 
-    require_once 'CRM/Utils/Hook.php';
     $edit = ($tag->id) ? TRUE : FALSE;
     if ($edit) {
       CRM_Utils_Hook::pre('edit', 'Tag', $tag->id, $tag);
@@ -368,8 +359,7 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
    * @access public
    * @static
    */
-  static
-  function dataExists(&$params) {
+  static function dataExists(&$params) {
     if (!empty($params['name'])) {
       return TRUE;
     }
@@ -386,8 +376,7 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
    * @access public
    * @static
    */
-  static
-  function getTagSet($entityTable) {
+  static function getTagSet($entityTable) {
     $tagSets = array();
     $query   = "SELECT name FROM civicrm_tag WHERE is_tagset=1 AND parent_id IS NULL and used_for LIKE '%{$entityTable}%'";
     $dao     = CRM_Core_DAO::executeQuery($query, CRM_Core_DAO::$_nullArray, TRUE, NULL, FALSE, FALSE);
@@ -404,8 +393,7 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
    * @access public
    * @static
    */
-  static
-  function getTagsNotInTagset() {
+  static function getTagsNotInTagset() {
     $tags = $tagSets = array();
     // first get all the tag sets
     $query = "SELECT id FROM civicrm_tag WHERE is_tagset=1 AND parent_id IS NULL";

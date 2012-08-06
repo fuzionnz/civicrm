@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 
 /**
  * Main page for viewing Notes.
@@ -179,7 +177,6 @@ class CRM_Contact_Page_View_Note extends CRM_Core_Page {
   function preProcess() {
     $this->_id = CRM_Utils_Request::retrieve('id', 'Positive', $this);
 
-    require_once 'CRM/Core/BAO/Note.php';
     if ($this->_id && CRM_Core_BAO_Note::getNotePrivacyHidden($this->_id)) {
       CRM_Core_Error::statusBounce(ts('You do not have access to this note.'));
     }
@@ -188,7 +185,6 @@ class CRM_Contact_Page_View_Note extends CRM_Core_Page {
     $this->assign('contactId', $this->_contactId);
 
     // check logged in url permission
-    require_once 'CRM/Contact/Page/View.php';
     CRM_Contact_Page_View::checkUserPermission($this);
 
     // set page title

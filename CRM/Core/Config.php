@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +31,7 @@
  * The default values in general, should reflect production values (minimizes chances of screwing up)
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -39,11 +39,6 @@
 require_once 'Log.php';
 require_once 'Mail.php';
 
-require_once 'CRM/Core/DAO.php';
-require_once 'CRM/Utils/System.php';
-require_once 'CRM/Utils/File.php';
-require_once 'CRM/Core/Session.php';
-require_once 'CRM/Core/Config/Variables.php';
 require_once 'api/api.php';
 class CRM_Core_Config extends CRM_Core_Config_Variables {
   ///
@@ -174,13 +169,11 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
    * @return object
    * @static
    */
-  static
-  function &singleton($loadFromDB = TRUE, $force = FALSE) {
+  static function &singleton($loadFromDB = TRUE, $force = FALSE) {
     if (self::$_singleton === NULL || $force) {
       // goto a simple error handler
-      PEAR::setErrorHandling(PEAR_ERROR_CALLBACK,
-        array('CRM_Core_Error', 'simpleHandler')
-      );
+      $GLOBALS['_PEAR_default_error_mode'] = PEAR_ERROR_CALLBACK;
+      $GLOBALS['_PEAR_default_error_options'] = array('CRM_Core_Error', 'simpleHandler');
 
       // lets ensure we set E_DEPRECATED to minimize errors
       // CRM-6327
@@ -189,7 +182,6 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
       }
 
       // first, attempt to get configuration object from cache
-      require_once 'CRM/Utils/Cache.php';
       $cache = CRM_Utils_Cache::singleton();
       self::$_singleton = $cache->get('CRM_Core_Config');
 
@@ -233,11 +225,18 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
 
       // call the hook so other modules can add to the config
       // again doing this at the very very end
-      require_once 'CRM/Utils/Hook.php';
       CRM_Utils_Hook::config(self::$_singleton);
 
       // make sure session is always initialised
       $session = CRM_Core_Session::singleton();
+
+      // for logging purposes, pass the userID to the db
+      $userID = $session->get('userID');
+      if ($userID) {
+        CRM_Core_DAO::executeQuery('SET @civicrm_user_id = %1',
+          array(1 => array($userID, 'Integer'))
+        );
+      }
     }
     return self::$_singleton;
   }
@@ -264,9 +263,7 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
       //format url for language negotiation, CRM-7803
       $this->userFrameworkBaseURL = CRM_Utils_System::languageNegotiationURL($this->userFrameworkBaseURL);
 
-      if (isset($_SERVER['HTTPS']) &&
-        strtolower($_SERVER['HTTPS']) != 'off'
-      ) {
+      if (CRM_Utils_System::isSSL()) {
         $this->userFrameworkBaseURL = str_replace('http://', 'https://',
           $this->userFrameworkBaseURL
         );
@@ -362,7 +359,6 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
     // initialize component registry early to avoid "race"
     // between CRM_Core_Config and CRM_Core_Component (they
     // are co-dependant)
-    require_once 'CRM/Core/Component.php';
     $this->componentRegistry = new CRM_Core_Component();
   }
 
@@ -404,7 +400,6 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
    */
   private function _initVariables() {
     // retrieve serialised settings
-    require_once "CRM/Core/BAO/ConfigSetting.php";
     $variables = array();
     CRM_Core_BAO_ConfigSetting::retrieve($variables);
 
@@ -415,11 +410,9 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
 
       // Step 2. get default values (with settings file overrides if
       // available - handled in CRM_Core_Config_Defaults)
-      require_once 'CRM/Core/Config/Defaults.php';
       CRM_Core_Config_Defaults::setValues($variables);
 
       // retrieve directory and url preferences also
-      require_once 'CRM/Core/BAO/Setting.php';
       CRM_Core_BAO_Setting::retrieveDirectoryAndURLPreferences($defaults);
 
       // add component specific settings
@@ -462,9 +455,7 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
 
     if ($this->userFrameworkResourceURL) {
       // we need to do this here so all blocks also load from an ssl server
-      if (isset($_SERVER['HTTPS']) &&
-        strtolower($_SERVER['HTTPS']) != 'off'
-      ) {
+      if (CRM_Utils_System::isSSL()) {
         CRM_Utils_System::mapConfigToSSL();
       }
       $rrb = parse_url($this->userFrameworkResourceURL);
@@ -504,17 +495,15 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
    *
    * @return object
    */
-  static
-  function &getMailer($persist = FALSE) {
+  static function &getMailer($persist = FALSE) {
     if (!isset(self::$_mail)) {
-      require_once "CRM/Core/BAO/Setting.php";
       $mailingInfo = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::MAILING_PREFERENCES_NAME,
         'mailing_backend'
       );
+
       if (defined('CIVICRM_MAILER_SPOOL') &&
         CIVICRM_MAILER_SPOOL
       ) {
-        require_once 'CRM/Mailing/BAO/Spool.php';
         self::$_mail = new CRM_Mailing_BAO_Spool();
       }
       elseif ($mailingInfo['outBound_option'] == 0) {
@@ -528,7 +517,6 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
         $params['port'] = $mailingInfo['smtpPort'] ? $mailingInfo['smtpPort'] : 25;
 
         if ($mailingInfo['smtpAuth']) {
-          require_once 'CRM/Utils/Crypt.php';
           $params['username'] = $mailingInfo['smtpUsername'];
           $params['password'] = CRM_Utils_Crypt::decrypt($mailingInfo['smtpPassword']);
           $params['auth']     = TRUE;
@@ -563,6 +551,9 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
       elseif ($mailingInfo['outBound_option'] == 3) {
         $params = array();
         self::$_mail = Mail::factory('mail', $params);
+      }
+      elseif ($mailingInfo['outBound_option'] == 4) {
+        self::$_mail = Mail::factory('mock', $params);
       }
       else {
         CRM_Core_Session::setStatus(ts('There is no valid SMTP server Setting Or SendMail path setting. Click <a href=\'%1\'>Administer CiviCRM >> Global Settings</a> to set the OutBound Email.', array(1 => CRM_Utils_System::url('civicrm/admin/setting', 'reset=1'))));
@@ -606,8 +597,7 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
    * @static
    * @access public
    */
-  static
-  function check(&$config, &$required) {
+  static function check(&$config, &$required) {
     foreach ($required as $name) {
       if (CRM_Utils_System::isNull($config->$name)) {
         return FALSE;
@@ -628,8 +618,7 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
   /**
    * one function to get domain ID
    */
-  static
-  function domainID() {
+  static function domainID() {
     return defined('CIVICRM_DOMAIN_ID') ? CIVICRM_DOMAIN_ID : 1;
   }
 
@@ -643,6 +632,8 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
 
     // clear db caching
     $this->clearDBCache();
+
+    CRM_Core_PseudoConstant::getModuleExtensions(TRUE);
 
     $session = CRM_Core_Session::singleton();
     $session->reset(2);
@@ -661,6 +652,7 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
       'TRUNCATE TABLE civicrm_group_contact_cache',
       'TRUNCATE TABLE civicrm_menu',
       'UPDATE civicrm_setting SET value = NULL WHERE name="navigation" AND contact_id IS NOT NULL',
+      'DELETE FROM civicrm_setting WHERE name="modulePaths"', // CRM-10543
     );
 
     foreach ($queries as $query) {
@@ -680,7 +672,7 @@ class CRM_Core_Config extends CRM_Core_Config_Variables {
     $query = "
 SELECT TABLE_NAME as tableName
 FROM   INFORMATION_SCHEMA.TABLES
-WHERE  TABLE_SCHEMA = %1 
+WHERE  TABLE_SCHEMA = %1
 AND    ( TABLE_NAME LIKE 'civicrm_import_job_%'
 OR       TABLE_NAME LIKE 'civicrm_export_temp%'
 OR       TABLE_NAME LIKE 'civicrm_task_action_temp%' )
@@ -702,21 +694,26 @@ OR       TABLE_NAME LIKE 'civicrm_task_action_temp%' )
   /**
    * function to check if running in upgrade mode
    */
-  function isUpgradeMode($path = NULL) {
-    if ($path && $path == 'civicrm/upgrade') {
+  static function isUpgradeMode($path = NULL) {
+    if (defined('CIVICRM_UPGRADE_ACTIVE')) {
       return TRUE;
     }
 
-    // note: do not re-initialize config here, since this function is part of
-    // config initialization itself
-    $urlVar = 'q';
-    if (defined('CIVICRM_UF') && CIVICRM_UF == 'Joomla') {
-      $urlVar = 'task';
+    if (!$path) {
+      // note: do not re-initialize config here, since this function is part of
+      // config initialization itself
+      $urlVar = 'q';
+      if (defined('CIVICRM_UF') && CIVICRM_UF == 'Joomla') {
+        $urlVar = 'task';
+      }
+
+      $path = CRM_Utils_Array::value($urlVar, $_GET);
     }
 
-    if (('civicrm/upgrade' == CRM_Utils_Array::value($urlVar, $_GET)) || defined('CIVICRM_UPGRADE_ACTIVE')) {
+    if ($path && preg_match('/^civicrm\/upgrade(\/.*)?$/', $path)) {
       return TRUE;
     }
+
     return FALSE;
   }
 

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Price/BAO/Set.php';
 
 /**
  * form to process actions on Price Sets
@@ -140,8 +137,6 @@ class CRM_Price_Form_Set extends CRM_Core_Form {
       $priceSetUsedTables = CRM_Price_BAO_Set::getUsedBy($this->_sid, TRUE);
     }
 
-    require_once 'CRM/Core/Config.php';
-    require_once 'CRM/Core/Component.php';
     $config           = CRM_Core_Config::singleton();
     $showContribution = FALSE;
     $components       = array('CiviEvent' => array('title' => ts('Event'),
@@ -171,7 +166,7 @@ class CRM_Price_Form_Set extends CRM_Core_Form {
       if (!in_array($compName, $config->enableComponents)) {
         continue;
       }
-      $option = HTML_QuickForm::createElement('checkbox', $compValues['extend'], NULL, $compValues['title']);
+      $option = $this->createElement('checkbox', $compValues['extend'], NULL, $compValues['title']);
 
       //if price set is used than freeze it.
       if (!empty($priceSetUsedTables)) {
@@ -200,7 +195,6 @@ class CRM_Price_Form_Set extends CRM_Core_Form {
     $this->addGroup($extends, 'extends', ts('Used For'), '&nbsp;', TRUE);
 
     $this->addRule('extends', ts('%1 is a required field.', array(1 => ts('Used For'))), 'required');
-    require_once 'CRM/Contribute/PseudoConstant.php';
     $this->add('select', 'contribution_type_id',
       ts('Contribution Type (Membership Fees)'),
       array('' => ts('- select -')) + CRM_Contribute_PseudoConstant::contributionType()

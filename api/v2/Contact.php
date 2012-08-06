@@ -1,9 +1,12 @@
 <?php
+// $Id: Contact.php 40968 2012-06-12 14:28:16Z kurund $
+
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,8 +35,8 @@
  *
  * @package CiviCRM_APIv2
  * @subpackage API_Contact
- * @copyright CiviCRM LLC (c) 2004-2011
- * $Id: Contact.php 40475 2012-05-17 00:55:16Z allen $
+ * @copyright CiviCRM LLC (c) 2004-2012
+ * $Id: Contact.php 40968 2012-06-12 14:28:16Z kurund $
  *
  */
 
@@ -259,7 +262,6 @@ function _civicrm_greeting_format_params(&$params) {
     if (!$formatParams) {
 
       continue;
-
     }
 
     // format params
@@ -836,6 +838,7 @@ function civicrm_contact_check_custom_params($params, $csType = NULL) {
   foreach ($params as $key => $value) {
     if ($customFieldID = CRM_Core_BAO_CustomField::getKeyID($key)) {
       /* check if it's a valid custom field id */
+
 
       if (!array_key_exists($customFieldID, $customFields)) {
 

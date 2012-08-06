@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Pledge/DAO/PledgeBlock.php';
 class CRM_Pledge_BAO_PledgeBlock extends CRM_Pledge_DAO_PledgeBlock {
 
   /**
@@ -79,7 +77,6 @@ class CRM_Pledge_BAO_PledgeBlock extends CRM_Pledge_DAO_PledgeBlock {
    */
   static
   function &create(&$params) {
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
     $pledgeBlock = self::add($params);
 
@@ -107,7 +104,6 @@ class CRM_Pledge_BAO_PledgeBlock extends CRM_Pledge_DAO_PledgeBlock {
    */
   static
   function add(&$params) {
-    require_once 'CRM/Utils/Hook.php';
 
     if (CRM_Utils_Array::value('id', $params)) {
       CRM_Utils_Hook::pre('edit', 'PledgeBlock', $params['id'], $params);
@@ -119,7 +115,6 @@ class CRM_Pledge_BAO_PledgeBlock extends CRM_Pledge_DAO_PledgeBlock {
     $pledgeBlock = new CRM_Pledge_DAO_PledgeBlock();
 
     //fix for pledge_frequency_unit
-    require_once 'CRM/Core/BAO/CustomOption.php';
     $freqUnits = CRM_Utils_Array::value('pledge_frequency_unit', $params);
 
     if ($freqUnits && is_array($freqUnits)) {
@@ -166,7 +161,6 @@ class CRM_Pledge_BAO_PledgeBlock extends CRM_Pledge_DAO_PledgeBlock {
   function deletePledgeBlock($id) {
     CRM_Utils_Hook::pre('delete', 'PledgeBlock', $id, CRM_Core_DAO::$_nullArray);
 
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
     $results = NULL;
@@ -219,7 +213,6 @@ class CRM_Pledge_BAO_PledgeBlock extends CRM_Pledge_DAO_PledgeBlock {
         $form->_values['pledge_id'], $allPayments, $returnProperties
       );
       //get all status
-      require_once 'CRM/Contribute/PseudoConstant.php';
       $allStatus = CRM_Contribute_PseudoConstant::contributionStatus(NULL, 'name');
 
       $nextPayment     = array();

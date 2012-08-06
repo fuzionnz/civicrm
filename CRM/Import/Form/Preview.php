@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Import/Parser/Contact.php';
 
 /**
  * This class previews the uploaded file and returns summary
@@ -278,7 +275,6 @@ class CRM_Import_Form_Preview extends CRM_Core_Form {
     );
 
     $tableName = $this->get('importTableName');
-    require_once 'CRM/Import/ImportJob.php';
     $importJob = new CRM_Import_ImportJob($tableName);
     $importJob->setJobParams($importJobParams);
 
@@ -286,7 +282,6 @@ class CRM_Import_Form_Preview extends CRM_Core_Form {
     if (!CRM_Core_Permission::check('view all contacts')) {
       $session = CRM_Core_Session::singleton();
       $userID = $session->get('userID');
-      require_once 'CRM/ACL/BAO/Cache.php';
       CRM_ACL_BAO_Cache::updateEntry($userID);
     }
 
@@ -299,7 +294,6 @@ class CRM_Import_Form_Preview extends CRM_Core_Form {
     }
 
     // clear all caches
-    require_once 'CRM/Contact/BAO/Contact/Utils.php';
     CRM_Contact_BAO_Contact_Utils::clearContactCaches();
 
     // add all the necessary variables to the form
@@ -532,7 +526,6 @@ class CRM_Import_Form_Preview extends CRM_Core_Form {
         'description' => $newTagDesc,
         'is_active' => TRUE,
       );
-      require_once 'CRM/Core/BAO/Tag.php';
       $id                 = array();
       $addedTag           = CRM_Core_BAO_Tag::add($tagParams, $id);
       $tag[$addedTag->id] = 1;
@@ -542,7 +535,6 @@ class CRM_Import_Form_Preview extends CRM_Core_Form {
     if (is_array($tag)) {
 
       $tagAdditions = array();
-      require_once "CRM/Core/BAO/EntityTag.php";
       foreach ($tag as $tagId => $val) {
         $addTagCount = CRM_Core_BAO_EntityTag::addContactsToTag($contactIds, $tagId);
         if (!empty($relatedContactIds)) {

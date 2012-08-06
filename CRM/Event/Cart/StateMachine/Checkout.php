@@ -3,7 +3,6 @@ class CRM_Event_Cart_StateMachine_Checkout extends CRM_Core_StateMachine {
   function __construct($controller, $action = CRM_Core_Action::NONE) {
     parent::__construct($controller, $action);
 
-    require_once 'CRM/Event/Cart/BAO/Cart.php';
     $cart = CRM_Event_Cart_BAO_Cart::find_or_create_for_current_session();
     $cart->load_associations();
     if ($cart->is_empty()) {

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Admin/Form/Preferences.php';
 
 /**
  * This class generates form components for Address Section
@@ -43,7 +41,6 @@ class CRM_Admin_Form_Preferences_Address extends CRM_Admin_Form_Preferences {
 
     CRM_Utils_System::setTitle(ts('Settings - Addresses'));
 
-    require_once 'CRM/Core/BAO/Setting.php';
 
     $this->_varNames = array(
       CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME =>
@@ -152,6 +149,20 @@ class CRM_Admin_Form_Preferences_Address extends CRM_Admin_Form_Preferences {
 
     $this->addFormRule(array('CRM_Admin_Form_Preferences_Address', 'formRule'));
 
+    //get the tokens for Mailing Label field
+    $tokens = CRM_Core_SelectValues::contactTokens();
+    natcasesort($tokens);
+    $this->assign('tokens', json_encode($tokens));
+
+    $this->add('select', 'token1', ts('Insert Token'),
+      $tokens, FALSE,
+      array(
+        'size' => "5",
+        'multiple' => TRUE,
+        'onclick' => "return tokenReplText(this);",
+      )
+    );
+
     parent::buildQuickForm();
   }
 
@@ -211,7 +222,6 @@ FROM   civicrm_county
             global $civicrm_root;
             $sqlFilePath = $civicrm_root . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'counties.US.sql.gz';
 
-            require_once 'CRM/Core/Session.php';
             CRM_Core_Session::setStatus(ts('You have enabled the County option. Please ensure you populate the county table in your CiviCRM Database. You can find a list of US counties (in gzip format) in your distribution at: <em>%1</em>',
                 array(1 => $sqlFilePath)
               ));

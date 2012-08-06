@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Case/BAO/Case.php';
 
 /**
  * This class assigns the current case to another client
@@ -54,7 +51,6 @@ class CRM_Case_Form_EditClient extends CRM_Core_Form {
     $context          = CRM_Utils_Request::retrieve('context', 'String', $this);
 
     //get current client name.
-    require_once 'CRM/Contact/BAO/Contact.php';
     $this->assign('currentClientName', CRM_Contact_BAO_Contact::displayName($this->_contactId));
 
     //set the context.
@@ -62,7 +58,6 @@ class CRM_Case_Form_EditClient extends CRM_Core_Form {
     if ($context == 'search') {
       $qfKey = CRM_Utils_Request::retrieve('key', 'String', $this);
       //validate the qfKey
-      require_once 'CRM/Utils/Rule.php';
       $urlParams = 'force=1';
       if (CRM_Utils_Rule::qfKey($qfKey)) {
         $urlParams .= "&qfKey=$qfKey";

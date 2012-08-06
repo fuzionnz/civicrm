@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -227,7 +227,6 @@ class CRM_Utils_Mail_Incoming {
   }
 
   function parseMailingObject(&$mail) {
-    require_once 'CRM/Core/Config.php';
 
     $config = CRM_Core_Config::singleton();
 
@@ -260,7 +259,6 @@ class CRM_Utils_Mail_Incoming {
 
     // format and move attachments to the civicrm area
     if (!empty($attachments)) {
-      require_once 'CRM/Utils/File.php';
       $date = date('Ymdhis');
       $config = CRM_Core_Config::singleton();
       for ($i = 0; $i < count($attachments); $i++) {
@@ -287,6 +285,11 @@ class CRM_Utils_Mail_Incoming {
   }
 
   function parseAddress(&$address, &$params, &$subParam, &$mail) {
+    // CRM-9484
+    if (empty($address->email)) {
+      return;
+    }
+
     $subParam['email'] = $address->email;
     $subParam['name'] = $address->name;
 
@@ -314,7 +317,6 @@ class CRM_Utils_Mail_Incoming {
    * create one with this email
    */
   function getContactID($email, $name = NULL, $create = TRUE, &$mail) {
-    require_once 'CRM/Contact/BAO/Contact.php';
     $dao = CRM_Contact_BAO_Contact::matchContactOnEmail($email, 'Individual');
 
     $contactID = NULL;
@@ -323,7 +325,6 @@ class CRM_Utils_Mail_Incoming {
     }
 
     $result = NULL;
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::emailProcessorContact($email, $contactID, $result);
 
     if (!empty($result)) {
@@ -352,7 +353,6 @@ class CRM_Utils_Mail_Incoming {
       'email-Primary' => $email,
     );
 
-    require_once 'CRM/Utils/String.php';
     CRM_Utils_String::extractName($name, $params);
 
     return CRM_Contact_BAO_Contact::createProfileContact($params,

@@ -1,7 +1,7 @@
 <?php
 /*
  +----------------------------------------------------------------------------+
- | Elavon (Nova) Virtual Merchant Core Payment Module for CiviCRM version 4.1 |
+ | Elavon (Nova) Virtual Merchant Core Payment Module for CiviCRM version 4.2 |
  +----------------------------------------------------------------------------+
  | Licensed to CiviCRM under the Academic Free License version 3.0            |
  |                                                                            |
@@ -23,9 +23,6 @@
 
  -----------------------------------------------------------------------------------------------
  **/
-
-
-require_once 'CRM/Core/Payment.php';
 class CRM_Core_Payment_Elavon extends CRM_Core_Payment {
   // (not used, implicit in the API, might need to convert?)
   CONST
@@ -186,8 +183,7 @@ class CRM_Core_Payment_Elavon extends CRM_Core_Payment {
     }
 
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-    // see - http://curl.haxx.se/docs/sslcerts.html
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'verifySSL'));
     // return the result on success, FALSE on failure
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_TIMEOUT, 36000);
@@ -309,7 +305,6 @@ class CRM_Core_Payment_Elavon extends CRM_Core_Payment {
    * @return bool                  True if ID exists, else false
    */
   function _checkDupe($invoiceId) {
-    require_once 'CRM/Contribute/DAO/Contribution.php';
     $contribution = new CRM_Contribute_DAO_Contribution();
     $contribution->invoice_id = $invoiceId;
     return $contribution->find();

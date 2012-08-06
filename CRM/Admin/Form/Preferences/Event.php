@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id: Display.php 36505 2011-10-03 14:19:56Z lobo $
  *
  */
-
-require_once 'CRM/Admin/Form/Preferences.php';
 
 /**
  * This class generates form components for the display preferences
@@ -42,6 +40,8 @@ require_once 'CRM/Admin/Form/Preferences.php';
 class CRM_Admin_Form_Preferences_Event extends CRM_Admin_Form_Preferences {
   function preProcess() {
     CRM_Utils_System::setTitle(ts('CiviEvent Component Settings'));
+    // pass "wiki" as 6th param to docURL2 if you are linking to a page in wiki.civicrm.org
+    $docLink = CRM_Utils_System::docURL2("CiviEvent Cart Checkout", NULL, NULL, NULL, NULL, "wiki");
     $this->_varNames = array(
       CRM_Core_BAO_Setting::EVENT_PREFERENCES_NAME =>
       array(
@@ -49,7 +49,8 @@ class CRM_Admin_Form_Preferences_Event extends CRM_Admin_Form_Preferences {
           'html_type' => 'checkbox',
           'title' => ts('Use Shopping Cart Style Event Registration'),
           'weight' => 1,
-          'description' => ts('This feature allows users to register for more than one event at a time. When enabled, users will add event(s) to a "cart" and then pay for them all at once. Enabling this setting will affect online registration for all active events. The code is an alpha state, and you will potentially need to have developer resources to debug and fix sections of the codebase while testing and deploying it.'),
+          'description' => ts('This feature allows users to register for more than one event at a time. When enabled, users will add event(s) to a "cart" and then pay for them all at once. Enabling this setting will affect online registration for all active events. The code is an alpha state, and you will potentially need to have developer resources to debug and fix sections of the codebase while testing and deploying it. %1',
+                              array(1 => $docLink)),
         ),
       ),
     );

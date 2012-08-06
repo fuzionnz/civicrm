@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Core/BAO/CustomField.php';
 
 /**
  * This class is to build the form for Deleting Group
@@ -64,7 +61,8 @@ class CRM_Custom_Form_ChangeFieldType extends CRM_Core_Form {
    *
    * @return void
    * @acess protected
-   */ function preProcess() {
+   */ 
+  function preProcess() {
     $this->_id = CRM_Utils_Request::retrieve('id', 'Positive',
       $this, TRUE
     );
@@ -190,7 +188,6 @@ class CRM_Custom_Form_ChangeFieldType extends CRM_Core_Form {
     $customField->save();
 
     // Reset cache for custom fields
-    require_once 'CRM/Core/BAO/Cache.php';
     CRM_Core_BAO_Cache::deleteGroup('contact fields');
 
     CRM_Core_Session::setStatus(ts('Input type of custom field \'%1\' has been successfully changed to \'%2\'.',
@@ -198,8 +195,7 @@ class CRM_Custom_Form_ChangeFieldType extends CRM_Core_Form {
       ));
   }
 
-  static
-  function fieldTypeTransitions($dataType, $htmlType) {
+  static function fieldTypeTransitions($dataType, $htmlType) {
     // Text field is single value field,
     // can not be change to other single value option which contains option group
     if ($htmlType == 'Text') {
@@ -297,8 +293,7 @@ class CRM_Custom_Form_ChangeFieldType extends CRM_Core_Form {
     }
   }
 
-  static
-  function explode($str) {
+  static function explode($str) {
     if (empty($str) || $str == CRM_Core_DAO::VALUE_SEPARATOR . CRM_Core_DAO::VALUE_SEPARATOR) {
       return array();
     }

@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +32,7 @@
  *
  * @package CiviCRM_APIv3
  * @subpackage API_Activity
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * @version $Id: Activity.php 30486 2010-11-02 16:12:09Z shot $
  *
  */
@@ -53,39 +55,13 @@ require_once 'CRM/Core/DAO/OptionGroup.php';
  *
  */
 function civicrm_api3_activity_create($params) {
-  if (CRM_Utils_Array::value('activity_id', $params)) {
-    $params['id'] = $params['activity_id'];
-  }
-
-  if (CRM_Utils_Array::value('id', $params) &&
-    !CRM_Utils_Array::value('source_contact_id', $params)
-  ) {
-    $oldActivityParams = array('id' => $params['id']);
-    CRM_Activity_BAO_Activity::retrieve($oldActivityParams, $oldActivityValues);
-    if ($oldActivityValues['source_contact_id']) {
-      $params['source_contact_id'] = $oldActivityValues['source_contact_id'];
-    }
-  }
-
-  if (!CRM_Utils_Array::value('source_contact_id',
-      $params
-    )) {
-    $session = CRM_Core_Session::singleton();
-    // sometimes this is not set, this happens for sure with tests
-    // since this gives an FK, adding a check
-    // also should we check if its an update and then skip the check?
-    if ($session->get('userID')) {
-      $params['source_contact_id'] = $session->get('userID');
-    }
-  }
 
   if (!CRM_Utils_Array::value('id', $params)) {
     // an update does not require any mandatory parameters
-    civicrm_api3_verify_mandatory($params,
+    civicrm_api3_verify_one_mandatory($params,
       NULL,
       array(
-        'source_contact_id',
-        array('activity_name', 'activity_type_id', 'activity_label'),
+        'activity_name', 'activity_type_id', 'activity_label',
       )
     );
   }
@@ -200,6 +176,10 @@ function civicrm_api3_activity_create($params) {
  */
 function _civicrm_api3_activity_create_spec(&$params) {
   $params['subject']['api.required'] = 1;
+
+  //default for source_contact_id = currently logged in user
+  $params['source_contact_id']['api.default'] = 'user_contact_id';
+
   $params['assignee_contact_id'] = array(
     'name' => 'assignee_id',
     'title' => 'assigned to',
@@ -217,6 +197,7 @@ function _civicrm_api3_activity_create_spec(&$params) {
     'title' => 'Status Id',
     'type' => 1,
   );
+  $params['priority_id']['pseudoconstant'] = 'priority';
 }
 
 /**
@@ -233,7 +214,6 @@ function _civicrm_api3_activity_create_spec(&$params) {
  * {@example ActivityGet.php 0}
  */
 function civicrm_api3_activity_get($params) {
-
   if (!empty($params['contact_id'])) {
     $activities = CRM_Activity_BAO_Activity::getContactActivity($params['contact_id']);
     //BAO function doesn't actually return a contact ID - hack api for now & add to test so when api re-write happens it won't get missed
@@ -335,7 +315,7 @@ SELECT  count(*)
   FROM  civicrm_contact
  WHERE  id IN (' . implode(', ', $contactIds) . ' )';
     if (count($contactIds) != CRM_Core_DAO::singleValueQuery($sql)) {
-      return civicrm_api3_create_error('Invalid ' . ucfirst($key) . ' Contact Id');
+      return civicrm_api3_create_error('Invalid ' .  ' Contact Id');
     }
   }
 
@@ -383,14 +363,6 @@ SELECT  count(*)
     return civicrm_api3_create_error('Invalid Activity Type ID');
   }
 
-
-  /*
-     * @todo unique name for status_id is activity status id - status id won't be supported in v4
-     */
-
-  if (!empty($params['status_id'])) {
-    $params['activity_status_id'] = $params['status_id'];
-  }
   // check for activity status is passed in
   if (isset($params['activity_status_id'])) {
     require_once "CRM/Core/PseudoConstant.php";
@@ -408,18 +380,7 @@ SELECT  count(*)
     }
   }
 
-  if (isset($params['priority_id'])) {
-    if (is_numeric($params['priority_id'])) {
-      require_once "CRM/Core/PseudoConstant.php";
-      $activityPriority = CRM_Core_PseudoConstant::priority();
-      if (!array_key_exists($params['priority_id'], $activityPriority)) {
-        return civicrm_api3_create_error('Invalid Priority');
-      }
-    }
-    else {
-      return civicrm_api3_create_error('Invalid Priority');
-    }
-  }
+
 
   // check for activity duration minutes
   if (isset($params['duration_minutes']) && !is_numeric($params['duration_minutes'])) {

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
- * $Id: Email.php 40475 2012-05-17 00:55:16Z allen $
+ * @copyright CiviCRM LLC (c) 2004-2012
+ * $Id: Email.php 41497 2012-07-11 06:31:17Z yashodha $
  *
  */
-
-require_once 'CRM/Member/Form/Task.php';
-require_once 'CRM/Contact/Form/Task/EmailCommon.php';
 
 /**
  * This class provides the functionality to email a group of
@@ -70,7 +67,8 @@ class CRM_Member_Form_Task_Email extends CRM_Member_Form_Task {
    *
    * @return void
    * @access public
-   */ function preProcess() {
+   */ 
+  function preProcess() {
     CRM_Contact_Form_Task_EmailCommon::preProcessFromAddress($this);
     parent::preProcess();
 

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 
 /**
  * form to process actions on the field aspect of Custom
@@ -138,7 +136,6 @@ class CRM_Custom_Form_Option extends CRM_Core_Form {
       $defaults['is_active'] = 1;
     }
 
-    require_once 'CRM/Core/DAO.php';
     if ($this->_action & CRM_Core_Action::ADD) {
       $fieldValues = array('option_group_id' => $this->_optionGroupID);
       $defaults['weight'] = CRM_Utils_Weight::getDefaultWeight('CRM_Core_DAO_OptionValue', $fieldValues);
@@ -244,8 +241,7 @@ class CRM_Custom_Form_Option extends CRM_Core_Form {
    * @static
    * @access public
    */
-  static
-  function formRule($fields, $files, $form) {
+  static function formRule($fields, $files, $form) {
     $optionLabel   = CRM_Utils_Type::escape($fields['label'], 'String');
     $optionValue   = CRM_Utils_Type::escape($fields['value'], 'String');
     $fieldId       = $form->_fid;
@@ -390,7 +386,6 @@ SELECT count(*)
    * @return void
    * @access public
    */
-
   public function postProcess() {
     // store the submitted values in an array
     $params = $this->controller->exportValues('Option');
@@ -404,8 +399,6 @@ SELECT count(*)
     }
 
     // set values for custom field properties and save
-    require_once 'CRM/Core/DAO/OptionValue.php';
-    require_once 'CRM/Utils/String.php';
     $customOption = new CRM_Core_DAO_OptionValue();
     $customOption->label = $params['label'];
     $customOption->name = CRM_Utils_String::titleToVar($params['label']);
@@ -463,7 +456,6 @@ SELECT count(*)
     else {
       switch ($customField->data_type) {
         case 'Money':
-          require_once 'CRM/Utils/Rule.php';
           $customOption->value = CRM_Utils_Rule::cleanMoney($customOption->value);
           break;
 

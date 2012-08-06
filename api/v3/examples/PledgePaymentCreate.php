@@ -30,10 +30,10 @@ function pledge_payment_create_expectedresult(){
   'is_error' => 0,
   'version' => 3,
   'count' => 1,
-  'id' => 16,
+  'id' => 1,
   'values' => array( 
-      '16' => array( 
-          'id' => '16',
+      '1' => array( 
+          'id' => '1',
           'pledge_id' => 1,
           'contribution_id' => 1,
           'scheduled_amount' => '',

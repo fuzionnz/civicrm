@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -59,6 +59,14 @@
         </td>
         <td>
             {$form.enableSSL.html} {help id='id-enable_ssl'}
+        </td>
+    </tr>
+    <tr class="crm-url-form-block-verifySSL">
+        <td class="label">
+            {$form.verifySSL.label}
+        </td>
+        <td>
+            {$form.verifySSL.html} {help id='id-verify_ssl'}
         </td>
     </tr>
 </table>

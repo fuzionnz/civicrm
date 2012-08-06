@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Admin/Form.php';
 
 /**
  * This class generates form components for Option Value
@@ -58,7 +56,6 @@ class CRM_Admin_Form_OptionValue extends CRM_Admin_Form {
    */
   public function preProcess() {
     parent::preProcess();
-    require_once 'CRM/Utils/Request.php';
     $this->_gid = CRM_Utils_Request::retrieve('gid', 'Positive',
       $this, FALSE, 0
     );
@@ -66,14 +63,12 @@ class CRM_Admin_Form_OptionValue extends CRM_Admin_Form {
     if (!empty($this->_gid)) {
       $this->_gName = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionGroup', $this->_gid, 'name');
     }
-    require_once 'CRM/Core/Session.php';
     $session = CRM_Core_Session::singleton();
     $url = CRM_Utils_System::url('civicrm/admin/optionValue', 'reset=1&action=browse&gid=' . $this->_gid);
     $session->replaceUserContext($url);
 
     $this->assign('id', $this->_id);
 
-    require_once 'CRM/Core/OptionGroup.php';
     if ($this->_id && in_array($this->_gName, CRM_Core_OptionGroup::$_domainIDGroups)) {
       $domainID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionValue', $this->_id, 'domain_id', 'id');
       if (CRM_Core_Config::domainID() != $domainID) {
@@ -160,6 +155,11 @@ class CRM_Admin_Form_OptionValue extends CRM_Admin_Form {
     $this->add('checkbox', 'is_default', ts('Default Option?'));
     $this->add('checkbox', 'is_optgroup', ts('Is OptGroup?'));
 
+    // CRM-9953
+    // we dont display this in the template, but the form sets the default values which are then saved
+    // this allow us to retain the previous values
+    $this->add('text', 'filter', ts('Filter'));
+
     if ($this->_action & CRM_Core_Action::UPDATE && $isReserved) {
       $this->freeze(array('name', 'description', 'is_active'));
     }
@@ -211,7 +211,6 @@ class CRM_Admin_Form_OptionValue extends CRM_Admin_Form {
 
     //don't allow duplicate value within group.
     $optionValues = array();
-    require_once 'CRM/Core/OptionValue.php';
     CRM_Core_OptionValue::getValues(array('id' => $self->_gid), $optionValues);
     foreach ($optionValues as $values) {
       if ($values['id'] != $self->_id) {
@@ -236,7 +235,6 @@ class CRM_Admin_Form_OptionValue extends CRM_Admin_Form {
     CRM_Utils_System::flushCache();
 
     $params = $this->exportValues();
-    require_once 'CRM/Core/BAO/OptionValue.php';
     if ($this->_action & CRM_Core_Action::DELETE) {
       CRM_Core_BAO_OptionValue::del($this->_id);
       CRM_Core_Session::setStatus(ts('Selected option value has been deleted.'));

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -27,8 +27,6 @@
 
 
 require_once "PEAR.php";
-
-require_once "CRM/Core/Error.php";
 class CRM_Core_Session {
 
   /**
@@ -262,7 +260,6 @@ class CRM_Core_Session {
       $values = &$this->_session[$this->_key];
     }
     else {
-      require_once 'CRM/Core/BAO/Cache.php';
       $values = CRM_Core_BAO_Cache::getItem('CiviCRM Session', "CiviCRM_{$prefix}");
     }
 
@@ -452,7 +449,6 @@ class CRM_Core_Session {
       self::$_managedNames = array_merge(self::$_managedNames, $names);
     }
 
-    require_once 'CRM/Core/BAO/Cache.php';
     CRM_Core_BAO_Cache::restoreSessionFromCache($names);
   }
 
@@ -462,8 +458,8 @@ class CRM_Core_Session {
       return;
     }
 
-    self::$_managedNames = array_unique(self::$_managedNames);
-    require_once 'CRM/Core/BAO/Cache.php';
+    self::$_managedNames = CRM_Utils_Array::crmArrayUnique(self::$_managedNames);
+
     CRM_Core_BAO_Cache::storeSessionToCache(self::$_managedNames, $reset);
 
     self::$_managedNames = NULL;

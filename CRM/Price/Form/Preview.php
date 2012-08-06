@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,15 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-//require_once 'CRM/Price/BAO/Set.php';
-//
-//require_once 'CRM/Core/BAO/CustomOption.php';
 
 /**
  * This class generates form components for previewing custom data
@@ -70,7 +65,6 @@ class CRM_Price_Form_Preview extends CRM_Core_Form {
     $fieldId = $this->get('fieldId');
 
     if ($fieldId) {
-      require_once 'CRM/Price/BAO/Set.php';
       $groupTree = CRM_Price_BAO_Set::getSetDetail($groupId);
       $this->_groupTree[$groupId]['fields'][$fieldId] = $groupTree[$groupId]['fields'][$fieldId];
       $this->assign('preview_type', 'field');
@@ -81,7 +75,6 @@ class CRM_Price_Form_Preview extends CRM_Core_Form {
     }
     else {
       // group preview
-      require_once 'CRM/Price/BAO/Set.php';
       $this->_groupTree = CRM_Price_BAO_Set::getSetDetail($groupId);
       $this->assign('preview_type', 'group');
       $this->assign('setTitle', CRM_Price_BAO_Set::getTitle($groupId));
@@ -134,7 +127,6 @@ class CRM_Price_Form_Preview extends CRM_Core_Form {
     $this->assign('groupTree', $this->_groupTree);
 
     // add the form elements
-    require_once 'CRM/Price/BAO/Field.php';
 
     foreach ($this->_groupTree as $group) {
       if (is_array($group['fields']) && !empty($group['fields'])) {

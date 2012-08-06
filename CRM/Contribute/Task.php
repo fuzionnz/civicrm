@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -103,6 +103,10 @@ class CRM_Contribute_Task {
           'class' => 'CRM_Contribute_Form_Task_PDF',
           'result' => FALSE,
         ),
+        8 => array('title' => ts('Send PDF Letter for Contributions'),
+          'class' => 'CRM_Contribute_Form_Task_PDFLetter',
+          'result' => FALSE,
+        ),
       );
 
       //CRM-4418, check for delete
@@ -110,7 +114,6 @@ class CRM_Contribute_Task {
         unset(self::$_tasks[1]);
       }
 
-      require_once 'CRM/Utils/Hook.php';
       CRM_Utils_Hook::searchTasks('contribution', self::$_tasks);
       asort(self::$_tasks);
     }

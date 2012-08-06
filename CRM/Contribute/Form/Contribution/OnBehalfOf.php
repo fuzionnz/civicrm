@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-require_once 'CRM/Contact/BAO/Relationship.php';
-require_once 'CRM/Core/BAO/UFGroup.php';
-require_once 'CRM/Member/BAO/Membership.php';
 class CRM_Contribute_Form_Contribution_OnBehalfOf {
 
   /**
@@ -47,7 +44,6 @@ class CRM_Contribute_Form_Contribution_OnBehalfOf {
     $session = CRM_Core_Session::singleton();
     $contactID = $session->get('userID');
 
-    require_once 'CRM/Core/BAO/UFJoin.php';
     $ufJoinParams = array(
       'module' => 'onBehalf',
       'entity_table' => 'civicrm_contribution_page',
@@ -134,7 +130,10 @@ class CRM_Contribute_Form_Contribution_OnBehalfOf {
       NULL, FALSE, NULL, FALSE, NULL,
       CRM_Core_Permission::CREATE, NULL
     );
-    $fieldTypes = array('Contact', 'Organization');
+    $fieldTypes     = array('Contact', 'Organization');
+    $contactSubType = CRM_Contact_BAO_ContactType::subTypes('Organization');
+    $fieldTypes     = array_merge($fieldTypes, $contactSubType);
+
     if (is_array($form->_membershipBlock) && !empty($form->_membershipBlock)) {
       $fieldTypes = array_merge($fieldTypes, array('Membership'));
     }
@@ -151,7 +150,8 @@ class CRM_Contribute_Form_Contribution_OnBehalfOf {
           if (!array_key_exists($index, $stateCountryMap)) {
             $stateCountryMap[$index] = array();
           }
-          $stateCountryMap[$index][$prefixName] = 'onbehalf_' . $name;
+
+          $stateCountryMap[$index][$prefixName] = 'onbehalf[' . $name . ']';
         }
         elseif (in_array($prefixName, array(
           'organization_name', 'email')) &&
@@ -165,8 +165,10 @@ class CRM_Contribute_Form_Contribution_OnBehalfOf {
     }
 
     if (!empty($stateCountryMap)) {
-      require_once 'CRM/Core/BAO/Address.php';
       CRM_Core_BAO_Address::addStateCountryMap($stateCountryMap);
+
+      // now fix all state country selectors
+      CRM_Core_BAO_Address::fixAllStateSelects($form, CRM_Core_DAO::$_nullArray);
     }
 
     $form->assign('onBehalfOfFields', $profileFields);

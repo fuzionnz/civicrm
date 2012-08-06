@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,20 +28,16 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Payment/BaseIPN.php';
-require_once 'CRM/Core/Payment.php';
 class CRM_Core_Payment_AuthorizeNetIPN extends CRM_Core_Payment_BaseIPN {
   function __construct() {
     parent::__construct();
   }
 
   function main($component = 'contribute') {
-    require_once 'CRM/Utils/Request.php';
 
     //we only get invoice num as a key player from payment gateway response.
     //for ARB we get x_subscription_id and x_subscription_paynum
@@ -49,7 +45,6 @@ class CRM_Core_Payment_AuthorizeNetIPN extends CRM_Core_Payment_BaseIPN {
 
     if ($x_subscription_id) {
       //Approved
-      CRM_Core_Error::debug_var('$_POST', $_POST);
 
       $ids = $objects = array();
       $input['component'] = $component;
@@ -60,10 +55,11 @@ class CRM_Core_Payment_AuthorizeNetIPN extends CRM_Core_Payment_BaseIPN {
       // load post ids in $ids
       $this->getIDs($ids, $input);
 
-      CRM_Core_Error::debug_var('$ids', $ids);
-      CRM_Core_Error::debug_var('$input', $input);
+      $paymentProcessorID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_PaymentProcessorType',
+        'AuthNet', 'id', 'name'
+      );
 
-      if (!$this->validateData($input, $ids, $objects)) {
+      if (!$this->validateData($input, $ids, $objects, TRUE, $paymentProcessorID)) {
         return FALSE;
       }
 
@@ -96,10 +92,8 @@ class CRM_Core_Payment_AuthorizeNetIPN extends CRM_Core_Payment_BaseIPN {
       return FALSE;
     }
 
-    require_once 'CRM/Contribute/PseudoConstant.php';
     $contributionStatus = CRM_Contribute_PseudoConstant::contributionStatus(NULL, 'name');
 
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
     $now = date('YmdHis');
@@ -115,7 +109,7 @@ class CRM_Core_Payment_AuthorizeNetIPN extends CRM_Core_Payment_BaseIPN {
     //load new contribution object if required.
     if (!$first) {
       // create a contribution and then get it processed
-      $contribution = new CRM_Contribute_DAO_Contribution();
+      $contribution = new CRM_Contribute_BAO_Contribution();
       $contribution->contact_id = $ids['contact'];
       $contribution->contribution_type_id = $objects['contributionType']->id;
       $contribution->contribution_page_id = $ids['contributionPage'];
@@ -135,11 +129,14 @@ class CRM_Core_Payment_AuthorizeNetIPN extends CRM_Core_Payment_BaseIPN {
     // check and validate gateway MD5 response if present
     $this->checkMD5($ids, $input);
 
+    $sendNotification = FALSE;
     if ($input['response_code'] == 1) {
       // Approved
       if ($first) {
         $recur->start_date = $now;
         $recur->trxn_id = $recur->processor_id;
+        $sendNotification = TRUE;
+        $subscriptionPaymentStatus = CRM_Core_Payment::RECURRING_PAYMENT_START;
       }
       $statusName = 'In Progress';
       if (($recur->installments > 0) &&
@@ -148,6 +145,8 @@ class CRM_Core_Payment_AuthorizeNetIPN extends CRM_Core_Payment_BaseIPN {
         // this is the last payment
         $statusName = 'Completed';
         $recur->end_date = $now;
+        $sendNotification = TRUE;
+        $subscriptionPaymentStatus = CRM_Core_Payment::RECURRING_PAYMENT_END;
       }
       $recur->modified_date = $now;
       $recur->contribution_status_id = array_search($statusName, $contributionStatus);
@@ -177,8 +176,24 @@ class CRM_Core_Payment_AuthorizeNetIPN extends CRM_Core_Payment_BaseIPN {
       return TRUE;
     }
 
-
     $this->completeTransaction($input, $ids, $objects, $transaction, $recur);
+
+    if ($sendNotification) {
+      $autoRenewMembership = FALSE;
+      if ($recur->id &&
+        isset($ids['membership']) && $ids['membership']
+      ) {
+        $autoRenewMembership = TRUE;
+      }
+
+      //send recurring Notification email for user
+      CRM_Contribute_BAO_ContributionPage::recurringNotify($subscriptionPaymentStatus,
+        $ids['contact'],
+        $ids['contributionPage'],
+        $recur,
+        $autoRenewMembership
+      );
+    }
   }
 
   function getInput(&$input, &$ids) {
@@ -225,11 +240,11 @@ class CRM_Core_Payment_AuthorizeNetIPN extends CRM_Core_Payment_BaseIPN {
 
     // joining with contribution table for extra checks
     $sql = "
-    SELECT cr.id 
+    SELECT cr.id
       FROM civicrm_contribution_recur cr
 INNER JOIN civicrm_contribution co ON co.contribution_recur_id = cr.id
-     WHERE cr.processor_id = '{$input['subscription_id']}' AND 
-           cr.contact_id = {$ids['contact']} AND co.id = {$ids['contribution']}
+     WHERE cr.processor_id = '{$input['subscription_id']}' AND
+           (cr.contact_id = {$ids['contact']} OR co.id = {$ids['contribution']})
      LIMIT 1";
     $ids['contributionRecur'] = CRM_Core_DAO::singleValueQuery($sql);
     if (!$ids['contributionRecur']) {
@@ -252,7 +267,7 @@ INNER JOIN civicrm_contribution co ON co.contribution_recur_id = cr.id
 
       // Get membershipId. Join with membership payment table for additional checks
       $sql = "
-    SELECT m.id 
+    SELECT m.id
       FROM civicrm_membership m
 INNER JOIN civicrm_membership_payment mp ON m.id = mp.membership_id AND mp.contribution_id = {$ids['contribution']}
      WHERE m.contribution_recur_id = {$ids['contributionRecur']}

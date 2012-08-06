@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,9 +32,6 @@
    * Grateful acknowledgements go to Donald Lobo for invaluable assistance
    * in creating this payment processor module
    */
-
-
-require_once 'CRM/Core/Payment/BaseIPN.php';
 class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
 
   /**
@@ -130,7 +127,11 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
     }
     $ids['contributionRecur'] = $ids['contributionPage'] = NULL;
 
-    if (!$this->validateData($input, $ids, $objects)) {
+    $paymentProcessorID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_PaymentProcessorType',
+      'PayPal_Express', 'id', 'name'
+    );
+
+    if (!$this->validateData($input, $ids, $objects, TRUE, $paymentProcessorID)) {
       return FALSE;
     }
 
@@ -158,7 +159,6 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
       return;
     }
 
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
     // fix for CRM-2842
@@ -174,7 +174,7 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
       return TRUE;
     }
     else {
-      /* Since trxn_id hasn't got any use here, 
+      /* Since trxn_id hasn't got any use here,
              * lets make use of it by passing the eventID/membershipTypeID to next level.
              * And change trxn_id to the payment processor reference before finishing db update */
 
@@ -202,7 +202,6 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
    */
   static
   function getContext($privateData, $orderNo) {
-    require_once 'CRM/Contribute/DAO/Contribution.php';
 
     $component = NULL;
     $isTest = NULL;
@@ -256,7 +255,6 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
 
       // we are in event mode
       // make sure event exists and is valid
-      require_once 'CRM/Event/DAO/Event.php';
       $event = new CRM_Event_DAO_Event();
       $event->id = $eventID;
       if (!$event->find(TRUE)) {
@@ -299,7 +297,6 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
     }
 
     if ($dps_method == "pxpay") {
-      require_once 'CRM/Core/Payment/PaymentExpressUtils.php';
       $processResponse = _valueXml(array(
           'PxPayUserId' => $dps_user,
           'PxPayKey' => $dps_key,
@@ -390,7 +387,6 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
     $mode = $mode ? 'test' : 'live';
 
 
-    require_once 'CRM/Core/BAO/PaymentProcessor.php';
     $paymentProcessor = CRM_Core_BAO_PaymentProcessor::getPayment($paymentProcessorID,
       $mode
     );

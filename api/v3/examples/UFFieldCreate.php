@@ -33,10 +33,10 @@ function uf_field_create_expectedresult(){
   'is_error' => 0,
   'version' => 3,
   'count' => 1,
-  'id' => 43,
+  'id' => 65,
   'values' => array( 
-      '43' => array( 
-          'id' => 43,
+      '65' => array( 
+          'id' => 65,
           'uf_group_id' => 11,
           'field_name' => 'country',
           'is_active' => 1,

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 
 /**
  * This class generates form components for Location Type
@@ -88,7 +86,6 @@ class CRM_Admin_Form_Preferences extends CRM_Core_Form {
       $this->_config->contact_id = $this->_contactID;
     }
 
-    require_once 'CRM/Core/BAO/Setting.php';
     foreach ($this->_varNames as $groupName => $settingNames) {
       $values = CRM_Core_BAO_Setting::getItem($groupName);
       foreach ($values as $name => $value) {
@@ -102,8 +99,8 @@ class CRM_Admin_Form_Preferences extends CRM_Core_Form {
     $defaults = array();
 
     foreach ($this->_varNames as $groupName => $settings) {
-      foreach ($settings as $settingName => $dontcare) {
-        $defaults[$settingName] = isset($this->_config->$settingName) ? $this->_config->$settingName : NULL;
+      foreach ($settings as $settingName => $settingDetails) {
+        $defaults[$settingName] = isset($this->_config->$settingName) ? $this->_config->$settingName : CRM_Utils_Array::value('default', $settingDetails, NULL);
       }
     }
 
@@ -111,7 +108,6 @@ class CRM_Admin_Form_Preferences extends CRM_Core_Form {
   }
 
   function cbsDefaultValues(&$defaults) {
-    require_once 'CRM/Core/BAO/CustomOption.php';
 
     foreach ($this->_varNames as $groupName => $groupValues) {
       foreach ($groupValues as $settingName => $fieldValue) {
@@ -143,9 +139,6 @@ class CRM_Admin_Form_Preferences extends CRM_Core_Form {
   public function buildQuickForm() {
     parent::buildQuickForm();
 
-    require_once 'CRM/Core/OptionGroup.php';
-    require_once 'CRM/Utils/String.php';
-    require_once 'CRM/Utils/Array.php';
 
     if (!empty($this->_varNames)) {
       foreach ($this->_varNames as $groupName => $groupValues) {

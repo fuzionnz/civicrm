@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 
 /**
  * Create a page for displaying Custom Sets.
@@ -59,7 +57,8 @@ class CRM_Custom_Page_Group extends CRM_Core_Page {
    *
    * @return  array   array of action links that we need to display for the browse screen
    * @access public
-   */ function &actionLinks() {
+   */ 
+  function &actionLinks() {
     // check if variable _actionsLinks is populated
     if (!isset(self::$_actionLinks)) {
       self::$_actionLinks = array(
@@ -150,8 +149,6 @@ class CRM_Custom_Page_Group extends CRM_Core_Page {
       $this->preview($id);
     }
     else {
-      require_once 'CRM/Core/BAO/CustomGroup.php';
-      require_once 'CRM/Core/BAO/UFField.php';
       // finally browse the custom groups
       $this->browse();
     }
@@ -242,16 +239,12 @@ class CRM_Custom_Page_Group extends CRM_Core_Page {
 
     //fix for Displaying subTypes
     $subTypes = array();
-    require_once "CRM/Contribute/PseudoConstant.php";
-    require_once "CRM/Member/BAO/MembershipType.php";
-    require_once "CRM/Event/PseudoConstant.php";
-    require_once 'CRM/Contact/BAO/ContactType.php';
-    require_once 'CRM/Campaign/PseudoConstant.php';
 
     $subTypes['Activity'] = CRM_Core_PseudoConstant::activityType(FALSE, TRUE, FALSE, 'label', TRUE);
     $subTypes['Contribution'] = CRM_Contribute_PseudoConstant::contributionType();
     $subTypes['Membership'] = CRM_Member_BAO_MembershipType::getMembershipTypes(FALSE);
     $subTypes['Event'] = CRM_Core_OptionGroup::values('event_type');
+    $subTypes['Grant'] = CRM_Core_OptionGroup::values('grant_type');
     $subTypes['Campaign'] = CRM_Campaign_PseudoConstant::campaignType();
     $subTypes['Participant'] = array();
     $subTypes['ParticipantRole'] = CRM_Core_OptionGroup::values('participant_role');;
@@ -261,7 +254,6 @@ class CRM_Custom_Page_Group extends CRM_Core_Page {
     $subTypes['Household'] = CRM_Contact_BAO_ContactType::subTypePairs('Household', FALSE, NULL);
     $subTypes['Organization'] = CRM_Contact_BAO_ContactType::subTypePairs('Organization', FALSE, NULL);
 
-    require_once "CRM/Contact/BAO/Relationship.php";
 
     $relTypeInd = CRM_Contact_BAO_Relationship::getContactRelationshipType(NULL, 'null', NULL, 'Individual');
     $relTypeOrg = CRM_Contact_BAO_Relationship::getContactRelationshipType(NULL, 'null', NULL, 'Organization');
@@ -282,7 +274,6 @@ class CRM_Custom_Page_Group extends CRM_Core_Page {
 
     $subTypes['Relationship'] = $allRelationshipType;
 
-    require_once "CRM/Core/Component.php";
     $cSubTypes = CRM_Core_Component::contactSubTypes();
     $contactSubTypes = array();
     foreach ($cSubTypes as $key => $value) {
@@ -336,7 +327,6 @@ class CRM_Custom_Page_Group extends CRM_Core_Page {
     }
 
     $returnURL = CRM_Utils_System::url('civicrm/admin/custom/group', "reset=1&action=browse");
-    require_once 'CRM/Utils/Weight.php';
     CRM_Utils_Weight::addOrder($customGroup, 'CRM_Core_DAO_CustomGroup',
       'id', $returnURL
     );

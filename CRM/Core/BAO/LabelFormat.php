@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | Copyright (C) 2011 Marty Wright                                    |
  | Licensed to CiviCRM under the Academic Free License version 3.0.   |
@@ -29,13 +29,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/OptionGroup.php';
-require_once 'CRM/Core/DAO/OptionValue.php';
 
 /**
  * This class contains functions for managing Label Formats
@@ -180,7 +177,6 @@ class CRM_Core_BAO_LabelFormat extends CRM_Core_DAO_OptionValue {
    * @access public
    */
   function getFontNames() {
-    require_once 'CRM/Utils/PDF/Label.php';
     $label = new CRM_Utils_PDF_Label(self::getDefaultValues());
     return $label->getFontNames();
   }
@@ -254,8 +250,7 @@ class CRM_Core_BAO_LabelFormat extends CRM_Core_DAO_OptionValue {
    * @access public
    */
   static
-  function &addOrder(&$list, $returnURL) {
-    require_once 'CRM/Utils/Weight.php';
+  function addOrder(&$list, $returnURL) {
     $filter = "option_group_id = " . self::_getGid();
     CRM_Utils_Weight::addOrder($list, 'CRM_Core_DAO_OptionValue', 'id', $returnURL, $filter);
   }
@@ -308,7 +303,6 @@ class CRM_Core_BAO_LabelFormat extends CRM_Core_DAO_OptionValue {
       foreach (self::$optionValueFields as $name => $field) {
         $defaults[$name] = $field['default'];
       }
-      require_once 'CRM/Utils/Weight.php';
       $filter = array('option_group_id' => self::_getGid());
       $defaults['weight'] = CRM_Utils_Weight::getDefaultWeight('CRM_Core_DAO_OptionValue', $filter);
     }
@@ -418,7 +412,6 @@ class CRM_Core_BAO_LabelFormat extends CRM_Core_DAO_OptionValue {
         if (!isset($values[$name])) {
           $values[$name] = $field['default'];
           if ($field['metric']) {
-            require_once "CRM/Utils/PDF/Utils.php";
             $values[$name] = CRM_Utils_PDF_Utils::convertMetric($field['default'],
               self::$optionValueFields['metric']['default'],
               $values['metric'], 3
@@ -504,7 +497,6 @@ class CRM_Core_BAO_LabelFormat extends CRM_Core_DAO_OptionValue {
     $this->save();
 
     // fix duplicate weights
-    require_once 'CRM/Utils/Weight.php';
     $filter = array('option_group_id' => self::_getGid());
     CRM_Utils_Weight::correctDuplicateWeights('CRM_Core_DAO_OptionValue', $filter);
   }
@@ -524,7 +516,6 @@ class CRM_Core_BAO_LabelFormat extends CRM_Core_DAO_OptionValue {
       $dao->id = $id;
       if ($dao->find(TRUE)) {
         if ($dao->option_group_id == self::_getGid()) {
-          require_once 'CRM/Utils/Weight.php';
           $filter = array('option_group_id' => self::_getGid());
           CRM_Utils_Weight::delWeight('CRM_Core_DAO_OptionValue', $id, $filter);
           $dao->delete();

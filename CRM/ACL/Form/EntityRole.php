@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,17 +30,15 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
-require_once 'CRM/Admin/Form.php';
-
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -59,14 +59,12 @@ class CRM_ACL_Form_EntityRole extends CRM_Admin_Form {
 
     $attributes = CRM_Core_DAO::getAttribute('CRM_ACL_DAO_EntityRole');
 
-    require_once 'CRM/Core/OptionGroup.php';
     $aclRoles = array('' => ts('- select -')) + CRM_Core_OptionGroup::values('acl_role');
     $this->add('select', 'acl_role_id', ts('ACL Role'),
       $aclRoles, TRUE
     );
 
 
-    require_once 'CRM/ACL/BAO/EntityRole.php';
 
     $label = ts('Assigned To');
     $group = array('' => ts('- select group -')) + CRM_Core_PseudoConstant::staticGroup(FALSE, 'Access');
@@ -83,8 +81,6 @@ class CRM_ACL_Form_EntityRole extends CRM_Admin_Form {
    * @return None
    */
   public function postProcess() {
-    require_once 'CRM/ACL/BAO/EntityRole.php';
-    require_once 'CRM/ACL/BAO/Cache.php';
     CRM_ACL_BAO_Cache::resetCache();
 
     if ($this->_action & CRM_Core_Action::DELETE) {

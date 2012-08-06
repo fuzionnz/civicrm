@@ -1,9 +1,9 @@
 <?php
 /*
   +--------------------------------------------------------------------+
-  | CiviCRM version 4.1                                                |
+  | CiviCRM version 4.2                                                |
   +--------------------------------------------------------------------+
-  | Copyright CiviCRM LLC (c) 2004-2011                                |
+  | Copyright CiviCRM LLC (c) 2004-2012                                |
   +--------------------------------------------------------------------+
   | This file is a part of CiviCRM.                                    |
   |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Mailing/BAO/Mailing.php';
 
 /**
  *
@@ -48,7 +45,6 @@ class CRM_Mailing_Form_Schedule extends CRM_Core_Form {
    * @access public
    */
   public function preProcess() {
-    require_once 'CRM/Mailing/Info.php';
     if (CRM_Mailing_Info::workflowEnabled() &&
       !CRM_Core_Permission::check('schedule mailings')
     ) {
@@ -57,9 +53,15 @@ class CRM_Mailing_Form_Schedule extends CRM_Core_Form {
     }
 
     //when user come from search context.
-    require_once 'CRM/Contact/Form/Search.php';
+    $ssID = $this->get('ssID');
+    $this->assign('ssid',$ssID);
     $this->_searchBasedMailing = CRM_Contact_Form_Search::isSearchContext($this->get('context'));
-
+    if(CRM_Contact_Form_Search::isSearchContext($this->get('context')) && !$ssID){
+      $params = array();
+      $value = CRM_Core_BAO_PrevNextCache::buildSelectedContactPager($this,$params);
+      $result = CRM_Core_BAO_PrevNextCache::getSelectedContacts($value['offset'],$value['rowCount1']);
+      $this->assign("value", $result);
+    }
     $this->_mailingID = $this->get('mailing_id');
     $this->_scheduleFormOnly = FALSE;
     if (!$this->_mailingID) {
@@ -67,7 +69,6 @@ class CRM_Mailing_Form_Schedule extends CRM_Core_Form {
       $this->_scheduleFormOnly = TRUE;
     }
   }
-
   /**
    * This function sets the default values for the form.
    *
@@ -78,13 +79,12 @@ class CRM_Mailing_Form_Schedule extends CRM_Core_Form {
   function setDefaultValues() {
     $defaults = array();
     if ($this->_scheduleFormOnly) {
-      require_once 'CRM/Mailing/BAO/Recipients.php';
       $count = CRM_Mailing_BAO_Recipients::mailingSize($this->_mailingID);
     }
     else {
       $count = $this->get('count');
     }
-    $this->assign('count', $count);
+     $this->assign('count', $count);
     $defaults['now'] = 1;
     return $defaults;
   }
@@ -171,7 +171,6 @@ class CRM_Mailing_Form_Schedule extends CRM_Core_Form {
       );
       $preview['viewURL'] = CRM_Utils_System::url('civicrm/mailing/view', "reset=1&id={$this->_mailingID}");
 
-      require_once 'CRM/Core/BAO/File.php';
       $preview['attachment'] = CRM_Core_BAO_File::attachmentInfo('civicrm_mailing',
         $this->_mailingID
       );

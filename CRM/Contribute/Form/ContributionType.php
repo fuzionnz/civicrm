@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contribute/Form.php';
 
 /**
  * This class generates form components for Contribution Type
@@ -77,7 +75,6 @@ class CRM_Contribute_Form_ContributionType extends CRM_Contribute_Form {
    * @return None
    */
   public function postProcess() {
-    require_once 'CRM/Contribute/BAO/ContributionType.php';
     if ($this->_action & CRM_Core_Action::DELETE) {
       CRM_Contribute_BAO_ContributionType::del($this->_id);
       CRM_Core_Session::setStatus(ts('Selected contribution type has been deleted.'));

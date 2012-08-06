@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page/Basic.php';
 
 /**
  * Page to display / edit the header / footer of a mailing
@@ -79,10 +77,8 @@ class CRM_Mailing_Page_Report extends CRM_Core_Page_Basic {
     $this->_mailing_id = CRM_Utils_Request::retrieve('mid', 'Positive', $this);
 
     // check that the user has permission to access mailing id
-    require_once 'CRM/Mailing/BAO/Mailing.php';
     CRM_Mailing_BAO_Mailing::checkPermission($this->_mailing_id);
 
-    require_once 'CRM/Mailing/BAO/Mailing.php';
     $report = CRM_Mailing_BAO_Mailing::report($this->_mailing_id);
 
     //get contents of mailing

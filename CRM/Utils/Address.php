@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -57,7 +57,6 @@ class CRM_Utils_Address {
     $tokenFields      = NULL
   ) {
     static $config = NULL;
-    require_once 'CRM/Core/BAO/Setting.php';
 
     if (!$format) {
       $format = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
@@ -93,7 +92,6 @@ class CRM_Utils_Address {
 
     $contactName = CRM_Utils_Array::value('display_name', $fields);
     if (!$individualFormat) {
-      require_once "CRM/Contact/BAO/Contact.php";
       if (isset($fields['id'])) {
         $type = CRM_Contact_BAO_Contact::getContactType($fields['id']);
       }

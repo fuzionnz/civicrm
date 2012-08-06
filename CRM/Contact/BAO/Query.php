@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/Address.php';
-require_once 'CRM/Core/DAO/Phone.php';
-require_once 'CRM/Core/DAO/Email.php';
 
 /**
  * This class is a heart of search query building mechanism.
@@ -376,7 +372,6 @@ class CRM_Contact_BAO_Query {
     $smartGroupCache   = TRUE, $displayRelationshipType = NULL,
     $operator          = 'AND'
   ) {
-    require_once 'CRM/Contact/BAO/Contact.php';
 
     // CRM_Core_Error::backtrace( );
     // CRM_Core_Error::debug( 'params', $params );
@@ -409,16 +404,13 @@ class CRM_Contact_BAO_Query {
       $this->_skipPermission = TRUE;
     }
     else {
-      require_once 'CRM/Contact/BAO/Contact.php';
       $this->_fields = CRM_Contact_BAO_Contact::exportableFields('All', FALSE, TRUE, TRUE);
 
-      require_once 'CRM/Core/Component.php';
       $fields = CRM_Core_Component::getQueryFields();
       unset($fields['note']);
       $this->_fields = array_merge($this->_fields, $fields);
 
       // add activity fields
-      require_once 'CRM/Activity/BAO/Activity.php';
       $fields = CRM_Activity_BAO_Activity::exportableFields();
       $this->_fields = array_merge($this->_fields, $fields);
     }
@@ -541,7 +533,6 @@ class CRM_Contact_BAO_Query {
 
       // redirect to activity select clause
       if (substr($name, 0, 9) == 'activity_') {
-        require_once 'CRM/Activity/BAO/Query.php';
         CRM_Activity_BAO_Query::select($this);
         continue;
       }
@@ -586,7 +577,6 @@ class CRM_Contact_BAO_Query {
               || $tableName == 'email_greeting' || $tableName == 'postal_greeting'
               || $tableName == 'addressee'
             ) {
-              require_once 'CRM/Core/OptionValue.php';
               CRM_Core_OptionValue::select($this);
               if (in_array($tableName, array(
                 'email_greeting', 'postal_greeting', 'addressee'))) {
@@ -721,11 +711,9 @@ class CRM_Contact_BAO_Query {
     $this->addMultipleElements();
 
     //fix for CRM-951
-    require_once 'CRM/Core/Component.php';
     CRM_Core_Component::alterQuery($this, 'select');
 
     if (!empty($this->_cfIDs)) {
-      require_once 'CRM/Core/BAO/CustomQuery.php';
       $this->_customQuery = new CRM_Core_BAO_CustomQuery($this->_cfIDs, TRUE);
       $this->_customQuery->query();
       $this->_select      = array_merge($this->_select, $this->_customQuery->_select);
@@ -905,7 +893,6 @@ class CRM_Contact_BAO_Query {
             $this->_element["{$tName}_id"] = 1;
             if (substr($tName, -15) == '-state_province') {
               // FIXME: hack to fix CRM-1900
-              require_once 'CRM/Core/BAO/Setting.php';
               $a = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
                 'address_format'
               );
@@ -1012,7 +999,6 @@ class CRM_Contact_BAO_Query {
     }
 
     if (!empty($addressCustomFieldIds)) {
-      require_once 'CRM/Core/BAO/CustomQuery.php';
       $cfIDs = $addressCustomFieldIds;
       $customQuery = new CRM_Core_BAO_CustomQuery($cfIDs);
       foreach ($addressCustomFieldIds as $cfID => $locTypeName) {
@@ -1081,7 +1067,7 @@ class CRM_Contact_BAO_Query {
         $select = "SELECT count( DISTINCT {$this->_distinctComponentClause} )";
       }
       else {
-        $select = ($this->_useDistinct) ? 'SELECT count(DISTINCT contact_a.id)' : 'SELECT count(*)';
+        $select = 'SELECT count(DISTINCT contact_a.id)';
       }
       $from = $this->_simpleFromClause;
       if ($this->_useDistinct) {
@@ -1179,9 +1165,15 @@ class CRM_Contact_BAO_Query {
   }
 
   static
+  function fixDateValues($relative, &$from, &$to) {
+    if ($relative) {
+      list($from, $to) = CRM_Utils_Date::getFromTo($relative, $from, $to);
+    }
+  }
+
+  static
   function convertFormValues(&$formValues, $wildcard = 0, $useEquals = FALSE) {
     $params = array();
-
     if (empty($formValues)) {
       return $params;
     }
@@ -1200,6 +1192,22 @@ class CRM_Contact_BAO_Query {
       elseif ($id == 'email_on_hold') {
         if ($formValues['email_on_hold']['on_hold']) {
           $params[] = array('on_hold', '=', $formValues['email_on_hold']['on_hold'], 0, 0);
+        }
+      }
+      elseif (preg_match('/_date_relative$/', $id) || $id == 'event_relative') {
+        if ($id == 'event_relative') {
+          $fromRange = 'event_start_date_low';
+          $toRange = 'event_end_date_high';
+        }
+        else {
+          $dateComponent = explode('_date_relative', $id);
+          $fromRange     = "{$dateComponent[0]}_date_low";
+          $toRange       = "{$dateComponent[0]}_date_high";
+        }
+
+        if (array_key_exists($fromRange, $formValues) && array_key_exists($toRange, $formValues)) {
+          CRM_Contact_BAO_Query::fixDateValues($formValues[$id], $formValues[$fromRange], $formValues[$toRange]);
+          continue;
         }
       }
       else {
@@ -1299,6 +1307,7 @@ class CRM_Contact_BAO_Query {
       (substr($values[0], 0, 13) == 'contribution_') ||
       (substr($values[0], 0, 6) == 'event_') ||
       (substr($values[0], 0, 12) == 'participant_') ||
+      (substr($values[0], 0, 12) == 'member_') ||
       (substr($values[0], 0, 6) == 'quest_') ||
       (substr($values[0], 0, 8) == 'kabissa_') ||
       (substr($values[0], 0, 4) == 'tmf_') ||
@@ -1403,7 +1412,6 @@ class CRM_Contact_BAO_Query {
       case 'activity_campaign_id':
       case 'activity_engagement_level':
       case 'activity_id':
-        require_once 'CRM/Activity/BAO/Query.php';
         CRM_Activity_BAO_Query::whereClauseSingle($values, $this);
         return;
 
@@ -1466,7 +1474,6 @@ class CRM_Contact_BAO_Query {
         return;
 
       case 'prox_distance':
-        require_once 'CRM/Contact/BAO/ProximityQuery.php';
         CRM_Contact_BAO_ProximityQuery::process($this, $values);
         return;
 
@@ -1525,7 +1532,6 @@ class CRM_Contact_BAO_Query {
         }
       }
 
-      require_once 'CRM/Core/Component.php';
       CRM_Core_Component::alterQuery($this, 'where');
     }
 
@@ -1967,7 +1973,7 @@ class CRM_Contact_BAO_Query {
     $value = array();
 
     foreach ($this->_element as $key => $dontCare) {
-      if (isset($dao->$key)) {
+      if (property_exists($dao, $key)) {
         if (strpos($key, '-') !== FALSE) {
           $values      = explode('-', $key);
           $lastElement = array_pop($values);
@@ -2096,11 +2102,9 @@ class CRM_Contact_BAO_Query {
     }
 
     // to handle table dependencies of components
-    require_once 'CRM/Core/Component.php';
     CRM_Core_Component::tableNames($tables);
 
     //format the table list according to the weight
-    require_once 'CRM/Core/TableHierarchy.php';
     $info = CRM_Core_TableHierarchy::info();
 
     foreach ($tables as $key => $value) {
@@ -2221,7 +2225,6 @@ class CRM_Contact_BAO_Query {
         case 'activity_type':
         case 'activity_status':
         case 'civicrm_activity_contact':
-          require_once 'CRM/Activity/BAO/Query.php';
           $from .= CRM_Activity_BAO_Query::from($name, $mode, $side);
           continue;
 
@@ -2524,11 +2527,15 @@ class CRM_Contact_BAO_Query {
     return $this->addGroupContactCache(array_keys($value));
   }
 
-  function addGroupContactCache($groups, $tableAlias = "civicrm_group_contact_cache", $joinTable = "contact_a") {
+  function addGroupContactCache($groups, $tableAlias = NULL, $joinTable = "contact_a") {
     $config = CRM_Core_Config::singleton();
 
     // find all the groups that are part of a saved search
     $groupIDs = implode(',', $groups);
+    if (empty($groupIDs)) {
+      return NULL;
+    }
+
     $sql = "
 SELECT id, cache_date, saved_search_id, children
 FROM   civicrm_group
@@ -2540,18 +2547,24 @@ WHERE  id IN ( $groupIDs )
     $group = CRM_Core_DAO::executeQuery($sql);
     $ssWhere = array();
     while ($group->fetch()) {
+      if ($tableAlias == NULL) {
+        $alias = "`civicrm_group_contact_cache_{$group->id}`";
+      }
+      else {
+        $alias = $tableAlias;
+      }
+
       $this->_useDistinct = TRUE;
 
       if (!$this->_smartGroupCache || $group->cache_date == NULL) {
-        require_once 'CRM/Contact/BAO/GroupContactCache.php';
         CRM_Contact_BAO_GroupContactCache::load($group);
       }
 
-      $ssWhere[] = "{$tableAlias}.group_id = {$group->id}";
+      $this->_tables[$alias] = $this->_whereTables[$alias] = " LEFT JOIN civicrm_group_contact_cache {$alias} ON {$joinTable}.id = {$alias}.contact_id ";
+      $ssWhere[] = "{$alias}.group_id = {$group->id}";
     }
 
     if (!empty($ssWhere)) {
-      $this->_tables[$tableAlias] = $this->_whereTables[$tableAlias] = " LEFT JOIN civicrm_group_contact_cache {$tableAlias} ON {$joinTable}.id = {$tableAlias}.contact_id ";
       return implode(' OR ', $ssWhere);
     }
     return NULL;
@@ -2593,7 +2606,7 @@ WHERE  id IN ( $groupIDs )
 
     $etTable = "`civicrm_entity_tag-" . $value . "`";
     $tTable = "`civicrm_tag-" . $value . "`";
-    $this->_tables[$etTable] = $this->_whereTables[$etTable] = " LEFT JOIN civicrm_entity_tag {$etTable} ON ( {$etTable}.entity_id = contact_a.id  AND 
+    $this->_tables[$etTable] = $this->_whereTables[$etTable] = " LEFT JOIN civicrm_entity_tag {$etTable} ON ( {$etTable}.entity_id = contact_a.id  AND
     {$etTable}.entity_table = 'civicrm_contact' )
               LEFT JOIN civicrm_tag {$tTable} ON ( {$etTable}.tag_id = {$tTable}.id  ) ";
 
@@ -2627,12 +2640,18 @@ WHERE  id IN ( $groupIDs )
     }
 
     $etTable = "`civicrm_entity_tag-" . $value . "`";
-    $this->_tables[$etTable] = $this->_whereTables[$etTable] = " LEFT JOIN civicrm_entity_tag {$etTable} ON ( {$etTable}.entity_id = contact_a.id  AND 
-                        {$etTable}.entity_table = 'civicrm_contact' ) ";
+    $this->_tables[$etTable] =
+      $this->_whereTables[$etTable] =
+      " LEFT JOIN civicrm_entity_tag {$etTable} ON ( {$etTable}.entity_id = contact_a.id  AND {$etTable}.entity_table = 'civicrm_contact' ) ";
 
-    $this->_where[$grouping][] = "{$etTable}.tag_id $op (" . $value . ')';
-    $this->_qill[$grouping][] = ts('Tagged %1', array(
-      1 => $op)) . ' ' . $names;
+    // CRM-10338
+    if ( in_array( $op, array( 'IS NULL', 'IS NOT NULL' ) ) ) {
+      $this->_where[$grouping][] = "{$etTable}.tag_id $op";
+    }
+    else {
+      $this->_where[$grouping][] = "{$etTable}.tag_id $op (". $value . ')';
+    }
+    $this->_qill[$grouping][] = ts('Tagged %1', array( 1 => $op)) . ' ' . $names;
   }
 
   /**
@@ -3196,20 +3215,16 @@ WHERE  id IN ( $groupIDs )
     foreach (array_keys($this->_params) as $id) {
       if ($this->_params[$id][0] == 'log_date') {
         if ($this->_params[$id][2] == 1) {
-          $changeDate = 'added_log_date';
-          $values[0]  = 'added_' . $values[0];
           $fieldTitle = 'Added Date';
         }
         elseif ($this->_params[$id][2] == 2) {
-          $changeDate = 'modified_log_date';
-          $values[0]  = 'modified_' . $values[0];
           $fieldTitle = 'Modified Date';
         }
       }
     }
 
     $this->dateQueryBuilder($values,
-      'civicrm_log', $changeDate, 'modified_date', $fieldTitle
+      'civicrm_log', 'log_date', 'modified_date', $fieldTitle
     );
   }
 
@@ -3357,7 +3372,6 @@ WHERE  id IN ( $groupIDs )
     $taskSelect = CRM_Core_PseudoConstant::tasks();
     $this->_qill[$grouping][] = ts('Task') . ": $taskSelect[$taskID]";
     if ($statusID) {
-      require_once 'CRM/Core/OptionGroup.php';
       $statusSelect = CRM_Core_OptionGroup::values('task_status');
       $this->_qill[$grouping][] = ts('Task Status') . ": $statusSelect[$statusID]";
     }
@@ -3397,24 +3411,22 @@ WHERE  id IN ( $groupIDs )
     $rel = explode('_', $value);
 
     self::$_relType = $rel[1];
+
+    $params = array('id' => $rel[0]);
+    $rTypeValues = array();
+    $rType = CRM_Contact_BAO_RelationshipType::retrieve($params, $rTypeValues);
+    if (!$rType) {
+      return;
+    }
+
+    if ($rTypeValues['name_a_b'] == $rTypeValues['name_b_a']) {
+      self::$_relType = 'reciprocal';
+    }
+
     if ($nameClause) {
-      require_once 'CRM/Contact/BAO/RelationshipType.php';
-
-      $params = array('id' => $rel[0]);
-      $rTypeValues = array();
-
-      $rType = CRM_Contact_BAO_RelationshipType::retrieve($params, $rTypeValues);
-      if (!$rType) {
-        return;
-      }
-      // for relatinship search we always do wildcard
-      if ($rTypeValues['name_a_b'] == $rTypeValues['name_b_a']) {
-        self::$_relType = 'reciprocal';
-      }
       $this->_where[$grouping][] = "( contact_b.sort_name $nameClause AND contact_b.id != contact_a.id )";
     }
 
-    require_once 'CRM/Contact/BAO/Relationship.php';
     $relTypeInd          = CRM_Contact_BAO_Relationship::getContactRelationshipType(NULL, 'null', NULL, 'Individual');
     $relTypeOrg          = CRM_Contact_BAO_Relationship::getContactRelationshipType(NULL, 'null', NULL, 'Organization');
     $relTypeHou          = CRM_Contact_BAO_Relationship::getContactRelationshipType(NULL, 'null', NULL, 'Household');
@@ -3430,7 +3442,9 @@ WHERE  id IN ( $groupIDs )
     //check to see if the target contact is in specified group
     if ($targetGroup) {
       //add contacts from static groups
-      $this->_tables['civicrm_relationship_group_contact'] = $this->_whereTables['civicrm_relationship_group_contact'] = " LEFT JOIN civicrm_group_contact civicrm_relationship_group_contact ON civicrm_relationship_group_contact.contact_id = contact_b.id";
+      $this->_tables['civicrm_relationship_group_contact'] =
+        $this->_whereTables['civicrm_relationship_group_contact'] =
+        " LEFT JOIN civicrm_group_contact civicrm_relationship_group_contact ON civicrm_relationship_group_contact.contact_id = contact_b.id";
       $groupWhere[] = "( civicrm_relationship_group_contact.group_id IN  (" . implode(",", $targetGroup[2]) . ") )";
 
       //add contacts from saved searches
@@ -3458,16 +3472,16 @@ WHERE  id IN ( $groupIDs )
     $today = date('Ymd');
     if ($relStatus[2] == 0) {
       $this->_where[$grouping][] = "(
-civicrm_relationship.is_active = 1 AND 
-( civicrm_relationship.end_date IS NULL OR civicrm_relationship.end_date >= {$today} ) AND 
+civicrm_relationship.is_active = 1 AND
+( civicrm_relationship.end_date IS NULL OR civicrm_relationship.end_date >= {$today} ) AND
 ( civicrm_relationship.start_date IS NULL OR civicrm_relationship.start_date <= {$today} )
 )";
       $this->_qill[$grouping][] = ts('Relationship - Active');
     }
     elseif ($relStatus[2] == 1) {
       $this->_where[$grouping][] = "(
-civicrm_relationship.is_active = 0 OR 
-civicrm_relationship.end_date < {$today} OR 
+civicrm_relationship.is_active = 0 OR
+civicrm_relationship.end_date < {$today} OR
 civicrm_relationship.start_date > {$today}
 )";
       $this->_qill[$grouping][] = ts('Relationship - Inactive');
@@ -3493,11 +3507,9 @@ civicrm_relationship.start_date > {$today}
     if (!isset(self::$_defaultReturnProperties[$mode])) {
       // add activity return properties
       if ($mode & CRM_Contact_BAO_Query::MODE_ACTIVITY) {
-        require_once 'CRM/Activity/BAO/Query.php';
         self::$_defaultReturnProperties[$mode] = CRM_Activity_BAO_Query::defaultReturnProperties($mode, FALSE);
       }
       else {
-        require_once 'CRM/Core/Component.php';
         self::$_defaultReturnProperties[$mode] = CRM_Core_Component::defaultReturnProperties($mode, FALSE);
       }
 
@@ -3666,7 +3678,6 @@ civicrm_relationship.start_date > {$today}
     $additionalWhereClause = NULL, $sortOrder = NULL,
     $additionalFromClause = NULL, $skipOrderAndLimit = FALSE
   ) {
-    require_once 'CRM/Core/Permission.php';
 
     if ($includeContactIds) {
       $this->_includeContactIds = TRUE;
@@ -3692,7 +3703,6 @@ civicrm_relationship.start_date > {$today}
     }
 
     if (!$this->_skipPermission) {
-      require_once 'CRM/ACL/API.php';
       $permission = CRM_ACL_API::whereClause(CRM_Core_Permission::VIEW,
         $this->_tables,
         $this->_whereTables,
@@ -3747,6 +3757,20 @@ civicrm_relationship.start_date > {$today}
     // CRM_Core_Error::debug( 'a', $additionalWhereClause );
     if ($additionalWhereClause) {
       $where = $where . ' AND ' . $additionalWhereClause;
+    }
+
+    // building the query string
+    $groupBy = NULL;
+    if (!$count) {
+      if (isset($this->_groupByComponentClause)) {
+        $groupBy = $this->_groupByComponentClause;
+      }
+      elseif ($this->_useGroupBy) {
+        $groupBy = ' GROUP BY contact_a.id';
+      }
+    }
+    if ($this->_mode & CRM_Contact_BAO_Query::MODE_ACTIVITY && (!$count)) {
+      $groupBy = 'GROUP BY civicrm_activity.id ';
     }
 
     $order = $orderBy = $limit = '';
@@ -3836,10 +3860,15 @@ civicrm_relationship.start_date > {$today}
         // that are restricted and we'll then do the final clause with it
         // CRM-5954
         if (isset($this->_distinctComponentClause)) {
-          $limitSelect = "SELECT {$this->_distinctComponentClause}";
+          if (strpos($this->_distinctComponentClause, 'DISTINCT') == FALSE) {
+            $limitSelect = "SELECT DISTINCT {$this->_distinctComponentClause}";
+          }
+          else {
+            $limitSelect = "SELECT {$this->_distinctComponentClause}";
+          }
         }
         else {
-          $limitSelect = ($this->_useDistinct) ? 'SELECT DISTINCT(contact_a.id) as id' : 'SELECT contact_a.id as id';
+          $limitSelect = 'SELECT DISTINCT contact_a.id as id';
         }
 
         if ($doOpt) {
@@ -3857,7 +3886,7 @@ civicrm_relationship.start_date > {$today}
             $this->filterRelatedContacts($this->_simpleFromClause, $where, $having);
           }
 
-          $limitQuery = "$limitSelect {$this->_simpleFromClause} $where $order $limit";
+          $limitQuery = "$limitSelect {$this->_simpleFromClause} $where $groupBy $order $limit";
           $limitDAO   = CRM_Core_DAO::executeQuery($limitQuery);
           $limitIDs   = array();
           while ($limitDAO->fetch()) {
@@ -3880,20 +3909,6 @@ civicrm_relationship.start_date > {$today}
           $limit = NULL;
         }
       }
-    }
-
-    // building the query string
-    $groupBy = NULL;
-    if (!$count) {
-      if (isset($this->_groupByComponentClause)) {
-        $groupBy = $this->_groupByComponentClause;
-      }
-      elseif ($this->_useGroupBy) {
-        $groupBy = ' GROUP BY contact_a.id';
-      }
-    }
-    if ($this->_mode & CRM_Contact_BAO_Query::MODE_ACTIVITY && (!$count)) {
-      $groupBy = 'GROUP BY civicrm_activity.id ';
     }
 
     // if we are doing a transform, do it here
@@ -3962,7 +3977,6 @@ SELECT COUNT( civicrm_contribution.total_amount ) as total_count,
 
     $dao = CRM_Core_DAO::executeQuery($query, $params);
 
-    require_once 'CRM/Utils/Money.php';
     $summary['total']['count'] = 0;
     $summary['total']['amount'] = $summary['total']['avg'] = array();
     while ($dao->fetch()) {
@@ -4001,7 +4015,6 @@ SELECT COUNT( civicrm_contribution.total_amount ) as cancel_count,
       }
     }
     else {
-      require_once 'CRM/Utils/Money.php';
       $summary['cancel']['count'] = 0;
       $summary['cancel']['amount'] = $summary['cancel']['avg'] = array();
       while ($dao->fetch()) {
@@ -4212,20 +4225,22 @@ SELECT COUNT( civicrm_contribution.total_amount ) as cancel_count,
 
       if ($date) {
         $this->_where[$grouping][] = "{$tableName}.{$dbFieldName} $op '$date'";
-        if ($tableName == 'civicrm_log' &&
-          $fieldName == 'added_log_date'
-        ) {
-          //CRM-6903 --hack to check modified date of first record.
-          //as added date means first modified date of object.
-          $addedDateQuery = 'select id from civicrm_log group by entity_id order by id';
-          $this->_where[$grouping][] = "civicrm_log.id IN ( {$addedDateQuery} )";
-        }
       }
       else {
         $this->_where[$grouping][] = "{$tableName}.{$dbFieldName} $op";
       }
       $this->_tables[$tableName] = $this->_whereTables[$tableName] = 1;
       $this->_qill[$grouping][] = "$fieldTitle - $phrase \"$format\"";
+    }
+
+    if (
+      $tableName == 'civicrm_log' &&
+      $fieldTitle == 'Added Date'
+    ) {
+      //CRM-6903 --hack to check modified date of first record.
+      //as added date means first modified date of object.
+      $addedDateQuery = 'select id from civicrm_log group by entity_id order by id';
+      $this->_where[$grouping][] = "civicrm_log.id IN ( {$addedDateQuery} )";
     }
   }
 
@@ -4271,7 +4286,7 @@ SELECT COUNT( civicrm_contribution.total_amount ) as cancel_count,
 
       if ($secondOP) {
         $this->_where[$grouping][] = "
-( {$tableName}.{$dbFieldName} $firstOP {$value} ) AND 
+( {$tableName}.{$dbFieldName} $firstOP {$value} ) AND
 ( {$tableName}.{$dbFieldName} $secondOP {$secondValue} )
 ";
         $displayValue = $options ? $options[$value] : $value;
@@ -4316,7 +4331,7 @@ SELECT COUNT( civicrm_contribution.total_amount ) as cancel_count,
    * @return where clause for the query
    * @access public
    */
-  function buildClause($field, $op, $value = NULL, $dataType = NULL) {
+  static function buildClause($field, $op, $value = NULL, $dataType = NULL) {
     $op = trim($op);
     $clause = "$field $op";
 

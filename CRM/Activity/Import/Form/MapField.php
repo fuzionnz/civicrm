@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,17 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-
-require_once 'CRM/Core/DAO/Mapping.php';
-require_once 'CRM/Core/DAO/MappingField.php';
-
-require_once 'CRM/Activity/Import/Parser/Activity.php';
 
 /**
  * This class gets the name of the file to upload
@@ -214,8 +207,6 @@ class CRM_Activity_Import_Form_MapField extends CRM_Core_Form {
    * @access public
    */
   public function buildQuickForm() {
-    require_once "CRM/Core/BAO/Mapping.php";
-    require_once "CRM/Core/OptionGroup.php";
     //to save the current mappings
     if (!$this->get('savedMapping')) {
       $saveDetailsName = ts('Save this field mapping');
@@ -431,7 +422,6 @@ class CRM_Activity_Import_Form_MapField extends CRM_Core_Form {
         'level' => 'Strict',
         'contact_type' => 'Individual',
       );
-      require_once 'CRM/Dedupe/BAO/RuleGroup.php';
       list($ruleFields, $threshold) = CRM_Dedupe_BAO_RuleGroup::dedupeRuleFieldsWeight($params);
       $weightSum = 0;
       foreach ($importKeys as $key => $val) {
@@ -449,8 +439,10 @@ class CRM_Activity_Import_Form_MapField extends CRM_Core_Form {
               continue;
             }
             else {
-              $errors['_qf_default'] .= ts('Missing required contact matching fields.') . $fieldMessage . ' ' . ts('(Sum of all weights should be greater than or equal to threshold: %1).', array(
-                1 => $threshold)) . '<br />';
+              $errors['_qf_default'] .= ts('Missing required contact matching fields.')
+                . $fieldMessage . ' '
+                . ts('(Sum of all weights should be greater than or equal to threshold: %1).', array(1 => $threshold))
+                . '<br />';
             }
           }
           elseif ($field == 'activity_type_id') {
@@ -461,14 +453,12 @@ class CRM_Activity_Import_Form_MapField extends CRM_Core_Form {
               $errors['_qf_default'] .= ts('Missing required field: Provide %1 or %2',
                 array(
                   1 => $title,
-                  2 => 'Activity Type Label',
-                )
-              ) . '<br />';
+                  2 => 'Activity Type Label'
+                )) . '<br />';
             }
           }
           else {
-            $errors['_qf_default'] .= ts('Missing required field: %1', array(
-              1 => $title)) . '<br />';
+            $errors['_qf_default'] .= ts('Missing required field: %1', array(1 => $title)) . '<br />';
           }
         }
       }
@@ -493,7 +483,6 @@ class CRM_Activity_Import_Form_MapField extends CRM_Core_Form {
     if (!empty($errors)) {
       if (!empty($errors['saveMappingName'])) {
         $_flag = 1;
-        require_once 'CRM/Core/Page.php';
         $assignError = new CRM_Core_Page();
         $assignError->assign('mappingDetailsError', $_flag);
       }

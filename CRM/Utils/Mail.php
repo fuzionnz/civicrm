@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -60,16 +60,16 @@ class CRM_Utils_Mail {
    */
   static
   function send(&$params) {
-    require_once 'CRM/Core/BAO/MailSettings.php';
-    $returnPath = CRM_Core_BAO_MailSettings::defaultReturnPath();
-    $from = CRM_Utils_Array::value('from', $params);
+    $returnPath       = CRM_Core_BAO_MailSettings::defaultReturnPath();
+    $includeMessageId = CRM_Core_BAO_MailSettings::includeMessageId();
+    $emailDomain      = CRM_Core_BAO_MailSettings::defaultDomain();
+    $from             = CRM_Utils_Array::value('from', $params);
     if (!$returnPath) {
       $returnPath = self::pluckEmailFromHeader($from);
     }
     $params['returnPath'] = $returnPath;
 
     // first call the mail alter hook
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::alterMailParams($params);
 
     // check if any module has aborted mail sending
@@ -84,7 +84,6 @@ class CRM_Utils_Mail {
     $attachments = CRM_Utils_Array::value('attachments', $params);
 
     // CRM-6224
-    require_once 'CRM/Utils/String.php';
     if (trim(CRM_Utils_String::htmlToText($htmlMessage)) == '') {
       $htmlMessage = FALSE;
     }
@@ -104,6 +103,9 @@ class CRM_Utils_Mail {
     $headers['Return-Path'] = CRM_Utils_Array::value('returnPath', $params);
     $headers['Reply-To'] = CRM_Utils_Array::value('replyTo', $params, $from);
     $headers['Date'] = date('r');
+    if ($includeMessageId) {
+      $headers['Message-ID'] = '<' . uniqid('civicrm_', TRUE) . "@$emailDomain>";
+    }
     if (CRM_Utils_Array::value('autoSubmitted', $params)) {
       $headers['Auto-Submitted'] = "Auto-Generated";
     }
@@ -165,7 +167,9 @@ class CRM_Utils_Mail {
       CRM_Core_Error::setCallback();
       if (is_a($result, 'PEAR_Error')) {
         $message = self::errorMessage($mailer, $result);
-        CRM_Core_Session::setStatus($message, FALSE);
+        // append error message in case multiple calls are being made to
+        // this method in the course of sending a batch of messages.
+        CRM_Core_Session::setStatus($message, TRUE);
         return FALSE;
       }
       return TRUE;
@@ -176,7 +180,7 @@ class CRM_Utils_Mail {
   static
   function errorMessage($mailer, $result) {
     $message = '<p>' . ts('An error occurred when CiviCRM attempted to send an email (via %1). If you received this error after submitting on online contribution or event registration - the transaction was completed, but we were unable to send the email receipt.', array(
-      1 => 'SMTP')) . '</p>' . '<p>' . ts('The mail library returned the following error message:') . '<br /><span class="font-red"><strong>' . $result->getMessage() . '</strong></span></p>' . '<p>' . ts('This is probably related to a problem in your Outbound Email Settings (Administer CiviCRM &raquo; Global Settings &raquo; Outbound Email), OR the FROM email address specifically configured for your contribution page or event. Possible causes are:') . '</p>';
+      1 => 'SMTP')) . '</p>' . '<p>' . ts('The mail library returned the following error message:') . '<br /><span class="font-red"><strong>' . $result->getMessage() . '</strong></span></p>' . '<p>' . ts('This is probably related to a problem in your Outbound Email Settings (Administer CiviCRM &raquo; System Settings &raquo; Outbound Email), OR the FROM email address specifically configured for your contribution page or event. Possible causes are:') . '</p>';
 
     if (is_a($mailer, 'Mail_smtp')) {
       $message .= '<ul>' . '<li>' . ts('Your SMTP Username or Password are incorrect.') . '</li>' . '<li>' . ts('Your SMTP Server (machine) name is incorrect.') . '</li>' . '<li>' . ts('You need to use a Port other than the default port 25 in your environment.') . '</li>' . '<li>' . ts('Your SMTP server is just not responding right now (it is down for some reason).') . '</li>';
@@ -186,7 +190,7 @@ class CRM_Utils_Mail {
     }
 
     $message .= '<li>' . ts('The FROM Email Address configured for this feature may not be a valid sender based on your email service provider rules.') . '</li>' . '</ul>' . '<p>' . ts('Check <a href="%1">this page</a> for more information.', array(
-      1 => CRM_Utils_System::docURL2('Outbound Email (SMTP)', TRUE))) . '</p>';
+      1 => CRM_Utils_System::docURL2('user/initial-set-up/email-system-configuration', TRUE))) . '</p>';
 
     return $message;
   }
@@ -228,7 +232,9 @@ class CRM_Utils_Mail {
    * @param  string $header  the full name + email address string
    *
    * @return string          the plucked email address
+   * @static
    */
+  static
   function pluckEmailFromHeader($header) {
     preg_match('/<([^<]*)>$/', $header, $matches);
 
@@ -247,7 +253,6 @@ class CRM_Utils_Mail {
    */
   static
   function validOutBoundMail() {
-    require_once 'CRM/Core/BAO/Setting.php';
     $mailingInfo = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::MAILING_PREFERENCES_NAME,
       'mailing_backend'
     );

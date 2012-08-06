@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -38,7 +38,7 @@
  *
  */
 class CRM_Activity_Task {
-  CONST DELETE_ACTIVITIES = 1, PRINT_ACTIVITIES = 2, EXPORT_ACTIVITIES = 3, BATCH_ACTIVITIES = 4, EMAIL_CONTACTS = 5;
+  CONST DELETE_ACTIVITIES = 1, PRINT_ACTIVITIES = 2, EXPORT_ACTIVITIES = 3, BATCH_ACTIVITIES = 4, EMAIL_CONTACTS = 5, EMAIL_SMS = 6;
 
   /**
    * the task array
@@ -97,9 +97,12 @@ class CRM_Activity_Task {
           ),
           'result' => FALSE,
         ),
+        6 => array('title' => ts('Send Reply SMS To Contacts'),
+          'class' => 'CRM_Activity_Form_Task_SMS',
+          'result' => FALSE,
+        ),
       );
 
-      require_once 'CRM/Core/Config.php';
       $config = CRM_Core_Config::singleton();
       if (in_array('CiviCase', $config->enableComponents)) {
         self::$_tasks[6] = array('title' => ts('File on Case'),
@@ -113,7 +116,6 @@ class CRM_Activity_Task {
         unset(self::$_tasks[1]);
       }
     }
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::searchTasks('activity', self::$_tasks);
     asort(self::$_tasks);
     return self::$_tasks;

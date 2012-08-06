@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,11 +28,9 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  *
  */
-
-require_once 'CRM/Contribute/Form/Task.php';
 
 /**
  * This class provides the functionality to email a group of
@@ -88,7 +86,6 @@ AND    {$this->_componentClause}";
     $this->assign('single', $this->_single);
 
     $qfKey = CRM_Utils_Request::retrieve('qfKey', 'String', $this);
-    require_once 'CRM/Utils/Rule.php';
     $urlParams = 'force=1';
     if (CRM_Utils_Rule::qfKey($qfKey)) {
       $urlParams .= "&qfKey=$qfKey";
@@ -121,7 +118,6 @@ AND    {$this->_componentClause}";
     );
     $this->addRule('output', ts('Selection required'), 'required');
 
-    require_once 'CRM/Core/BAO/PdfFormat.php';
     $this->add('select', 'pdf_format_id', ts('Page Format'),
       array(0 => ts('- default -')) + CRM_Core_BAO_PdfFormat::getList(TRUE)
     );
@@ -144,7 +140,6 @@ AND    {$this->_componentClause}";
    * Set default values
    */
   function setDefaultValues() {
-    require_once 'CRM/Core/BAO/PdfFormat.php';
     $defaultFormat = CRM_Core_BAO_PdfFormat::getDefaultValues();
     return array('pdf_format_id' => $defaultFormat['id']);
   }
@@ -160,10 +155,8 @@ AND    {$this->_componentClause}";
     // get all the details needed to generate a receipt
     $contribIDs = implode(',', $this->_contributionIds);
 
-    require_once 'CRM/Contribute/Form/Task/Status.php';
     $details = CRM_Contribute_Form_Task_Status::getDetails($contribIDs);
 
-    require_once 'CRM/Core/Payment/BaseIPN.php';
     $baseIPN = new CRM_Core_Payment_BaseIPN();
 
     $message = array();
@@ -185,7 +178,6 @@ AND    {$this->_componentClause}";
         'on_hold' => 1,
       );
 
-      require_once 'CRM/Utils/Token.php';
       list($contactDetails) = CRM_Utils_Token::getTokenDetails($this->_contactIds, $returnProperties, FALSE, FALSE);
       $suppressedEmails = 0;
       foreach ($contactDetails as $id => $values) {
@@ -249,7 +241,6 @@ AND    {$this->_componentClause}";
       $template->clearTemplateVars();
     }
     if ($createPdf) {
-      require_once 'CRM/Utils/PDF/Utils.php';
       CRM_Utils_PDF_Utils::html2pdf($message,
         'civicrmContributionReceipt.pdf',
         FALSE,

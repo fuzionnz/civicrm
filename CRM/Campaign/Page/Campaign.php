@@ -1,8 +1,9 @@
+<?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
- --------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | CiviCRM version 4.2                                                |
+ +--------------------------------------------------------------------+
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -22,18 +23,15 @@
  | GNU Affero General Public License or the licensing of CiviCRM,     |
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
- */<?php +
+ */
 
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
-require_once 'CRM/Campaign/BAO/Campaign.php';
 
 /**
  * Page for displaying Campaigns
@@ -87,12 +85,10 @@ class CRM_Campaign_Page_Campaign extends CRM_Core_Page {
   }
 
   function browse() {
-    require_once 'CRM/Core/Permission.php';
 
     $campaigns = CRM_Campaign_BAO_Campaign::getCampaignSummary();
 
     if (!empty($campaigns)) {
-      require_once 'CRM/Campaign/BAO/Campaign.php';
       $campaignType = CRM_Core_PseudoConstant::campaignType();
       $campaignStatus = CRM_Core_PseudoConstant::campaignStatus();
 

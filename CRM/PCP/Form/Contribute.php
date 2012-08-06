@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/PCP/BAO/PCP.php';
-require_once 'CRM/Contribute/Form/ContributionPage.php';
 
 /**
  * This class generates form components for Tell A Friend
@@ -122,13 +119,12 @@ class CRM_PCP_Form_Contribute extends CRM_Contribute_Form_ContributionPage {
       if (CRM_Utils_Array::value('is_tellfriend_enabled', $params) &&
         (CRM_Utils_Array::value('tellfriend_limit', $params) <= 0)
       ) {
-        $errors['tellfriend_limit'] = ts('if Tell Friend is enable, Maximum recipients limit should be greater than zero.');
+        $errors['tellfriend_limit'] = ts('if Tell Friend is enabled, Maximum recipients limit should be greater than zero.');
       }
       if (!CRM_Utils_Array::value('supporter_profile_id', $params)) {
         $errors['supporter_profile_id'] = ts('Supporter profile is a required field.');
       }
       else {
-        require_once 'CRM/PCP/BAO/PCP.php';
         if (CRM_PCP_BAO_PCP::checkEmailProfile($params['supporter_profile_id'])) {
           $errors['supporter_profile_id'] = ts('Profile is not configured with Email address.');
         }
@@ -174,7 +170,6 @@ class CRM_PCP_Form_Contribute extends CRM_Contribute_Form_ContributionPage {
     $params['is_approval_needed'] = CRM_Utils_Array::value('is_approval_needed', $params, FALSE);
     $params['is_tellfriend_enabled'] = CRM_Utils_Array::value('is_tellfriend_enabled', $params, FALSE);
 
-    require_once 'CRM/PCP/BAO/PCP.php';
     $dao = CRM_PCP_BAO_PCP::add($params);
 
     parent::endPostProcess();

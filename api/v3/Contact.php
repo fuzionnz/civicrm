@@ -1,28 +1,30 @@
 <?php
+// $Id$
+
 /*
- +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
- +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
- +--------------------------------------------------------------------+
- | This file is a part of CiviCRM.                                    |
- |                                                                    |
- | CiviCRM is free software; you can copy, modify, and distribute it  |
- | under the terms of the GNU Affero General Public License           |
- | Version 3, 19 November 2007 and the CiviCRM Licensing Exception.   |
- |                                                                    |
- | CiviCRM is distributed in the hope that it will be useful, but     |
- | WITHOUT ANY WARRANTY; without even the implied warranty of         |
- | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.               |
- | See the GNU Affero General Public License for more details.        |
- |                                                                    |
- | You should have received a copy of the GNU Affero General Public   |
- | License and the CiviCRM Licensing Exception along                  |
- | with this program; if not, contact CiviCRM LLC                     |
- | at info[AT]civicrm[DOT]org. If you have questions about the        |
- | GNU Affero General Public License or the licensing of CiviCRM,     |
- | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
- +--------------------------------------------------------------------+
+  +--------------------------------------------------------------------+
+  | CiviCRM version 4.2                                                |
+  +--------------------------------------------------------------------+
+  | Copyright CiviCRM LLC (c) 2004-2012                                |
+  +--------------------------------------------------------------------+
+  | This file is a part of CiviCRM.                                    |
+  |                                                                    |
+  | CiviCRM is free software; you can copy, modify, and distribute it  |
+  | under the terms of the GNU Affero General Public License           |
+  | Version 3, 19 November 2007 and the CiviCRM Licensing Exception.   |
+  |                                                                    |
+  | CiviCRM is distributed in the hope that it will be useful, but     |
+  | WITHOUT ANY WARRANTY; without even the implied warranty of         |
+  | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.               |
+  | See the GNU Affero General Public License for more details.        |
+  |                                                                    |
+  | You should have received a copy of the GNU Affero General Public   |
+  | License and the CiviCRM Licensing Exception along                  |
+  | with this program; if not, contact CiviCRM LLC                     |
+  | at info[AT]civicrm[DOT]org. If you have questions about the        |
+  | GNU Affero General Public License or the licensing of CiviCRM,     |
+  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
+  +--------------------------------------------------------------------+
 */
 
 /**
@@ -32,16 +34,10 @@
  *
  * @package CiviCRM_APIv3
  * @subpackage API_Contact
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id: Contact.php 30879 2010-11-22 15:45:55Z shot $
  *
  */
-
-/**
- * Include common API util functions
- */
-
-require_once 'CRM/Contact/BAO/Contact.php';
 
 /**
  * Create or update a contact (note you should always call this via civicrm_api() & never directly)
@@ -69,8 +65,6 @@ function civicrm_api3_contact_create($params) {
   }
 
   if (empty($contactID)) {
-
-
     // If we get here, we're ready to create a new contact
     if (($email = CRM_Utils_Array::value('email', $params)) && !is_array($params['email'])) {
       require_once 'CRM/Core/BAO/LocationType.php';
@@ -84,11 +78,11 @@ function civicrm_api3_contact_create($params) {
     }
   }
 
-  if ($homeUrl = CRM_Utils_Array::value('home_url', $params)) {
+  if (CRM_Utils_Array::value('home_url', $params)) {
     require_once 'CRM/Core/PseudoConstant.php';
     $websiteTypes = CRM_Core_PseudoConstant::websiteType();
     $params['website'] = array(1 => array('website_type_id' => key($websiteTypes),
-        'url' => $homeUrl,
+        'url' => $params['home_url'],
       ),
     );
   }
@@ -136,7 +130,7 @@ function civicrm_api3_contact_create($params) {
 
   $params = array_merge($params, $values);
 
-  $contact = &_civicrm_api3_contact_update($params, $contactID);
+  $contact = _civicrm_api3_contact_update($params, $contactID);
 
   if (is_a($contact, 'CRM_Core_Error')) {
     return civicrm_api3_create_error($contact->_errors[0]['message']);
@@ -147,8 +141,6 @@ function civicrm_api3_contact_create($params) {
   }
 
   return civicrm_api3_create_success($values, $params, 'Contact', 'create');
-
-  return civicrm_api3_contact_update($params, $create_new);
 }
 
 /*
@@ -158,6 +150,7 @@ function civicrm_api3_contact_create($params) {
  */
 function _civicrm_api3_contact_create_spec(&$params) {
   $params['contact_type']['api.required'] = 1;
+  $params['id']['api.aliases'] = array('contact_id');
 }
 
 /**
@@ -172,84 +165,18 @@ function _civicrm_api3_contact_create_spec(&$params) {
  *
  * @example ContactGet.php Standard GET example
  *
- * @todo EM 7 Jan 11 - does this return the number of contacts if required (replacement for deprecated contact_search_count function - if so is this tested?
  */
 function civicrm_api3_contact_get($params) {
+  $options = array();
+  _civicrm_api3_contact_get_supportanomalies($params, $options);
+  $contacts = _civicrm_api3_get_using_query_object($params,$options);
 
-  if (isset($params['showAll'])) {
-    if (strtolower($params['showAll']) == "active") {
-      $params['contact_is_deleted'] = 0;
-    }
-    if (strtolower($params['showAll']) == "trash") {
-      $params['contact_is_deleted'] = 1;
-    }
-    if (strtolower($params['showAll']) == "all" && isset($params['contact_is_deleted'])) {
-      unset($params['contact_is_deleted']);
-    }
-  }
-
-  $inputParams      = array();
-  $returnProperties = array();
-  $otherVars        = array('sort', 'offset', 'rowCount', 'smartGroupCache');
-
-  $sort            = NULL;
-  $offset          = 0;
-  $rowCount        = 25;
-  $smartGroupCache = FALSE;
-
-  if (array_key_exists('filter_group_id', $params)) {
-    $params['filter.group_id'] = $params['filter_group_id'];
-    unset($params['filter_group_id']);
-  }
-  // filter.group_id works both for 1,2,3 and array (1,2,3)
-  if (array_key_exists('filter.group_id', $params)) {
-    if (is_array($params['filter.group_id'])) {
-      $groups = $params['filter.group_id'];
-    }
-    else $groups = explode(',', $params['filter.group_id']);
-    unset($params['filter.group_id']);
-    $groups = array_flip($groups);
-    $groups[key($groups)] = 1;
-    $params['group'] = $groups;
-  }
-
-
-  // handle the format return =sort_name,display_name...
-  if (array_key_exists('return', $params)) {
-    $returnProperties = explode(',', $params['return']);
-    $returnProperties = array_flip($returnProperties);
-    $returnProperties[key($returnProperties)] = 1;
-  }
-  foreach ($params as $n => $v) {
-    // handle the format return.sort_name=1,return.display_name=1
-    if (substr($n, 0, 6) == 'return') {
-      $returnProperties[substr($n, 7)] = $v;
-    }
-    elseif (in_array($n, $otherVars)) {
-      $$n = $v;
-    }
-    else {
-      $inputParams[$n] = $v;
-    }
-  }
-
-  if (empty($returnProperties)) {
-    $returnProperties = NULL;
-  }
-
-  require_once 'CRM/Contact/BAO/Query.php';
-  $newParams = CRM_Contact_BAO_Query::convertFormValues($inputParams);
-  list($contacts, $options) = CRM_Contact_BAO_Query::apiQuery($newParams,
-    $returnProperties,
-    NULL,
-    $sort,
-    $offset,
-    $rowCount,
-    $smartGroupCache
-  );
   // CRM-7929 Quick fix by colemanw
   // TODO: Figure out what function is responsible for prepending 'individual_' to these keys
   // and sort it out there rather than going to all this trouble here.
+  // Eileen's note - not sure anymore if we went the right path stripping the 'individual' here
+  // as is arguable whether it makes more sense now I think it would make more sense to rename the table field  or uniquefield to have
+  // the individual prefix but we are stuck with it now for apiv3 series.
   $returnContacts = array();
   if (is_array($contacts)) {
     foreach ($contacts as $cid => $contact) {
@@ -273,6 +200,47 @@ function _civicrm_api3_contact_get_spec(&$params) {
   $params['contact_is_deleted']['api.default'] = 0;
 }
 
+/*
+ * We are supporting 'showAll' = 'all', 'trash' or 'active' for contact get
+ * and for getcount
+ * - hopefully some day we'll come up with a std syntax for the 3-way-boolean of
+ * 0, 1 or not set
+ *
+ * We also support 'filter_group_id' & 'filter.group_id'
+ *
+ * @param array $params as passed into api get or getcount function
+ * @param array $options array of options (so we can modify the filter)
+ */
+function _civicrm_api3_contact_get_supportanomalies(&$params, &$options) {
+  if (isset($params['showAll'])) {
+    if (strtolower($params['showAll']) == "active") {
+      $params['contact_is_deleted'] = 0;
+    }
+    if (strtolower($params['showAll']) == "trash") {
+      $params['contact_is_deleted'] = 1;
+    }
+    if (strtolower($params['showAll']) == "all" && isset($params['contact_is_deleted'])) {
+      unset($params['contact_is_deleted']);
+    }
+  }
+  // support for group filters
+  if (array_key_exists('filter_group_id', $params)) {
+    $params['filter.group_id'] = $params['filter_group_id'];
+    unset($params['filter_group_id']);
+  }
+  // filter.group_id works both for 1,2,3 and array (1,2,3)
+  if (array_key_exists('filter.group_id', $params)) {
+    if (is_array($params['filter.group_id'])) {
+      $groups = $params['filter.group_id'];
+    }
+    else $groups = explode(',', $params['filter.group_id']);
+    unset($params['filter.group_id']);
+    $groups = array_flip($groups);
+    $groups[key($groups)] = 1;
+    $options['input_params']['group'] = $groups;
+  }
+}
+
 /**
  * Delete a contact with given contact id
  *
@@ -288,7 +256,7 @@ function civicrm_api3_contact_delete($params) {
 
 
   require_once 'CRM/Contact/BAO/Contact.php';
-  civicrm_api3_verify_mandatory($params, NULL, array('id'));
+
   $contactID = CRM_Utils_Array::value('id', $params);
 
 
@@ -306,70 +274,32 @@ function civicrm_api3_contact_delete($params) {
   }
 }
 
-function _civicrm_api3_contact_check_params(&$params, $dupeCheck = TRUE, $dupeErrorArray = FALSE, $requiredCheck = TRUE, $dedupeRuleGroupID = NULL) {
-  if (isset($params['id']) && is_numeric($params['id'])) {
-    $requiredCheck = FALSE;
+
+function _civicrm_api3_contact_check_params( &$params, $dupeCheck = true, $dupeErrorArray = false, $obsoletevalue = true, $dedupeRuleGroupID = null )
+{
+
+  switch (strtolower(CRM_Utils_Array::value('contact_type', $params))) {
+    case 'household':
+      civicrm_api3_verify_mandatory($params,null, array('household_name'));
+      break;
+    case 'organization':
+      civicrm_api3_verify_mandatory($params,null, array('organization_name'));
+      break;
+    case 'individual':
+      civicrm_api3_verify_one_mandatory($params,null, array(
+          'first_name',
+          'last_name',
+          'email',
+          'display_name',
+         )
+      );
+    break;
   }
 
-  if ($requiredCheck) {
-    if (isset($params['id'])) {
-      $required = array('Individual', 'Household', 'Organization');
-    }
-
-    $required = array(
-      'Individual' => array(
-        array('first_name', 'last_name'),
-        'email',
-      ),
-      'Household' => array(
-        'household_name',
-      ),
-      'Organization' => array(
-        'organization_name',
-      ),
-    );
-
-
-    // contact_type has a limited number of valid values
-    $fields = CRM_Utils_Array::value($params['contact_type'], $required);
-    if ($fields == NULL) {
-      return civicrm_api3_create_error("Invalid Contact Type: {$params['contact_type']}");
-    }
-
-    if ($csType = CRM_Utils_Array::value('contact_sub_type', $params)) {
-      if (!(CRM_Contact_BAO_ContactType::isExtendsContactType($csType, $params['contact_type']))) {
-        return civicrm_api3_create_error("Invalid or Mismatched Contact SubType: " . implode(', ', (array)$csType));
+  if (CRM_Utils_Array::value('contact_sub_type', $params) && CRM_Utils_Array::value('contact_type', $params)) {
+      if (!(CRM_Contact_BAO_ContactType::isExtendsContactType($params['contact_sub_type'], $params['contact_type']))) {
+        return civicrm_api3_create_error("Invalid or Mismatched Contact SubType: " . implode(', ', (array)$params['contact_sub_type']));
       }
-    }
-
-    if (!CRM_Utils_Array::value('contact_id', $params) && CRM_Utils_Array::value('id', $params)) {
-      $valid = FALSE;
-      $error = '';
-      foreach ($fields as $field) {
-        if (is_array($field)) {
-          $valid = TRUE;
-          foreach ($field as $element) {
-            if (!CRM_Utils_Array::value($element, $params)) {
-              $valid = FALSE;
-              $error .= $element;
-              break;
-            }
-          }
-        }
-        else {
-          if (CRM_Utils_Array::value($field, $params)) {
-            $valid = TRUE;
-          }
-        }
-        if ($valid) {
-          break;
-        }
-      }
-
-      if (!$valid) {
-        return civicrm_api3_create_error("Required fields not found for {$params['contact_type']} : $error");
-      }
-    }
   }
 
   if ($dupeCheck) {
@@ -385,18 +315,10 @@ function _civicrm_api3_contact_check_params(&$params, $dupeCheck = TRUE, $dupeEr
       $dedupeParams['check_permission'] = $params['check_permission'];
     }
 
-    $ids = implode(',', CRM_Dedupe_Finder::dupesByParams($dedupeParams, $params['contact_type'], 'Strict', array(), $dedupeRuleGroupID));
+    $ids = implode(',', CRM_Dedupe_Finder::dupesByParams($dedupeParams, $params['contact_type'], 'Strict', array()));
 
     if ($ids != NULL) {
-      if ($dupeErrorArray) {
-        $error = CRM_Core_Error::createError("Found matching contacts: $ids",
-          CRM_Core_Error::DUPLICATE_CONTACT,
-          'Fatal', $ids
-        );
-        return civicrm_api3_create_error($error->pop());
-      }
-
-      return civicrm_api3_create_error("Found matching contacts: $ids");
+      throw new Exception("Found matching contacts: $ids");
     }
   }
 
@@ -492,7 +414,6 @@ function _civicrm_api3_greeting_format_params($params) {
     if (!$formatParams) {
 
       continue;
-
     }
 
     // format params
@@ -823,5 +744,91 @@ LIMIT    0, {$limit}
   }
 
   return civicrm_api3_create_success($contactList, $params);
+}
+
+/**
+ * Merges given pair of duplicate contacts.
+ *
+ * @param  array   $params   input parameters
+ *
+ * Allowed @params array keys are:
+ * {int     main_id     main contact id with whom merge has to happen}
+ * {int     other_id    duplicate contact which would be deleted after merge operation}
+ * {string  mode        helps decide how to behave when there are conflicts.
+ *                      A 'safe' value skips the merge if there are no conflicts. Does a force merge otherwise.}
+ * {boolean auto_flip   wether to let api decide which contact to retain and which to delete.}
+ *
+ * @return array  API Result Array
+ *
+ * @static void
+ * @access public
+ */
+function civicrm_api3_contact_merge($params) {
+  $mode = CRM_Utils_Array::value('mode', $params, 'safe');
+  $autoFlip = CRM_Utils_Array::value('auto_flip', $params, TRUE);
+
+  require_once 'CRM/Dedupe/Merger.php';
+  $dupePairs = array(array('srcID' => CRM_Utils_Array::value('main_id', $params),
+      'dstID' => CRM_Utils_Array::value('other_id', $params),
+    ));
+  $result = CRM_Dedupe_Merger::merge($dupePairs, array(), $mode, $autoFlip);
+
+  if ($result['is_error'] == 0) {
+    return civicrm_api3_create_success();
+  }
+  else {
+    return civicrm_api3_create_error($result['messages']);
+  }
+}
+
+function _civicrm_api3_contact_proximity_spec(&$params) {
+  $params['latitude']['api.required'] = 1;
+  $params['longitude']['api.required'] = 1;
+  $params['unit']['api.default'] = 'meter';
+}
+
+function civicrm_api3_contact_proximity($params) {
+  $latitude  = CRM_Utils_Array::value('latitude', $params);
+  $longitude = CRM_Utils_Array::value('longitude', $params);
+  $distance  = CRM_Utils_Array::value('distance', $params);
+
+  $unit = CRM_Utils_Array::value('unit', $params);
+
+  // check and ensure that lat/long and distance are floats
+  if (
+    !CRM_Utils_Rule::numeric($latitude) ||
+    !CRM_Utils_Rule::numeric($longitude) ||
+    !CRM_Utils_Rule::numeric($distance)
+  ) {
+    throw new Exception(ts('Latitude, Longitude and Distance should exist and be numeric'));
+  }
+
+  if ($unit == "mile") {
+    $conversionFactor = 1609.344;
+  }
+  else {
+    $conversionFactor = 1000;
+  }
+  //Distance in meters
+  $distance = $distance * $conversionFactor;
+
+  require_once 'CRM/Contact/BAO/ProximityQuery.php';
+  $whereClause = CRM_Contact_BAO_ProximityQuery::where($latitude, $longitude, $distance);
+
+  $query = "
+SELECT    civicrm_contact.id as contact_id,
+          civicrm_contact.display_name as display_name
+FROM      civicrm_contact
+LEFT JOIN civicrm_address ON civicrm_contact.id = civicrm_address.contact_id
+WHERE     $whereClause
+";
+
+  $dao = CRM_Core_DAO::executeQuery($query);
+  $contacts = array();
+  while ($dao->fetch()) {
+    $contacts[] = $dao->toArray();
+  }
+
+  return civicrm_api3_create_success($contacts, $params, 'contact', 'get_by_location', $dao);
 }
 

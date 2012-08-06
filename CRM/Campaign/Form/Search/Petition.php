@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -36,10 +36,6 @@
 /**
  * Files required
  */
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Campaign/BAO/Survey.php';
-require_once 'CRM/Campaign/BAO/Petition.php';
-require_once 'CRM/Campaign/BAO/Campaign.php';
 class CRM_Campaign_Form_Search_Petition extends CRM_Core_Form {
 
   /**
@@ -88,7 +84,6 @@ class CRM_Campaign_Form_Search_Petition extends CRM_Core_Form {
     $this->add('text', 'petition_title', ts('Title'), $attributes['title']);
 
     //campaigns
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     $campaigns = CRM_Campaign_BAO_Campaign::getCampaigns(NULL, NULL, FALSE, FALSE, FALSE, TRUE);
     $this->add('select', 'petition_campaign_id', ts('Campaign'), array('' => ts('- select -')) + $campaigns);
     $this->set('petitionCampaigns', $campaigns);

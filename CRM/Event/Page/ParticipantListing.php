@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 class CRM_Event_Page_ParticipantListing extends CRM_Core_Page {
 
   protected $_id;
@@ -69,7 +67,6 @@ class CRM_Event_Page_ParticipantListing extends CRM_Core_Page {
     $this->preProcess();
 
     // get the class name from the participantListingID
-    require_once 'CRM/Core/OptionGroup.php';
     $className = CRM_Core_OptionGroup::getValue('participant_listing',
       $this->_participantListingID,
       'value',

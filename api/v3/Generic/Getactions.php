@@ -1,4 +1,6 @@
 <?php
+// $Id$
+
 function civicrm_api3_generic_getActions($params) {
   civicrm_api3_verify_mandatory($params, NULL, array('entity'));
   $r = civicrm_api('Entity', 'Get', array('version' => 3));
@@ -26,6 +28,5 @@ function civicrm_api3_generic_getActions($params) {
     }
   }
   return civicrm_api3_create_success($actions);
-  //function _civicrm_api_resolve($apiRequest) {}
 }
 

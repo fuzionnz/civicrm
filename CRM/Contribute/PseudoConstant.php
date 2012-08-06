@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/OptionGroup.php';
-require_once 'CRM/Core/PseudoConstant.php';
 
 /**
  * This class holds all the Pseudo constants that are specific to Contributions. This avoids
@@ -93,6 +90,13 @@ class CRM_Contribute_PseudoConstant extends CRM_Core_PseudoConstant {
    * @static
    */
   private static $pcPage;
+
+  /**
+   * status of personal campaign page
+   * @var array
+   * @static
+   */
+  private static $pcpStatus = array();
 
   /**
    * Get all the contribution types
@@ -209,9 +213,8 @@ class CRM_Contribute_PseudoConstant extends CRM_Core_PseudoConstant {
    * @static
    */
   public static function products($pageID = NULL) {
-    $products = array();
-    require_once 'CRM/Contribute/DAO/Product.php';
-    $dao = new CRM_Contribute_DAO_Product();
+    $products       = array();
+    $dao            = new CRM_Contribute_DAO_Product();
     $dao->is_active = 1;
     $dao->orderBy('id');
     $dao->find();
@@ -220,7 +223,6 @@ class CRM_Contribute_PseudoConstant extends CRM_Core_PseudoConstant {
       $products[$dao->id] = $dao->name;
     }
     if ($pageID) {
-      require_once 'CRM/Contribute/DAO/Premium.php';
       $dao               = new CRM_Contribute_DAO_Premium();
       $dao->entity_table = 'civicrm_contribution_page';
       $dao->entity_id    = $pageID;
@@ -229,7 +231,6 @@ class CRM_Contribute_PseudoConstant extends CRM_Core_PseudoConstant {
 
       $productID = array();
 
-      require_once 'CRM/Contribute/DAO/PremiumsProduct.php';
       $dao = new CRM_Contribute_DAO_PremiumsProduct();
       $dao->premiums_id = $premiumID;
       $dao->find();
@@ -300,6 +301,27 @@ class CRM_Contribute_PseudoConstant extends CRM_Core_PseudoConstant {
     }
 
     return $result;
+  }
+
+  /**
+   * Get all PCP Statuses.
+   *
+   * The static array pcpStatus is returned
+   *
+   * @access public
+   * @static
+   *
+   * @return array - array reference of all PCP activity statuses
+   */
+  public static function &pcpStatus($column = 'label') {
+    if (!array_key_exists($column, self::$pcpStatus)) {
+      self::$pcpStatus[$column] = array();
+
+      self::$pcpStatus[$column] = CRM_Core_OptionGroup::values('pcp_status', FALSE,
+        FALSE, FALSE, NULL, $column
+      );
+    }
+    return self::$pcpStatus[$column];
   }
 }
 

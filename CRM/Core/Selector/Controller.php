@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -35,16 +35,10 @@
  * implement the Selector/Api.interface.php class
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Utils/Pager.php';
-require_once 'CRM/Utils/PagerAToZ.php';
-require_once 'CRM/Utils/Sort.php';
-require_once 'CRM/Core/Report/Excel.php';
-require_once 'CRM/Contact/Form/Task/Label.php';
 class CRM_Core_Selector_Controller {
 
   /**
@@ -310,7 +304,6 @@ class CRM_Core_Selector_Controller {
     // get the column headers
     $columnHeaders = &$this->_object->getColumnHeaders($this->_action, $this->_output);
 
-    require_once 'CRM/Utils/Hook.php';
     $contextArray = explode('_', get_class($this->_object));
 
     $contextName = strtolower($contextArray[1]);

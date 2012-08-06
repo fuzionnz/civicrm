@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -61,7 +61,7 @@
 	<tr class="crm-contribution-form-block-page_text">
 		<td class="label" width="15%">{$form.page_text.label}</td>
 		<td width="85%">
-            <span class="description">{ts}Tell people why this campaign is important to you.{/ts}</span><br />
+            <span class="description">{ts}Tell people why this campaign is important to you.{/ts}</span><br />        
             {$form.page_text.html|crmReplace:class:huge}
         </td>
 	</tr>
@@ -78,7 +78,7 @@
 		<td class="label">{$form.is_active.label}</td>
 		<td>{$form.is_active.html}
             <span class="description">{ts}Is your Personal Campaign Page active? You can activate/de-activate it any time during it's lifecycle.{/ts}</span></td>
-	</tr>
+	</tr>	
 </table>
 </div>
 <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>

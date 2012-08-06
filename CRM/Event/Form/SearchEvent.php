@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,19 +28,15 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Core/OptionGroup.php';
 class CRM_Event_Form_SearchEvent extends CRM_Core_Form {
   function setDefaultValues() {
     $defaults = array();
     $defaults['eventsByDates'] = 0;
 
-    require_once 'CRM/Core/ShowHideBlocks.php';
     $this->_showHide = new CRM_Core_ShowHideBlocks();
     if (!CRM_Utils_Array::value('eventsByDates', $defaults)) {
       $this->_showHide->addHide('id_fromToDates');
@@ -75,7 +71,6 @@ class CRM_Event_Form_SearchEvent extends CRM_Core_Form {
     $this->addDate('start_date', ts('From'), FALSE, array('formatType' => 'searchDate'));
     $this->addDate('end_date', ts('To'), FALSE, array('formatType' => 'searchDate'));
 
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     CRM_Campaign_BAO_Campaign::addCampaignInComponentSearch($this);
 
     $this->addButtons(array(

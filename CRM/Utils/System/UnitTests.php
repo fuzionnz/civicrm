@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Utils/System/Drupal.php';
 
 /**
  * Helper authentication class for unit tests
@@ -48,7 +46,8 @@ class CRM_Utils_System_UnitTests extends CRM_Utils_System_Drupal {
     return;
   }
 
-  function authenticate($name, $password) {
+  static
+  function authenticate($name, $password, $loadCMSBootstrap = FALSE, $realPath = NULL) {
     $retVal = array(1, 1, 12345);
     return $retVal;
   }
@@ -74,7 +73,7 @@ class CRM_Utils_System_UnitTests extends CRM_Utils_System_Drupal {
     return;
   }
 
-  function url($path = NULL, $query = NULL, $absolute = TRUE, $fragment = NULL, $htmlize = TRUE) {
+  function url($path = NULL, $query = NULL, $absolute = TRUE, $fragment = NULL, $htmlize = TRUE, $frontend = FALSE) {
     $config = CRM_Core_Config::singleton();
     static $script = 'index.php';
 
@@ -130,7 +129,6 @@ class CRM_Utils_System_UnitTests extends CRM_Utils_System_Drupal {
 
   function getUserID($user) {
     //FIXME: look here a bit closer when testing UFMatch
-    require_once 'CRM/Core/BAO/UFMatch.php';
 
     // this puts the appropriate values in the session, so
     // no need to return anything

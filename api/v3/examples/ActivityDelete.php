@@ -7,8 +7,7 @@
  */
 function activity_delete_example(){
 $params = array( 
-  'id' => 13,
-  'activity_type_id' => 1,
+  'id' => 1,
   'version' => 3,
 );
 

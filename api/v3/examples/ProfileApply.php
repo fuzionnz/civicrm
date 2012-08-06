@@ -32,9 +32,10 @@ function profile_apply_expectedresult(){
   $expectedResult = array( 
   'is_error' => 0,
   'version' => 3,
-  'count' => 9,
+  'count' => 10,
   'values' => array( 
       'contact_type' => 'Individual',
+      'contact_sub_type' => '',
       'contact_id' => 1,
       'profile_id' => 25,
       'version' => 3,

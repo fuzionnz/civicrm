@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contact/DAO/ContactType.php';
-require_once 'CRM/Core/BAO/Navigation.php';
 class CRM_Contact_BAO_ContactType extends CRM_Contact_DAO_ContactType {
 
   /**
@@ -185,7 +182,7 @@ WHERE  parent_id IS NULL
 SELECT subtype.*, parent.name as parent, parent.label as parent_label
 FROM   civicrm_contact_type subtype
 INNER JOIN civicrm_contact_type parent ON subtype.parent_id = parent.id
-WHERE  subtype.name IS NOT NULL AND subtype.parent_id IS NOT NULL {$ctWHERE} 
+WHERE  subtype.name IS NOT NULL AND subtype.parent_id IS NOT NULL {$ctWHERE}
 ";
         if ($all === FALSE) {
           $sql .= " AND subtype.is_active = 1 AND parent.is_active = 1 ORDER BY parent.id";
@@ -292,7 +289,7 @@ WHERE  subtype.name IS NOT NULL AND subtype.parent_id IS NOT NULL {$ctWHERE}
 SELECT type.*, parent.name as parent, parent.label as parent_label
 FROM      civicrm_contact_type type
 LEFT JOIN civicrm_contact_type parent ON type.parent_id = parent.id
-WHERE  type.name IS NOT NULL 
+WHERE  type.name IS NOT NULL
 ";
         if ($all === FALSE) {
           $sql .= " AND type.is_active = 1";
@@ -464,7 +461,7 @@ AND   ( p.is_active = 1 OR p.id IS NULL )
       $_cache[$argString] = array();
 
       $sql = "
-SELECT subtype.name as contact_subtype, type.name as contact_type 
+SELECT subtype.name as contact_subtype, type.name as contact_type
 FROM   civicrm_contact_type subtype
 INNER JOIN civicrm_contact_type type ON ( subtype.parent_id = type.id )
 WHERE  subtype.name IN ('" . implode("','", $subType) . "' )";
@@ -525,7 +522,6 @@ WHERE  subtype.name IN ('" . implode("','", $subType) . "' )";
    */
   static
   function getCreateNewList() {
-    require_once 'CRM/Core/DAO.php';
     $shortCuts = array();
     $contactTypes = self::getSelectElements();
     foreach ($contactTypes as $key => $value) {
@@ -561,8 +557,6 @@ WHERE  subtype.name IN ('" . implode("','", $subType) . "' )";
       return FALSE;
     }
 
-    require_once 'CRM/Core/DAO/CustomGroup.php';
-    require_once 'CRM/Contact/DAO/Contact.php';
     $params = array('id' => $contactTypeId);
     self::retrieve($params, $typeInfo);
     $name = $typeInfo['name'];
@@ -579,7 +573,7 @@ WHERE  subtype.name IN ('" . implode("','", $subType) . "' )";
 
     // remove subtype for existing contacts
     $sql = "
-UPDATE civicrm_contact SET contact_sub_type = NULL 
+UPDATE civicrm_contact SET contact_sub_type = NULL
 WHERE contact_sub_type = '$name'";
     CRM_Core_DAO::executeQuery($sql);
 
@@ -592,7 +586,7 @@ WHERE contact_sub_type = '$name'";
     if ($name) {
       $sql = "
 DELETE
-FROM civicrm_navigation 
+FROM civicrm_navigation
 WHERE name = %1";
       $params = array(1 => array("New $name", 'String'));
       $dao = CRM_Core_DAO::executeQuery($sql, $params);
@@ -771,7 +765,7 @@ WHERE name = %1";
     if (self::isaSubType($contactType)) {
       $subType       = $contactType;
       $contactType   = self::getBasicType($subType);
-      $subTypeClause = " AND ( ( crt.contact_type_a = '{$contactType}' AND crt.contact_sub_type_a = '{$subType}') OR 
+      $subTypeClause = " AND ( ( crt.contact_type_a = '{$contactType}' AND crt.contact_sub_type_a = '{$subType}') OR
                                      ( crt.contact_type_b = '{$contactType}' AND crt.contact_sub_type_b = '{$subType}')  ) ";
     }
     else {
@@ -780,10 +774,10 @@ WHERE name = %1";
 
     // check relationships for
     $relationshipQuery = "
-SELECT count(cr.id) FROM civicrm_relationship cr 
-INNER JOIN civicrm_relationship_type crt ON 
-( cr.relationship_type_id = crt.id {$subTypeClause} ) 
-WHERE ( cr.contact_id_a = {$contactId} OR cr.contact_id_b = {$contactId} ) 
+SELECT count(cr.id) FROM civicrm_relationship cr
+INNER JOIN civicrm_relationship_type crt ON
+( cr.relationship_type_id = crt.id {$subTypeClause} )
+WHERE ( cr.contact_id_a = {$contactId} OR cr.contact_id_b = {$contactId} )
 LIMIT 1";
 
     $relationshipCount = CRM_Core_DAO::singleValueQuery($relationshipQuery);
@@ -808,8 +802,8 @@ LIMIT 1";
       $subType         = CRM_Core_DAO::VALUE_SEPARATOR . $subtype . CRM_Core_DAO::VALUE_SEPARATOR;
       $subTypeClause[] = "extends_entity_column_value LIKE '%{$subtype}%' ";
     }
-    $query = "SELECT table_name 
-FROM civicrm_custom_group 
+    $query = "SELECT table_name
+FROM civicrm_custom_group
 WHERE extends = %1 AND " . implode(" OR ", $subTypeClause);
     $dao = CRM_Core_DAO::executeQuery($query, array(1 => array($contactType, 'String')));
     while ($dao->fetch()) {
@@ -860,7 +854,7 @@ WHERE extends = %1 AND " . implode(" OR ", $subTypeClause);
     }
     $subtypeClause = implode(' OR ', $subtypeClause);
 
-    $query = "DELETE custom.* 
+    $query = "DELETE custom.*
 FROM {$tableName} custom
 INNER JOIN civicrm_contact ON civicrm_contact.id = custom.entity_id
 WHERE ($subtypeClause)";

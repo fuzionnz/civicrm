@@ -1,14 +1,21 @@
 <?php
+// $Id$
 
 /**
- * This class allows to consume the API, either from within a module that knows civicrm already:
+
+ This class allows to consume the API, either from within a module that knows civicrm already:
+
  require_once('api/class/api.php');
  $api = new civicrm_api3();
+
  or from any code on the same server as civicrm
+
  require_once('/your/civi/folder/api/class.api.php');
  // the path to civicrm.settings.php
  $api = new civicrm_api3 (array('conf_path'=> '/your/path/to/your/civicrm/or/joomla/site));
+
  or to query a remote server via the rest api
+
  $api = new civicrm_api3 (array ('server' => 'http://example.org','api_key'=>'theusersecretkey','key'=>'thesitesecretkey'));
 
  no matter how initialised and if civicrm is local or remote, you use the class the same way
@@ -16,6 +23,7 @@
  $api->{entity}->{action}($params);
 
  so to get the individual contacts
+
  if ($api->Contact->Get(array(
    'contact_type'=>'Individual','return'=>'sort_name,current_employer')) {
  // each key of the result array is an attribute of the api
@@ -23,14 +31,13 @@
  foreach ($api->values as $c) {
  echo "\n".$c->sort_name. " working for ". $c->current_employer;
  }
-
-
  // in theory, doesn't append
- }else {
+ } else {
  echo $api->errorMsg();
  }
 
  or to create an event
+
  if ($api->Event->Create(array(
    'title'=>'Test','event_type_id' => 1,'is_public' => 1,'start_date' => 19430429))) {
  echo "created event id:". $api->id;
@@ -39,13 +46,16 @@
  }
 
  To make it easier, the Actions can either take for input an associative array $params, or simply an id
+
  $api->Activity->Get (42);
+
  being the same as:
+
  $api->Activity->Get (array('id'=>42));
 
  you can too get the result like what civicrm_api does, but as an object instead of an array (eg $entity->attribute  instead of $entity['attribute']
- $result = $api->result;
 
+ $result = $api->result;
  // is the json encoded result
  echo $api;
 
@@ -80,13 +90,13 @@ class civicrm_api3 {
       return;
     }
     if (isset($config) && isset($config['conf_path'])) {
-      require_once ($config['conf_path'] . '/civicrm.settings.php');
+      define('CIVICRM_SETTINGS_PATH', $config['conf_path'] . '/civicrm.settings.php');
+      require_once CIVICRM_SETTINGS_PATH;
       require_once 'CRM/Core/Config.php';
       require_once 'api/api.php';
       require_once "api/v3/utils.php";
       $this->cfg = CRM_Core_Config::singleton();
       $this->init();
-      $this->ping();
     }
     else {
       $this->cfg = CRM_Core_Config::singleton();
@@ -145,12 +155,13 @@ class civicrm_api3 {
     if (is_int($params)) {
       $params = array('id' => $params);
     }
-    elseif (is_string($params)) {  $params = json_decode($params);}
+    elseif (is_string($params)) {
+      $params = json_decode($params);
+    }
 
     if (!isset($params['version'])) {
 
       $params['version'] = 3;
-
     }
     if (!isset($params['sequential'])) {
       $params['sequential'] = 1;
@@ -201,6 +212,7 @@ class civicrm_api3 {
    */
 
 
+
   public function attr($name, $value = NULL) {
     if ($value === NULL) {
       if (property_exists($this->lastResult, $name)) {
@@ -227,6 +239,7 @@ class civicrm_api3 {
  */
 
 
+
   public function __get($name) {
     //TODO, test if valid entity
     if (strtolower($name) !== $name) {
@@ -238,7 +251,6 @@ class civicrm_api3 {
     if ($name === 'result') {
 
       return $this->lastResult;
-
     }
     if ($name === 'values') {
       return $this->lastResult->values;
@@ -247,7 +259,6 @@ class civicrm_api3 {
     if (property_exists($this->lastResult, $name)) {
 
       return $this->lastResult->$name;
-
     }
 
     $this->currentEntity = $name;

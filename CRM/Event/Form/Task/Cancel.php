@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Event/Form/Task.php';
 
 /**
  * This class provides the functionality for cancel registration for event participations
@@ -91,7 +89,6 @@ class CRM_Event_Form_Task_Cancel extends CRM_Event_Form_Task {
 
       // Cancelled status id = 4
       $value['status_id'] = 4;
-      require_once 'CRM/Event/BAO/Participant.php';
       CRM_Event_BAO_Participant::create($value);
     }
   }

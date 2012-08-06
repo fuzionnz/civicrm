@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,20 +28,16 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
-require_once 'CRM/Campaign/BAO/Petition.php';
 
 /**
  * Page for displaying Petition Signatures
  */
 class CRM_Campaign_Page_Petition extends CRM_Core_Page {
   function browse() {
-    require_once 'CRM/Core/Permission.php';
 
     //get the survey id
     $surveyId = CRM_Utils_Request::retrieve('sid', 'Positive', $this);

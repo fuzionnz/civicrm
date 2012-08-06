@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Contribute/PseudoConstant.php';
 
 /**
  * This class generates form components for processing a pledge payment
@@ -77,7 +74,6 @@ class CRM_Pledge_Form_Payment extends CRM_Core_Form {
     $defaults = array();
     if ($this->_id) {
       $params['id'] = $this->_id;
-      require_once 'CRM/Pledge/BAO/PledgePayment.php';
       CRM_Pledge_BAO_PledgePayment::retrieve($params, $defaults);
       list($defaults['scheduled_date']) = CRM_Utils_Date::setDateDefaults($defaults['scheduled_date']);
       if (isset($defaults['contribution_id'])) {
@@ -100,16 +96,17 @@ class CRM_Pledge_Form_Payment extends CRM_Core_Form {
     //add various dates
     $this->addDate('scheduled_date', ts('Scheduled Date'), TRUE);
 
-    $this->add('text',
-      'scheduled_amount',
-      ts('Scheduled Amount'),
+    $this->addMoney('scheduled_amount',
+      ts('Scheduled Amount'), TRUE,
       array(
         'READONLY' => TRUE,
         'style' => "background-color:#EBECE4",
       ),
-      TRUE
+      TRUE,
+      'currency',
+      NULL, TRUE
     );
-    $this->addRule('scheduled_amount', ts('Please enter a valid monetary amount.'), 'money');
+
     $optionTypes = array('1' => ts('Adjust Pledge Payment Schedule?'),
       '2' => ts('Adjust Total Pledge Amount?'),
     );
@@ -149,7 +146,7 @@ class CRM_Pledge_Form_Payment extends CRM_Core_Form {
     $params = array();
     $formValues['scheduled_date'] = CRM_Utils_Date::processDate($formValues['scheduled_date']);
     $params['scheduled_date'] = CRM_Utils_Date::format($formValues['scheduled_date']);
-
+    $params['currency'] = CRM_Utils_Array::value('currency', $formValues);
     $now = date('Ymd');
     $contributionStatus = CRM_Contribute_PseudoConstant::contributionStatus(NULL, 'name');
 
@@ -163,7 +160,6 @@ class CRM_Pledge_Form_Payment extends CRM_Core_Form {
     $params['id'] = $this->_id;
     $pledgeId = CRM_Core_DAO::getFieldValue('CRM_Pledge_DAO_PledgePayment', $params['id'], 'pledge_id');
 
-    require_once 'CRM/Pledge/BAO/PledgePayment.php';
     CRM_Pledge_BAO_PledgePayment::add($params);
     $adjustTotalAmount = FALSE;
     if (CRM_Utils_Array::value('option_type', $formValues) == 2) {

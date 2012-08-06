@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -39,16 +39,21 @@
 class CRM_Mailing_Form_Upload extends CRM_Core_Form {
   public $_mailingID; function preProcess() {
     $this->_mailingID = $this->get('mailing_id');
-    require_once 'CRM/Core/Permission.php';
     if (CRM_Core_Permission::check('administer CiviCRM')) {
       $this->assign('isAdmin', 1);
     }
 
     //when user come from search context.
-    require_once 'CRM/Contact/Form/Search.php';
+    $ssID = $this->get('ssID');
+    $this->assign('ssid',$ssID);
     $this->_searchBasedMailing = CRM_Contact_Form_Search::isSearchContext($this->get('context'));
+    if(CRM_Contact_Form_Search::isSearchContext($this->get('context')) && !$ssID){
+      $params = array();
+      $value = CRM_Core_BAO_PrevNextCache::buildSelectedContactPager($this,$params);
+      $result = CRM_Core_BAO_PrevNextCache::getSelectedContacts($value['offset'],$value['rowCount1']);
+      $this->assign("value", $result);
+    }
   }
-
   /**
    * This function sets the default values for the form.
    * the default values are retrieved from the database
@@ -79,7 +84,6 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form {
 
     $htmlMessage = NULL;
     if ($mailingID) {
-      require_once 'CRM/Mailing/DAO/Mailing.php';
       $dao = new CRM_Mailing_DAO_Mailing();
       $dao->id = $mailingID;
       $dao->find(TRUE);
@@ -114,7 +118,6 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form {
       }
 
       //set default from email address.
-      require_once 'CRM/Core/OptionGroup.php';
       if (CRM_Utils_Array::value('from_name', $defaults) && CRM_Utils_Array::value('from_email', $defaults)) {
         $defaults['from_email_address'] = array_search('"' . $defaults['from_name'] . '" <' . $defaults['from_email'] . '>',
           CRM_Core_OptionGroup::values('from_email_address')
@@ -210,7 +213,6 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form {
       "CRM_Mailing_Controller_Send_{$this->controller->_key}"
     );
 
-    require_once 'CRM/Core/PseudoConstant.php';
     $fromEmailAddress = CRM_Core_PseudoConstant::fromEmailAddress('from_email_address');
     if (empty($fromEmailAddress)) {
       //redirect user to enter from email address.
@@ -229,8 +231,8 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form {
         '' => '- select -') + $fromEmailAddress, TRUE
     );
 
-    // Added code to add custom field as Reply-To on form when it is enabled from Mailer settings
-    if ($config->replyTo && !CRM_Utils_Array::value('override_verp', $options)) {
+    //Added code to add custom field as Reply-To on form when it is enabled from Mailer settings
+    if ( isset($config->replyTo) && ! CRM_Utils_Array::value( 'override_verp', $options ) ) {
       $this->add('select', 'reply_to_address', ts('Reply-To'),
         array(
           '' => '- select -') + $fromEmailAddress
@@ -250,7 +252,6 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form {
 
     $this->addRadio('upload_type', ts('I want to'), $options, $attributes, "&nbsp;&nbsp;");
 
-    require_once 'CRM/Mailing/BAO/Mailing.php';
     CRM_Mailing_BAO_Mailing::commonCompose($this);
 
     $this->addElement('file', 'textFile', ts('Upload TEXT Message'), 'size=30 maxlength=60');
@@ -275,13 +276,11 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form {
       $this->set('uploadNames', array('textFile', 'htmlFile'));
     }
 
-    require_once 'CRM/Core/BAO/File.php';
     CRM_Core_BAO_File::buildAttachment($this,
       'civicrm_mailing',
       $this->_mailingID
     );
 
-    require_once 'CRM/Mailing/PseudoConstant.php';
     $this->add('select', 'header_id', ts('Mailing Header'),
       array('' => ts('- none -')) + CRM_Mailing_PseudoConstant::component('Header')
     );
@@ -451,7 +450,6 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form {
     );
 
     //get the from email address
-    require_once 'CRM/Utils/Mail.php';
     $params['from_email'] = CRM_Utils_Mail::pluckEmailFromHeader($fromEmailAddress);
 
     //get the from Name
@@ -465,7 +463,6 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form {
 
     /* Build the mailing object */
 
-    require_once 'CRM/Mailing/BAO/Mailing.php';
     CRM_Mailing_BAO_Mailing::create($params, $ids);
 
     if (isset($this->_submitValues['_qf_Upload_upload_save']) &&
@@ -539,11 +536,9 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form {
       $htmlMessage = str_replace("'", "\'", $htmlMessage);
       $template->assign('htmlContent', $htmlMessage);
     }
-    require_once 'CRM/Core/BAO/Domain.php';
 
     $domain = CRM_Core_BAO_Domain::getDomain();
 
-    require_once 'CRM/Mailing/BAO/Mailing.php';
     $mailing = new CRM_Mailing_BAO_Mailing();
     $mailing->id = $self->_mailingID;
     $mailing->find(TRUE);
@@ -568,7 +563,6 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form {
       $urls[$key]++;
     }
 
-    require_once 'CRM/Mailing/BAO/Component.php';
 
     // set $header and $footer
     foreach (array(
@@ -588,7 +582,6 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form {
       }
     }
 
-    require_once 'CRM/Utils/Token.php';
 
     $skipTextFile = $self->get('skipTextFile');
     $skipHtmlFile = $self->get('skipHtmlFile');
@@ -658,7 +651,6 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form {
       // be a suggestion from someone on how to
       // make it a bit more elegant
 
-      require_once 'CRM/Mailing/BAO/Mailing.php';
       $dummy_mail        = new CRM_Mailing_BAO_Mailing();
       $mess              = "body_{$file}";
       $dummy_mail->$mess = $str;
@@ -680,11 +672,10 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form {
       }
       if (!empty($dataErrors)) {
         $errors[$file . 'File'] = ts('The following errors were detected in %1:', array(
-          1 => $name)) . ' <ul>' . implode('', $dataErrors) . '</ul><br /><a href="' . CRM_Utils_System::docURL2('Sample CiviMail Messages', TRUE) . '" target="_blank">' . ts('More information on required tokens...') . '</a>';
+          1 => $name)) . ' <ul>' . implode('', $dataErrors) . '</ul><br /><a href="' . CRM_Utils_System::docURL2('Sample CiviMail Messages', TRUE, NULL, NULL, NULL, "wiki") . '" target="_blank">' . ts('More information on required tokens...') . '</a>';
       }
     }
 
-    require_once 'CRM/Core/BAO/MessageTemplates.php';
     $templateName = CRM_Core_BAO_MessageTemplates::getMessageTemplates();
     if (CRM_Utils_Array::value('saveTemplate', $params)
       && in_array(CRM_Utils_Array::value('saveTemplateName', $params), $templateName)

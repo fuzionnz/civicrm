@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -64,7 +64,6 @@ class CRM_Contact_BAO_SearchCustom {
 
     // check that the csid exists in the db along with the right file
     // and implements the right interface
-    require_once 'CRM/Core/OptionGroup.php';
     $customSearchClass = CRM_Core_OptionGroup::getLabel('custom_search',
       $customSearchID
     );
@@ -72,7 +71,6 @@ class CRM_Contact_BAO_SearchCustom {
       return $error;
     }
 
-    require_once ('CRM/Core/Extensions.php');
     $ext = new CRM_Core_Extensions();
 
     if (!$ext->isExtensionKey($customSearchClass)) {

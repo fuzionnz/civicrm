@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -43,7 +43,7 @@ class CRM_Core_Payment_Form {
   protected function _setPaymentFields(&$form) {
     $bltID = $form->_bltID;
 
-    $form->_fields['billing_first_name'] = array(
+    $form->_paymentFields['billing_first_name'] = array(
       'htmlType' => 'text',
       'name' => 'billing_first_name',
       'title' => ts('Billing First Name'),
@@ -52,7 +52,7 @@ class CRM_Core_Payment_Form {
       'is_required' => TRUE,
     );
 
-    $form->_fields['billing_middle_name'] = array(
+    $form->_paymentFields['billing_middle_name'] = array(
       'htmlType' => 'text',
       'name' => 'billing_middle_name',
       'title' => ts('Billing Middle Name'),
@@ -61,7 +61,7 @@ class CRM_Core_Payment_Form {
       'is_required' => FALSE,
     );
 
-    $form->_fields['billing_last_name'] = array(
+    $form->_paymentFields['billing_last_name'] = array(
       'htmlType' => 'text',
       'name' => 'billing_last_name',
       'title' => ts('Billing Last Name'),
@@ -70,7 +70,7 @@ class CRM_Core_Payment_Form {
       'is_required' => TRUE,
     );
 
-    $form->_fields["billing_street_address-{$bltID}"] = array(
+    $form->_paymentFields["billing_street_address-{$bltID}"] = array(
       'htmlType' => 'text',
       'name' => "billing_street_address-{$bltID}",
       'title' => ts('Street Address'),
@@ -79,7 +79,7 @@ class CRM_Core_Payment_Form {
       'is_required' => TRUE,
     );
 
-    $form->_fields["billing_city-{$bltID}"] = array(
+    $form->_paymentFields["billing_city-{$bltID}"] = array(
       'htmlType' => 'text',
       'name' => "billing_city-{$bltID}",
       'title' => ts('City'),
@@ -88,7 +88,7 @@ class CRM_Core_Payment_Form {
       'is_required' => TRUE,
     );
 
-    $form->_fields["billing_state_province_id-{$bltID}"] = array(
+    $form->_paymentFields["billing_state_province_id-{$bltID}"] = array(
       'htmlType' => 'select',
       'name' => "billing_state_province_id-{$bltID}",
       'title' => ts('State / Province'),
@@ -99,7 +99,7 @@ class CRM_Core_Payment_Form {
       'is_required' => self::checkRequiredStateProvince($form),
     );
 
-    $form->_fields["billing_postal_code-{$bltID}"] = array(
+    $form->_paymentFields["billing_postal_code-{$bltID}"] = array(
       'htmlType' => 'text',
       'name' => "billing_postal_code-{$bltID}",
       'title' => ts('Postal Code'),
@@ -108,7 +108,7 @@ class CRM_Core_Payment_Form {
       'is_required' => TRUE,
     );
 
-    $form->_fields["billing_country_id-{$bltID}"] = array(
+    $form->_paymentFields["billing_country_id-{$bltID}"] = array(
       'htmlType' => 'select',
       'name' => "billing_country_id-{$bltID}",
       'title' => ts('Country'),
@@ -129,7 +129,7 @@ class CRM_Core_Payment_Form {
   function setCreditCardFields(&$form) {
     CRM_Core_Payment_Form::_setPaymentFields($form);
 
-    $form->_fields['credit_card_number'] = array(
+    $form->_paymentFields['credit_card_number'] = array(
       'htmlType' => 'text',
       'name' => 'credit_card_number',
       'title' => ts('Card Number'),
@@ -138,16 +138,20 @@ class CRM_Core_Payment_Form {
       'is_required' => TRUE,
     );
 
-    $form->_fields['cvv2'] = array(
+    $form->_paymentFields['cvv2'] = array(
       'htmlType' => 'text',
       'name' => 'cvv2',
       'title' => ts('Security Code'),
       'cc_field' => TRUE,
       'attributes' => array('size' => 5, 'maxlength' => 10, 'autocomplete' => 'off'),
-      'is_required' => TRUE,
+      'is_required' => CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME,
+        'cvv_backoffice_required',
+        CRM_Core_Component::getComponentID('CiviContribute')
+        ,1
+      ),
     );
 
-    $form->_fields['credit_card_exp_date'] = array(
+    $form->_paymentFields['credit_card_exp_date'] = array(
       'htmlType' => 'date',
       'name' => 'credit_card_exp_date',
       'title' => ts('Expiration Date'),
@@ -156,9 +160,8 @@ class CRM_Core_Payment_Form {
       'is_required' => TRUE,
     );
 
-    require_once 'CRM/Contribute/PseudoConstant.php';
     $creditCardType = array('' => ts('- select -')) + CRM_Contribute_PseudoConstant::creditCard();
-    $form->_fields['credit_card_type'] = array(
+    $form->_paymentFields['credit_card_type'] = array(
       'htmlType' => 'select',
       'name' => 'credit_card_type',
       'title' => ts('Card Type'),
@@ -176,7 +179,7 @@ class CRM_Core_Payment_Form {
   function setDirectDebitFields(&$form) {
     CRM_Core_Payment_Form::_setPaymentFields($form);
 
-    $form->_fields['account_holder'] = array(
+    $form->_paymentFields['account_holder'] = array(
       'htmlType' => 'text',
       'name' => 'account_holder',
       'title' => ts('Account Holder'),
@@ -186,7 +189,7 @@ class CRM_Core_Payment_Form {
     );
 
     //e.g. IBAN can have maxlength of 34 digits
-    $form->_fields['bank_account_number'] = array(
+    $form->_paymentFields['bank_account_number'] = array(
       'htmlType' => 'text',
       'name' => 'bank_account_number',
       'title' => ts('Bank Account Number'),
@@ -196,7 +199,7 @@ class CRM_Core_Payment_Form {
     );
 
     //e.g. SWIFT-BIC can have maxlength of 11 digits
-    $form->_fields['bank_identification_number'] = array(
+    $form->_paymentFields['bank_identification_number'] = array(
       'htmlType' => 'text',
       'name' => 'bank_identification_number',
       'title' => ts('Bank Identification Number'),
@@ -205,7 +208,7 @@ class CRM_Core_Payment_Form {
       'is_required' => TRUE,
     );
 
-    $form->_fields['bank_name'] = array(
+    $form->_paymentFields['bank_name'] = array(
       'htmlType' => 'text',
       'name' => 'bank_name',
       'title' => ts('Bank Name'),
@@ -222,9 +225,9 @@ class CRM_Core_Payment_Form {
    * @access public
    */
   function buildCreditCard(&$form, $useRequired = FALSE) {
-    require_once 'CRM/Core/Payment.php';
     if ($form->_paymentProcessor['billing_mode'] & CRM_Core_Payment::BILLING_MODE_FORM) {
-      foreach ($form->_fields as $name => $field) {
+      self::setCreditCardFields($form);
+      foreach ($form->_paymentFields as $name => $field) {
         if (isset($field['cc_field']) &&
           $field['cc_field']
         ) {
@@ -248,7 +251,6 @@ class CRM_Core_Payment_Form {
       );
 
       // also take care of state country widget
-      require_once 'CRM/Core/BAO/Address.php';
       $stateCountryMap = array(
         1 => array('country' => "billing_country_id-{$form->_bltID}",
           'state_province' => "billing_state_province_id-{$form->_bltID}",
@@ -274,10 +276,10 @@ class CRM_Core_Payment_Form {
    * @access public
    */
   function buildDirectDebit(&$form, $useRequired = FALSE) {
-    require_once 'CRM/Core/Payment.php';
 
     if ($form->_paymentProcessor['billing_mode'] & CRM_Core_Payment::BILLING_MODE_FORM) {
-      foreach ($form->_fields as $name => $field) {
+      self::setDirectDebitFields($form);
+      foreach ($form->_paymentFields as $name => $field) {
         if (isset($field['cc_field']) &&
           $field['cc_field']
         ) {
@@ -317,8 +319,7 @@ class CRM_Core_Payment_Form {
    * @return void
    * @static
    */
-  static
-  function mapParams($id, &$src, &$dst, $reverse = FALSE) {
+  static function mapParams($id, &$src, &$dst, $reverse = FALSE) {
     static $map = NULL;
     if (!$map) {
       $map = array(
@@ -357,8 +358,7 @@ class CRM_Core_Payment_Form {
    * @return int
    * @static
    */
-  static
-  function getCreditCardExpirationMonth($src) {
+  static function getCreditCardExpirationMonth($src) {
     if ($month = CRM_Utils_Array::value('M', $src['credit_card_exp_date'])) {
       return $month;
     }
@@ -374,8 +374,7 @@ class CRM_Core_Payment_Form {
    * @return int
    * @static
    */
-  static
-  function getCreditCardExpirationYear($src) {
+  static function getCreditCardExpirationYear($src) {
     return CRM_Utils_Array::value('Y', $src['credit_card_exp_date']);
   }
 
@@ -386,7 +385,6 @@ class CRM_Core_Payment_Form {
   function checkRequiredStateProvince($form) {
     // If selected country has possible values for state/province mark the
     // state/province field as required.
-    require_once 'CRM/Core/DAO/StateProvince.php';
     $config = CRM_Core_Config::singleton();
     $stateProvince = new CRM_Core_DAO_StateProvince();
     $stateProvince->country_id = CRM_Utils_Array::value("billing_country_id-{$form->_bltID}", $form->_submitValues);
@@ -394,7 +392,6 @@ class CRM_Core_Payment_Form {
     if ($stateProvince->count() > 0) {
       // check that the state/province data is not excluded by a
       // limitation in the localisation settings.
-      require_once 'CRM/Core/PseudoConstant.php';
       $countryIsoCodes = CRM_Core_PseudoConstant::countryIsoCode();
       $limitCodes      = $config->provinceLimit();
       $limitIds        = array();

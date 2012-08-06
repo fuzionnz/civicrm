@@ -23,8 +23,10 @@ $params = array(
 function membership_delete_expectedresult(){
 
   $expectedResult = array( 
-  'is_error' => 1,
-  'error_message' => 'DB Error: syntax error',
+  'is_error' => 0,
+  'version' => 3,
+  'count' => 1,
+  'values' => 1,
 );
 
   return $expectedResult  ;

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,12 +29,10 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Event/Form/Registration.php';
 
 /**
  * This class generates form components for processing Event
@@ -59,7 +57,8 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
    *
    * @return void
    * @access public
-   */ function preProcess() {
+   */ 
+  function preProcess() {
     parent::preProcess();
 
     $participantNo = substr($this->_name, 12);
@@ -102,7 +101,6 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
     $discountId = NULL;
     //fix for CRM-3088, default value for discount set.
     if (!empty($this->_values['discount'])) {
-      require_once 'CRM/Core/BAO/Discount.php';
       $discountId = CRM_Core_BAO_Discount::findSet($this->_eventId, 'civicrm_event');
       if ($discountId && CRM_Utils_Array::value('default_discount_fee_id', $this->_values['event'])) {
         $discountKey = CRM_Core_DAO::getFieldValue("CRM_Core_DAO_OptionValue", $this->_values['event']['default_discount_fee_id']
@@ -136,7 +134,6 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
 
     //CRM-4320, setdefault additional participant values.
     if ($this->_allowConfirmation && $this->_additionalParticipantId) {
-      require_once 'CRM/Event/Form/EventFees.php';
       //hack to get set default from eventFees.php
       $this->_discountId   = $discountId;
       $this->_pId          = $this->_additionalParticipantId;
@@ -163,7 +160,6 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
     if (array_key_exists('participant_campaign_id', $this->_fields)) {
       $defaults['participant_campaign_id'] = CRM_Utils_Array::value('campaign_id', $this->_values['event']);
     }
-    require_once 'CRM/Core/BAO/Address.php';
     CRM_Core_BAO_Address::fixAllStateSelects($this, $this->_defaults);
 
     return $defaults;
@@ -183,10 +179,10 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
     $this->add('hidden', 'scriptArray', NULL);
 
     if ($this->_values['event']['is_monetary']) {
-      require_once 'CRM/Event/Form/Registration/Register.php';
       CRM_Event_Form_Registration_Register::buildAmount($this);
     }
     $first_name = $last_name = NULL;
+    $pre = $post = array();
     foreach (array(
       'pre', 'post') as $keys) {
       if (isset($this->_values['additional_custom_' . $keys . '_id'])) {
@@ -208,13 +204,6 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
       ($first_name && $last_name)
     ) ? FALSE : TRUE;
 
-    $this->add('text',
-      "email-{$this->_bltID}",
-      ts('Email Address'),
-      array('size' => 30, 'maxlength' => 60),
-      $required
-    );
-    $this->addRule("email-{$this->_bltID}", ts('Email is not valid.'), 'email');
     //add buttons
     $js = NULL;
     if ($this->isLastParticipant(TRUE) && !CRM_Utils_Array::value('is_monetary', $this->_values['event'])) {
@@ -230,7 +219,6 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
     $includeSkipButton = TRUE;
     $this->_resetAllowWaitlist = FALSE;
 
-    require_once "CRM/Price/BAO/Set.php";
     $pricesetFieldsCount = CRM_Price_BAO_Set::getPricesetCount($this->_priceSetId);
 
     if ($this->_lastParticipant || $pricesetFieldsCount) {
@@ -313,17 +301,17 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
     ) {
 
       if ($this->_isEventFull) {
-        $statusMessage = ts('This event is currently full. You are registering in a waiting list. You will be notified if spaces become available.');
+        $statusMessage = ts('This event is currently full. You are registering for the waiting list. You will be notified if spaces become available.');
       }
       elseif ($this->_allowWaitlist ||
         (!$this->_allowWaitlist && ($processedCnt + $pricesetFieldsCount) > $this->_availableRegistrations)
       ) {
 
-        $waitingMsg = ts('It looks like you are now registering a group participants which are extending the event availability. All participant will be listed in the waiting list and you will be notified if spaces become available.');
-        $confirmedMsg = ts('It look like that total participant recoreded will fit in the event availability (you will not be wait listed).');
+        $waitingMsg = ts('It looks like you are registering more participants then there are spaces available. All participants will be added to the waiting list. You will be notified if spaces become available.');
+        $confirmedMsg = ts('It looks like there are enough spaces in this event for your group (you will not be wait listed).');
         if ($this->_requireApproval) {
           $waitingMsg = ts('It looks like you are now registering a group of %1 participants. The event has %2 available spaces (you will not be wait listed). Registration for this event requires approval. You will receive an email once your registration has been reviewed.');
-          $confirmedMsg = ts('It look like that total participant recoreded will fit in the event availability (you will not be wait listed). Registration for this event requires approval. You will receive an email once your registration has been reviewed.');
+          $confirmedMsg = ts('It looks there are enough spaces in this event for your group (you will not be wait listed). Registration for this event requires approval. You will receive an email once your registration has been reviewed.');
         }
 
         $this->assign('waitingMsg', $waitingMsg);
@@ -405,8 +393,10 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
     }
 
     if ($button != 'skip') {
+      //Check that either an email or firstname+lastname is included in the form(CRM-9587)
+      CRM_Event_Form_Registration_Register::checkProfileComplete($fields, &$errors, $self->_eventId);
+
       //Additional Participant can also register for an event only once
-      require_once 'CRM/Event/Form/Registration/Register.php';
       $isRegistered = CRM_Event_Form_Registration_Register::checkRegistration($fields, $self, TRUE);
       if ($isRegistered) {
         if ($self->_values['event']['allow_same_participant_emails']) {
@@ -427,8 +417,25 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
         foreach ($params as $key => $value) {
           if ($key != $addParticipantNum) {
             if (!$self->_values['event']['allow_same_participant_emails']) {
-              if ($value["email-{$self->_bltID}"] == $fields["email-{$self->_bltID}"]) {
-                $errors["email-{$self->_bltID}"] = ts('The email address must be unique for each participant.');
+              //collect all email fields
+              $existingEmails = array();
+              $additionalParticipantEmails = array();
+              if (is_array($value)) {
+                foreach ($value as $key => $val) {
+                  if (substr($key, 0, 6) == 'email-' && $val) {
+                    $existingEmails[] = $val;
+                  }
+                }
+              }
+              foreach ($fields as $key => $val) {
+                if (substr($key, 0, 6) == 'email-' && $val) {
+                  $additionalParticipantEmails[] = $val;
+                  $mailKey = $key;
+                }
+              }
+              //check if any emails are common to both arrays
+              if (count(array_intersect($existingEmails, $additionalParticipantEmails))) {
+                $errors[$mailKey] = ts('The email address must be unique for each participant.');
                 break;
               }
             }
@@ -481,7 +488,6 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
     }
 
     if ($button == 'skip' && $self->_lastParticipant && CRM_Utils_Array::value('priceSetId', $fields)) {
-      require_once 'CRM/Price/BAO/Set.php';
       $pricesetFieldsCount = CRM_Price_BAO_Set::getPricesetCount($fields['priceSetId']);
       if (($pricesetFieldsCount < 1) || $self->_allowConfirmation) {
         return $errors;
@@ -494,7 +500,7 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
         !$self->_requireApproval &&
         !(CRM_Utils_Array::value('amount', $self->_params[0], 0) == 0)
       ) {
-        $errors['_qf_default'] = ts("You are goinng to skip the last participant, your event registration will be confirmed. Please go back to the main registration page, to complete payment information.");
+        $errors['_qf_default'] = ts("You are going to skip the last participant, your event registration will be confirmed. Please go back to the main registration page, to complete payment information.");
       }
     }
 
@@ -504,7 +510,7 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
       !isset($errors['_qf_default']) &&
       !$self->validatePaymentValues($self, $fields)
     ) {
-      $errors['_qf_default'] = ts("Your payement information looks incomplete. Please go back to the main registration page, to complete payment information.");
+      $errors['_qf_default'] = ts("Your payment information looks incomplete. Please go back to the main registration page, to complete payment information.");
       $self->set('forcePayement', TRUE);
     }
     elseif ($button == 'skip') {
@@ -526,7 +532,6 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
 
     $validatePayement = FALSE;
     if (CRM_Utils_Array::value('priceSetId', $fields)) {
-      require_once 'CRM/Price/BAO/Set.php';
       $lineItem = array();
       CRM_Price_BAO_Set::processAmount($self->_values['fee'], $fields, $lineItem);
       if ($fields['amount'] > 0) {
@@ -556,8 +561,6 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
     }
 
     // make sure that credit card number and cvv are valid
-    require_once 'CRM/Utils/Rule.php';
-    require_once 'CRM/Core/OptionGroup.php';
     if (CRM_Utils_Array::value('credit_card_type', $self->_params[0])) {
       if (CRM_Utils_Array::value('credit_card_number', $self->_params[0]) &&
         !CRM_Utils_Rule::creditCardNumber($self->_params[0]['credit_card_number'], $self->_params[0]['credit_card_type'])
@@ -571,7 +574,6 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
         return FALSE;
       }
     }
-    require_once 'CRM/Contact/BAO/Contact.php';
     foreach (CRM_Contact_BAO_Contact::$_greetingTypes as $greeting) {
       if ($greetingType = CRM_Utils_Array::value($greeting, $self->_params[0])) {
         $customizedValue = CRM_Core_OptionGroup::getValue($greeting, 'Customized', 'name');
@@ -666,7 +668,6 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
       if ($this->_values['event']['is_monetary']) {
 
         //added for discount
-        require_once 'CRM/Core/BAO/Discount.php';
         $discountId = CRM_Core_BAO_Discount::findSet($this->_eventId, 'civicrm_event');
 
         if (!empty($this->_values['discount'][$discountId])) {
@@ -680,7 +681,6 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
         }
         else {
           $lineItem = array();
-          require_once 'CRM/Price/BAO/Set.php';
           CRM_Price_BAO_Set::processAmount($this->_values['fee'], $params, $lineItem);
 
           //build the line item..
@@ -730,7 +730,6 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
 
     $participantNo = count($this->_params);
     if ($button != 'skip') {
-      require_once "CRM/Core/Session.php";
       $statusMsg = ts('Registration information for participant %1 has been saved.', array(1 => $participantNo));
       CRM_Core_Session::setStatus("{$statusMsg}");
     }
@@ -740,7 +739,6 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
       && CRM_Utils_Array::value('additional_participants', $this->_params[0])
       && $this->isLastParticipant()
     ) {
-      require_once 'CRM/Event/Form/Registration/Register.php';
       CRM_Event_Form_Registration_Register::processRegistration($this->_params, NULL);
     }
   }

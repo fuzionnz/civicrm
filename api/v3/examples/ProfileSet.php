@@ -53,7 +53,7 @@ function profile_set_expectedresult(){
           'legal_name' => '',
           'image_URL' => '',
           'preferred_communication_method' => '',
-          'preferred_language' => 'en_US',
+          'preferred_language' => '',
           'preferred_mail_format' => '',
           'api_key' => '',
           'first_name' => 'abc2',

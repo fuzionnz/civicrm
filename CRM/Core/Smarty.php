@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Utils/Recent.php';
 
 /**
  * Fix for bug CRM-392. Not sure if this is the best fix or it will impact
@@ -63,7 +61,8 @@ class CRM_Core_Smarty extends Smarty {
    *
    * @return CRM_Core_Smarty
    * @access private
-   */ function __construct() {
+   */ 
+  function __construct() {
     parent::__construct();
 
     $config = CRM_Core_Config::singleton();
@@ -82,7 +81,7 @@ class CRM_Core_Smarty extends Smarty {
     // else we sometime suppress errors quietly and this results
     // in blank emails etc
     if (!is_writable($this->compile_dir)) {
-      echo "CiviCRM does not have permission to write temp files in {$this->compile_dir}, Exiting";
+           echo "CiviCRM does not have permission to write temp files in {$this->compile_dir}, Exiting";
       exit();
     }
 
@@ -120,7 +119,6 @@ class CRM_Core_Smarty extends Smarty {
     if (!$defaultWysiwygEditor &&
       !CRM_Core_Config::isUpgradeMode()
     ) {
-      require_once 'CRM/Core/BAO/Setting.php';
       $editorID = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
         'editor_id'
       );
@@ -136,18 +134,11 @@ class CRM_Core_Smarty extends Smarty {
     $this->assign('tsLocale', $tsLocale);
 
     // CRM-7163 hack: we don’t display langSwitch on upgrades anyway
-    $displayLangSwitch = TRUE;
-    if (CRM_Utils_Array::value($config->userFrameworkURLVar, $_GET) == 'civicrm/upgrade' ||
-      CRM_Utils_Array::value($config->userFrameworkURLVar, $_REQUEST) == 'civicrm/upgrade'
-    ) {
-      $displayLangSwitch = FALSE;
-    }
-    if ($displayLangSwitch) {
+    if (!CRM_Core_Config::isUpgradeMode()) {
       $this->assign('langSwitch', CRM_Core_I18n::languages(TRUE));
     }
 
     //check if logged in user has access CiviCRM permission and build menu
-    require_once 'CRM/Core/Permission.php';
     $buildNavigation = CRM_Core_Permission::check('access CiviCRM');
     $this->assign('buildNavigation', $buildNavigation);
 
@@ -155,7 +146,6 @@ class CRM_Core_Smarty extends Smarty {
     if (!CRM_Core_Config::isUpgradeMode() &&
       $buildNavigation
     ) {
-      require_once 'CRM/Core/BAO/Navigation.php';
       $contactID = $session->get('userID');
       if ($contactID) {
         $navigation = CRM_Core_BAO_Navigation::createNavigation($contactID);
@@ -172,11 +162,12 @@ class CRM_Core_Smarty extends Smarty {
    * Method providing static instance of SmartTemplate, as
    * in Singleton pattern.
    */
-  static
-  function &singleton() {
+  static function &singleton() {
     if (!isset(self::$_singleton)) {
       $config = CRM_Core_Config::singleton();
       self::$_singleton = new CRM_Core_Smarty($config->templateDir, $config->templateCompileDir);
+
+      self::registerStringResource();
     }
     return self::$_singleton;
   }
@@ -190,7 +181,6 @@ class CRM_Core_Smarty extends Smarty {
    * @param boolean $display
    */
   function fetch($resource_name, $cache_id = NULL, $compile_id = NULL, $display = FALSE) {
-    require_once 'CRM/Core/Menu.php';
     return parent::fetch($resource_name, $cache_id, $compile_id, $display);
   }
 
@@ -213,6 +203,11 @@ class CRM_Core_Smarty extends Smarty {
       }
       unset($this->_tpl_vars[$key]);
     }
+  }
+
+  static function registerStringResource() {
+    require_once 'CRM/Core/Smarty/resources/String.php';
+    civicrm_smarty_register_string_resource();
   }
 }
 

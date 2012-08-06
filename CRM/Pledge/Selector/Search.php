@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,16 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Selector/Base.php';
-require_once 'CRM/Core/Selector/API.php';
-require_once 'CRM/Utils/Pager.php';
-require_once 'CRM/Utils/Sort.php';
-require_once 'CRM/Contact/BAO/Query.php';
 
 /**
  * This class is used to retrieve and display a range of
@@ -85,6 +79,7 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base {
     'pledge_contribution_page_id',
     'pledge_contribution_type',
     'pledge_campaign_id',
+    'pledge_currency',
   );
 
   /**
@@ -290,6 +285,7 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base {
       FALSE,
       $this->_additionalClause
     );
+
     // process the result of the query
     $rows = array();
 
@@ -299,7 +295,6 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base {
     );
 
     //get all campaigns.
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     $allCampaigns = CRM_Campaign_BAO_Campaign::getCampaigns(NULL, NULL, FALSE, FALSE, FALSE, TRUE);
 
     //4418 check for view, edit and delete
@@ -353,13 +348,11 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base {
       );
 
 
-      require_once ('CRM/Contact/BAO/Contact/Utils.php');
       $row['contact_type'] = CRM_Contact_BAO_Contact_Utils::getImage($result->contact_sub_type ?
         $result->contact_sub_type : $result->contact_type, FALSE, $result->contact_id
       );
       $rows[] = $row;
     }
-
     return $rows;
   }
 

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 
 /**
  * Create a page for displaying Price Fields.
@@ -60,6 +58,14 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
    * @access private
    */
   private static $_actionLinks;
+
+  /**
+   * The price set is reserved or not
+   *
+   * @var boolean
+   * @access protected
+   */
+  protected $_isSetReserved = false;
 
   /**
    * Get the action links for this page.
@@ -118,15 +124,14 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
    * @access public
    */
   function browse() {
-    require_once 'CRM/Price/BAO/Field.php';
-    $priceField = array();
+    $priceField    = array();
     $priceFieldBAO = new CRM_Price_BAO_Field();
 
     // fkey is sid
     $priceFieldBAO->price_set_id = $this->_sid;
     $priceFieldBAO->orderBy('weight, label');
     $priceFieldBAO->find();
-
+    
     while ($priceFieldBAO->fetch()) {
       $priceField[$priceFieldBAO->id] = array();
       CRM_Core_DAO::storeValues($priceFieldBAO, $priceField[$priceFieldBAO->id]);
@@ -136,7 +141,6 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
         $optionValues = array();
         $params = array('price_field_id' => $priceFieldBAO->id);
 
-        require_once 'CRM/Price/BAO/FieldValue.php';
         CRM_Price_BAO_FieldValue::retrieve($params, $optionValues);
 
         $priceField[$priceFieldBAO->id]['price'] = CRM_Utils_Array::value('amount', $optionValues);
@@ -144,11 +148,16 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
 
       $action = array_sum(array_keys($this->actionLinks()));
 
-      if ($priceFieldBAO->is_active) {
-        $action -= CRM_Core_Action::ENABLE;
+      if ($this->_isSetReserved) {
+        $action -= CRM_Core_Action::UPDATE + CRM_Core_Action::DELETE + CRM_Core_Action::ENABLE + CRM_Core_Action::DISABLE;
       }
       else {
-        $action -= CRM_Core_Action::DISABLE;
+        if ($priceFieldBAO->is_active) {
+          $action -= CRM_Core_Action::ENABLE;
+        }
+        else {
+          $action -= CRM_Core_Action::DISABLE;
+        }
       }
 
       if ($priceFieldBAO->active_on == '0000-00-00 00:00:00') {
@@ -160,7 +169,6 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
       }
 
       // need to translate html types from the db
-      require_once 'CRM/Price/BAO/Field.php';
       $htmlTypes = CRM_Price_BAO_Field::htmlTypes();
       $priceField[$priceFieldBAO->id]['html_type'] = $htmlTypes[$priceField[$priceFieldBAO->id]['html_type']];
       $priceField[$priceFieldBAO->id]['order'] = $priceField[$priceFieldBAO->id]['weight'];
@@ -174,7 +182,6 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
 
     $returnURL = CRM_Utils_System::url('civicrm/admin/price/field', "reset=1&action=browse&sid={$this->_sid}");
     $filter = "price_set_id = {$this->_sid}";
-    require_once 'CRM/Utils/Weight.php';
     CRM_Utils_Weight::addOrder($priceField, 'CRM_Price_DAO_Field',
       'id', $returnURL, $filter
     );
@@ -218,7 +225,6 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
    * @access public
    */
   function run() {
-    require_once 'CRM/Price/BAO/Set.php';
 
     // get the group id
     $this->_sid = CRM_Utils_Request::retrieve('sid', 'Positive',
@@ -234,8 +240,10 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
 
     if ($this->_sid) {
       $usedBy = CRM_Price_BAO_Set::getUsedBy($this->_sid);
-
       $this->assign('usedBy', $usedBy);
+      $this->_isSetReserved= CRM_Core_DAO::getFieldValue('CRM_Price_DAO_Set', $this->_sid, 'is_reserved');
+      $this->assign('isReserved', $this->_isSetReserved);
+      
       CRM_Price_BAO_Set::checkPermission($this->_sid);
       $comps = array(
         'Event' => 'civicrm_event',
@@ -250,7 +258,7 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
       $this->assign('contexts', $priceSetContexts);
     }
 
-    if ($action & (CRM_Core_Action::DELETE)) {
+    if ($action & (CRM_Core_Action::DELETE) && !$this->_isSetReserved) {
       if (empty($usedBy)) {
         // prompt to delete
         $session = CRM_Core_Session::singleton();
@@ -263,7 +271,6 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
       }
       else {
         // add breadcrumb
-        require_once 'CRM/Price/BAO/Field.php';
         $url = CRM_Utils_System::url('civicrm/admin/price/field', 'reset=1');
         CRM_Utils_System::appendBreadCrumb(ts('Price'),
           $url
@@ -283,7 +290,7 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
     $this->assign('action', $action);
 
     // what action to take ?
-    if ($action & (CRM_Core_Action::UPDATE | CRM_Core_Action::ADD)) {
+    if ($action & (CRM_Core_Action::UPDATE | CRM_Core_Action::ADD) && !$this->_isSetReserved) {
       // no browse for edit/update/view
       $this->edit($action);
     }
@@ -291,7 +298,6 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
       $this->preview($fid);
     }
     else {
-      require_once 'CRM/Price/BAO/Field.php';
       $this->browse();
     }
 

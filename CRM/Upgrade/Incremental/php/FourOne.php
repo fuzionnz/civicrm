@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -45,8 +45,15 @@ class CRM_Upgrade_Incremental_php_FourOne {
     return TRUE;
   }
 
-  function setPostUpgradeMessage(&$postUpgradeMessage, $currentVer, $latestVer) {
-    if (version_compare($currentVer, '4.1.0') < 0) {
+  /**
+   * Compute any messages which should be displayed after upgrade
+   *
+   * @param $postUpgradeMessage string, alterable
+   * @param $rev string, an intermediate version; note that setPostUpgradeMessage is called repeatedly with different $revs
+   * @return void
+   */
+  function setPostUpgradeMessage(&$postUpgradeMessage, $rev) {
+    if ($rev == '4.1.alpha1') {
       $postUpgradeMessage .= '<br />' . ts('WARNING! CiviCRM 4.1 introduces an improved way of handling cron jobs. However the new method is NOT backwards compatible. <strong>Please notify your system administrator that all CiviCRM related cron jobs will cease to work, and will need to be re-configured (this includes sending CiviMail mailings, updating membership statuses, etc.).</strong> Refer to the <a href="%1">online documentation</a> for detailed instructions.', array(1 => 'http://wiki.civicrm.org/confluence/display/CRMDOC41/Managing+Scheduled+Jobs'));
       $postUpgradeMessage .= '<br />' . ts('The CiviCRM Administration menu structure has been re-organized during this upgrade to make it easier to find things and reduce the number of keystrokes. If you have customized this portion of the navigation menu - you should take a few minutes to review the changes. You may need to reimplement or move your customizations.');
 
@@ -59,7 +66,6 @@ class CRM_Upgrade_Incremental_php_FourOne {
   function upgrade_4_1_alpha1($rev) {
     $config = CRM_Core_Config::singleton();
     if (in_array('CiviCase', $config->enableComponents)) {
-      require_once 'CRM/Case/BAO/Case.php';
       if (!CRM_Case_BAO_Case::createCaseViews()) {
         $template = CRM_Core_Smarty::singleton();
         $afterUpgradeMessage = '';
@@ -75,19 +81,16 @@ class CRM_Upgrade_Incremental_php_FourOne {
     $upgrade = new CRM_Upgrade_Form();
     $upgrade->processSQL($rev);
 
-    require_once 'CRM/Core/BAO/Setting.php';
 
     $this->transferPreferencesToSettings();
     $this->createNewSettings();
 
     // now modify the config so that the directories are now stored in the settings table
     // CRM-8780
-    require_once 'CRM/Core/BAO/ConfigSetting.php';
     $params = array();
     CRM_Core_BAO_ConfigSetting::add($params);
 
     // also reset navigation
-    require_once 'CRM/Core/BAO/Navigation.php';
     CRM_Core_BAO_Navigation::resetNavigation();
   }
 
@@ -292,7 +295,6 @@ AND    v.is_active = 1
   }
 
   function upgrade_4_1_alpha2($rev) {
-    require_once 'CRM/Core/BAO/Setting.php';
     $dao             = new CRM_Core_DAO_Setting();
     $dao->group_name = 'Directory Preferences';
     $dao->name       = 'customTemplateDir';
@@ -311,8 +313,6 @@ AND    v.is_active = 1
 
   function upgrade_4_1_beta1($rev) {
     //CRM-9311
-    require_once 'CRM/Core/BAO/Setting.php';
-    require_once 'CRM/Core/OptionGroup.php';
     $groupNames = array('directory_preferences', 'url_preferences');
     foreach ($groupNames as $groupName) {
       CRM_Core_OptionGroup::deleteAssoc($groupName);

@@ -1,4 +1,6 @@
 <?php
+// $Id$
+
 require_once 'CRM/Core/BAO/OptionValue.php';
 
 /**
@@ -52,6 +54,7 @@ function civicrm_api3_option_value_create($params) {
     /* CONVERT(value, DECIMAL) is used to convert varchar
        field 'value' to decimal->integer                    */
 
+
     $params['value'] = (int) CRM_Utils_Weight::getDefaultWeight('CRM_Core_DAO_OptionValue',
       $fieldValues,
       'CONVERT(value, DECIMAL)'
@@ -68,7 +71,7 @@ function civicrm_api3_option_value_create($params) {
     $ids = array('optionValue' => $params['id']);
   }
   $optionValueBAO = CRM_Core_BAO_OptionValue::add($params, $ids);
-
+  civicrm_api('option_value', 'getfields', array('version' => 3, 'cache_clear' => 1));
   $values = array();
   _civicrm_api3_object_to_array($optionValueBAO, $values[$optionValueBAO->id]);
   return civicrm_api3_create_success($values, $params);
@@ -96,8 +99,6 @@ function _civicrm_api3_option_value_create_spec(&$params) {
  * @access public
  */
 function civicrm_api3_option_value_delete($params) {
-  return CRM_Core_BAO_OptionValue::del((int) $params["id"]) ? civicrm_api3_create_success() : civicrm_api3_create_error('Could not delete OptionValue ' . $id);
+  return CRM_Core_BAO_OptionValue::del((int) $params['id']) ? civicrm_api3_create_success() : civicrm_api3_create_error('Could not delete OptionValue ' . $params['id']);
 }
-
-
 

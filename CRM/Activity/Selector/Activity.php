@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,17 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Core/Selector/Base.php';
-require_once 'CRM/Core/Selector/API.php';
-require_once 'CRM/Utils/Pager.php';
-require_once 'CRM/Utils/Sort.php';
-require_once 'CRM/Activity/BAO/Activity.php';
 
 /**
  * This class is used to retrieve and display activities for a contact
@@ -91,7 +84,6 @@ class CRM_Activity_Selector_Activity extends CRM_Core_Selector_Base implements C
     $this->_activityTypeIDs = $activityTypeIDs;
 
     // get all enabled view componentc (check if case is enabled)
-    require_once 'CRM/Core/BAO/Setting.php';
     $this->_viewOptions = CRM_Core_BAO_Setting::valueOptions(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
       'contact_view_options', TRUE, NULL, TRUE
     );
@@ -148,6 +140,8 @@ class CRM_Activity_Selector_Activity extends CRM_Core_Selector_Base implements C
 
       case 'Membership Signup':
       case 'Membership Renewal':
+      case 'Change Membership Status':
+      case 'Change Membership Type':
         $url = 'civicrm/contact/view/membership';
         $qsView = "action=view&reset=1&id={$sourceRecordId}&cid=%%cid%%&context=%%cxt%%{$extraParams}";
         break;
@@ -233,7 +227,6 @@ class CRM_Activity_Selector_Activity extends CRM_Core_Selector_Base implements C
         ));
     }
 
-    require_once 'CRM/Case/BAO/Case.php';
     if ($activityTypeName &&
       CRM_Case_BAO_Case::checkPermission($activityId, 'File On Case', $activityTypeId)
     ) {
@@ -327,7 +320,6 @@ class CRM_Activity_Selector_Activity extends CRM_Core_Selector_Base implements C
    * @access public
    */
   function getTotalCount($action, $case = NULL) {
-    require_once 'CRM/Activity/BAO/Activity.php';
     $params = array(
       'contact_id' => $this->_contactId,
       'admin' => $this->_admin,
@@ -372,7 +364,6 @@ class CRM_Activity_Selector_Activity extends CRM_Core_Selector_Base implements C
 
     $activityStatus = CRM_Core_PseudoConstant::activityStatus();
 
-    require_once 'CRM/Campaign/PseudoConstant.php';
     $engagementLevels = CRM_Campaign_PseudoConstant::engagementLevel();
 
     //CRM-4418

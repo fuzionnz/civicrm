@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,15 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Config.php';
-require_once 'CRM/Core/BAO/UFGroup.php';
-require_once 'CRM/Core/BAO/CustomField.php';
-require_once 'CRM/Profile/Form.php';
 
 /**
  * This class contains all the function that are called using AJAX
@@ -60,8 +55,6 @@ class CRM_Core_Page_AJAX_Location {
       $relContact = CRM_Utils_Type::escape($_GET['relContact'], 'Integer');
     }
 
-    require_once 'CRM/Core/BAO/Location.php';
-    require_once 'CRM/Core/BAO/Website.php';
     $values      = array();
     $entityBlock = array('contact_id' => $cid);
     $location    = CRM_Core_BAO_Location::getValues($entityBlock);
@@ -189,29 +182,30 @@ class CRM_Core_Page_AJAX_Location {
         foreach ($profileFields as $key => $val) {
 
           if (array_key_exists($key, $defaults)) {
-            if ($val['html_type'] == 'Radio') {
-              $elements["onbehalf[{$key}]"]['type'] = $val['html_type'];
+            $htmlType = CRM_Utils_Array::value('html_type', $val);
+            if ($htmlType == 'Radio') {
+              $elements["onbehalf[{$key}]"]['type'] = $htmlType;
               $elements["onbehalf[{$key}]"]['value'] = $defaults[$key];
             }
-            elseif ($val['html_type'] == 'CheckBox') {
+            elseif ($htmlType == 'CheckBox') {
               foreach ($defaults[$key] as $k => $v) {
-                $elements["onbehalf[{$key}][{$k}]"]['type'] = $val['html_type'];
+                $elements["onbehalf[{$key}][{$k}]"]['type'] = $htmlType;
                 $elements["onbehalf[{$key}][{$k}]"]['value'] = $v;
               }
             }
-            elseif ($val['html_type'] == 'Multi-Select') {
+            elseif ($htmlType == 'Multi-Select') {
               foreach ($defaults[$key] as $k => $v) {
-                $elements["onbehalf_{$key}"]['type'] = $val['html_type'];
+                $elements["onbehalf_{$key}"]['type'] = $htmlType;
                 $elements["onbehalf_{$key}"]['value'][$k] = $v;
               }
             }
-            elseif ($val['html_type'] == 'Autocomplete-Select') {
-              $elements["onbehalf_{$key}"]['type'] = $val['html_type'];
+            elseif ($htmlType == 'Autocomplete-Select') {
+              $elements["onbehalf_{$key}"]['type'] = $htmlType;
               $elements["onbehalf_{$key}"]['value'] = $defaults[$key];
               $elements["onbehalf_{$key}"]['id'] = $defaults["{$key}_id"];
             }
             else {
-              $elements["onbehalf_{$key}"]['type'] = $val['html_type'];
+              $elements["onbehalf_{$key}"]['type'] = $htmlType;
               $elements["onbehalf_{$key}"]['value'] = $defaults[$key];
             }
           }
@@ -233,7 +227,6 @@ class CRM_Core_Page_AJAX_Location {
       CRM_Utils_System::civiExit();
     }
 
-    require_once 'CRM/Core/PseudoConstant.php';
     $result = CRM_Core_PseudoConstant::stateProvinceForCountry($_GET['_value']);
 
     $elements = array(array('name' => ts('- select a state -'),
@@ -246,7 +239,6 @@ class CRM_Core_Page_AJAX_Location {
       );
     }
 
-    require_once "CRM/Utils/JSON.php";
     echo json_encode($elements);
     CRM_Utils_System::civiExit();
   }
@@ -259,7 +251,6 @@ class CRM_Core_Page_AJAX_Location {
     }
     else {
 
-      require_once 'CRM/Core/PseudoConstant.php';
       $result = CRM_Core_PseudoConstant::countyForState($_GET['_value']);
 
       $elements = array(array('name' => ts('- select -'),
@@ -280,7 +271,6 @@ class CRM_Core_Page_AJAX_Location {
       }
     }
 
-    require_once "CRM/Utils/JSON.php";
     echo json_encode($elements);
     CRM_Utils_System::civiExit();
   }
@@ -295,13 +285,11 @@ class CRM_Core_Page_AJAX_Location {
     // now lets use the event-id obtained above, to retrieve loc block information.
     if ($eventId) {
       $params = array('entity_id' => $eventId, 'entity_table' => 'civicrm_event');
-      require_once 'CRM/Core/BAO/Location.php';
       // second parameter is of no use, but since required, lets use the same variable.
       $location = CRM_Core_BAO_Location::getValues($params, $params);
     }
 
     $result = array();
-    require_once 'CRM/Core/BAO/Setting.php';
     $addressOptions = CRM_Core_BAO_Setting::valueOptions(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
       'address_options', TRUE, NULL, TRUE
     );
@@ -337,7 +325,6 @@ class CRM_Core_Page_AJAX_Location {
     }
 
     // set the message if loc block is being used by more than one event.
-    require_once 'CRM/Event/BAO/Event.php';
     $result['count_loc_used'] = CRM_Event_BAO_Event::countEventsUsingLocBlockId($_POST['lbid']);
 
     echo json_encode($result);

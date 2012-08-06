@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,15 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/SelectValues.php';
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Contact/Form/Edit/Notes.php';
-require_once 'CRM/Custom/Form/CustomData.php';
 
 /**
  * This class generates form components for relationship
@@ -158,16 +153,15 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
     }
     $this->assign('rtype', $this->_rtype);
 
-    require_once 'CRM/Core/PseudoConstant.php';
 
     //use name as it remain constant, CRM-3336
     $this->_allRelationshipNames = CRM_Core_PseudoConstant::relationshipType('name');
 
     // when custom data is included in this page
     if (CRM_Utils_Array::value('hidden_custom', $_POST)) {
-      CRM_Custom_Form_Customdata::preProcess($this);
-      CRM_Custom_Form_Customdata::buildQuickForm($this);
-      CRM_Custom_Form_Customdata::setDefaultValues($this);
+      CRM_Custom_Form_CustomData::preProcess($this);
+      CRM_Custom_Form_CustomData::buildQuickForm($this);
+      CRM_Custom_Form_CustomData::setDefaultValues($this);
     }
   }
 
@@ -343,7 +337,6 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
     // add a ajax facility for searching contacts
     $dataUrl = CRM_Utils_System::url('civicrm/ajax/search', 'reset=1', TRUE, NULL, FALSE);
     $this->assign('dataUrl', $dataUrl);
-    require_once 'CRM/Contact/Form/NewContact.php';
     CRM_Contact_Form_NewContact::buildQuickForm($this);
 
     $this->addDate('start_date', ts('Start Date'), FALSE, array('formatType' => 'searchDate'));
@@ -415,7 +408,6 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
     $this->assign('searchDone', $searchDone);
 
     if ($this->get('contact_type')) {
-      require_once 'CRM/Contact/BAO/ContactType.php';
       $typeLabel = CRM_Contact_BAO_ContactType::getLabel($this->get('contact_type'));
       $this->assign('contact_type', $this->get('contact_type'));
       $this->assign('contact_type_display', $typeLabel);
@@ -533,7 +525,6 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
         $relChanged = FALSE;
       }
       if ($employerId && ($isDisabled || $relChanged)) {
-        require_once 'CRM/Contact/BAO/Contact/Utils.php';
         CRM_Contact_BAO_Contact_Utils::clearCurrentEmployer($this->_values['current_employee_id']);
       }
     }
@@ -572,7 +563,6 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
     // if this is called from case view,
     //create an activity for case role removal.CRM-4480
     if ($this->_caseId) {
-      require_once 'CRM/Case/BAO/Case.php';
       CRM_Case_BAO_Case::createCaseRoleActivity($this->_caseId, $relationshipIds, $params['contact_check'], $this->_contactId);
     }
 
@@ -648,7 +638,6 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
           CRM_Utils_Array::value('current_employer_id', $this->_values)
         ) {
           //clear current employer.
-          require_once 'CRM/Contact/BAO/Contact/Utils.php';
           CRM_Contact_BAO_Contact_Utils::clearCurrentEmployer($this->_contactId);
         }
       }
@@ -656,7 +645,6 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
       //set current employer
       if ($orgId) {
         $currentEmpParams[$this->_contactId] = $orgId;
-        require_once 'CRM/Contact/BAO/Contact/Utils.php';
         CRM_Contact_BAO_Contact_Utils::setCurrentEmployer($currentEmpParams);
       }
     }
@@ -677,7 +665,6 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
           CRM_Utils_Array::value('current_employee_id', $this->_values)
         ) {
           // clear current employee
-          require_once 'CRM/Contact/BAO/Contact/Utils.php';
           CRM_Contact_BAO_Contact_Utils::clearCurrentEmployer($ids['contactTarget']);
         }
       }
@@ -690,7 +677,6 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
           $currentEmpParams[$Id] = $this->_contactId;
         }
 
-        require_once 'CRM/Contact/BAO/Contact/Utils.php';
         CRM_Contact_BAO_Contact_Utils::setCurrentEmployer($currentEmpParams);
       }
     }

@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -23,6 +23,9 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
+{if $ppType}
+  {include file="CRM/Core/BillingBlock.tpl"}
+{else}
 {if $action & 1024}
     {include file="CRM/Event/Form/Registration/PreviewHeader.tpl"}
 {/if}
@@ -72,32 +75,17 @@
 {/if}
 
 {if $priceSet}
-    <fieldset id="priceset" class="crm-group priceset-group"><legend>{$event.fee_label}</legend>
-        {include file="CRM/Price/Form/PriceSet.tpl" extends="Event"}
-	{include file="CRM/Price/Form/ParticipantCount.tpl"}
-    </fieldset>
+    {if ! $quickConfig}<fieldset id="priceset" class="crm-group priceset-group"><legend>{$event.fee_label}</legend>{/if}
+      {include file="CRM/Price/Form/PriceSet.tpl" extends="Event"}
+			{include file="CRM/Price/Form/ParticipantCount.tpl"}
+    {if ! $quickConfig}</fieldset>{/if}
+
     {if $form.is_pay_later}
         <div class="crm-section pay_later-section">
 	        <div class="label">&nbsp;</div>
             <div class="content">{$form.is_pay_later.html}&nbsp;{$form.is_pay_later.label}</div>
             <div class="clear"></div>
         </div>
-    {/if}
-
-{else}
-    {if $paidEvent}
-        <div class="crm-section paid_event-section">
-    	    <div class="label">{$event.fee_label} <span class="marker">*</span></div>
-    		<div class="content">{$form.amount.html}</div>
-            <div class="clear"></div>
-     	</div>
-        {if $form.is_pay_later}
-            <div class="crm-section pay_later-section">
-    	        <div class="label">&nbsp;</div>
-                <div class="content">{$form.is_pay_later.html}&nbsp;{$form.is_pay_later.label}</div>
-                <div class="clear"></div>
-            </div>
-        {/if}
     {/if}
 {/if}
 
@@ -136,22 +124,19 @@
     </fieldset>
 {/if}
 
-{assign var=n value=email-$bltID}
-    <div class="crm-section email-section">
-        <div class="label">{$form.$n.label}</div>
-        <div class="content">{$form.$n.html}</div>
-        <div class="clear"></div>
-    </div>
-
-
 {* User account registration option. Displays if enabled for one of the profiles on this page. *}
 {include file="CRM/common/CMSUser.tpl"}
 
 {include file="CRM/UF/Form/Block.tpl" fields=$customPre} 
+ <div class="crm-section payment_processor-section">
+      <div class="label">{$form.payment_processor.label}</div>
+      <div class="content">{$form.payment_processor.html}</div>
+      <div class="clear"></div>
+ </div>
 
-{if $paidEvent}   
-    {include file='CRM/Core/BillingBlock.tpl'} 
-{/if}        
+ <div id="billing-payment-block"></div>
+ {include file="CRM/common/paymentBlock.tpl'}
+
 
 {include file="CRM/UF/Form/Block.tpl" fields=$customPost}   
 
@@ -181,7 +166,7 @@
     </div>
 {/if}
 </div>
-
+{/if}
 {literal} 
 <script type="text/javascript">
     {/literal}{if $pcp && $is_honor_roll }pcpAnonymous();{/if}{literal}
@@ -226,9 +211,9 @@
 
 	if ( ( cj("#bypass_payment").val( ) == 1 ) ||
 	     ( payLater && document.getElementsByName('is_pay_later')[0].checked ) ) {
-	     hide( 'payment_information' );		
+	     hide( 'billing-payment-block' );		
 	} else {
-             show( 'payment_information' );
+             show( 'billing-payment-block' );
 	}
     }
     

@@ -29,7 +29,6 @@ class CRM_Event_Cart_Form_Checkout_ConferenceEvents extends CRM_Event_Cart_Form_
 	  WHERE
 		parent_event_id = {$this->conference_event->id}
                 AND civicrm_event.is_active = 1
-                AND civicrm_event.is_public = 1
                 AND COALESCE(civicrm_event.is_template, 0) = 0
                 AND og.name = 'conference_slot'
 	  ORDER BY
@@ -131,10 +130,9 @@ EOS;
 
       $values = array();
       CRM_Core_DAO::storeValues($this->main_participant, $values);
-      $values['id'] = NULL;
+      $values['id']       = NULL;
       $values['event_id'] = $event_in_cart->event_id;
-      require_once 'CRM/Event/Cart/BAO/MerParticipant.php';
-      $participant = CRM_Event_Cart_BAO_MerParticipant::create($values);
+      $participant        = CRM_Event_Cart_BAO_MerParticipant::create($values);
       $participant->save();
       $event_in_cart->add_participant($participant);
     }

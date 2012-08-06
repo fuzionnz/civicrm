@@ -1,7 +1,8 @@
 <?php
-require_once ('CRM/Event/BAO/Participant.php');
 class CRM_Event_Cart_BAO_MerParticipant extends CRM_Event_BAO_Participant {
   public $email = NULL;
+  public $contribution_id = NULL;
+  public $cart = NULL;
 
   //XXX 
   function __construct($participant = NULL) {
@@ -80,13 +81,12 @@ class CRM_Event_Cart_BAO_MerParticipant extends CRM_Event_BAO_Participant {
   }
 
   function load_associations() {
-    require_once 'CRM/Contact/BAO/Contact.php';
     $contact_details = CRM_Contact_BAO_Contact::getContactDetails($this->contact_id);
     $this->email = $contact_details[1];
   }
 
   function get_participant_index() {
-    if (!isset($this->cart)) {
+    if (!$this->cart) {
       $this->cart = CRM_Event_Cart_BAO_Cart::find_by_id($this->cart_id);
       $this->cart->load_associations();
     }
@@ -110,7 +110,6 @@ class CRM_Event_Cart_BAO_MerParticipant extends CRM_Event_BAO_Participant {
   }
 
   function get_form() {
-    require_once ('CRM/Event/Cart/Form/MerParticipant.php');
     return new CRM_Event_Cart_Form_MerParticipant($this);
   }
 }

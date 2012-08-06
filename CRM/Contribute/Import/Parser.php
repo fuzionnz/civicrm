@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,15 +28,12 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
-require_once 'CRM/Utils/String.php';
-require_once 'CRM/Utils/Type.php';
 
-require_once 'CRM/Contribute/Import/Field.php';
 
 abstract class CRM_Contribute_Import_Parser {
   CONST MAX_ERRORS = 250, MAX_WARNINGS = 25, VALID = 1, WARNING = 2, ERROR = 3, CONFLICT = 4, STOP = 5, DUPLICATE = 6, MULTIPLE_DUPE = 7, NO_MATCH = 8, SOFT_CREDIT = 9, SOFT_CREDIT_ERROR = 10, PLEDGE_PAYMENT = 11, PLEDGE_PAYMENT_ERROR = 12;
@@ -554,7 +551,6 @@ abstract class CRM_Contribute_Import_Parser {
    */
   function setActiveFields($fieldKeys) {
     $this->_activeFieldCount = count($fieldKeys);
-    require_once 'CRM/Contribute/Import/Field.php';
     foreach ($fieldKeys as $key) {
       if (empty($this->_fields[$key])) {
         $this->_activeFields[] = new CRM_Contribute_Import_Field('', ts('- do not import -'));
@@ -668,7 +664,6 @@ abstract class CRM_Contribute_Import_Parser {
         $this->_fields[$name] = new CRM_Contribute_Import_Field($name, $title, $type, $headerPattern, $dataPattern);
       }
       else {
-        require_once 'CRM/Import/Field.php';
         $this->_fields[$name] = new CRM_Import_Field($name, $title, $type, $headerPattern, $dataPattern,
           CRM_Utils_Array::value('hasLocationType', $tempField[$name])
         );
@@ -814,7 +809,7 @@ abstract class CRM_Contribute_Import_Parser {
     }
 
     foreach ($values as $k => $v) {
-      $values[$k] = preg_replace("/^$enclosure(.*)$enclosure$/", '$1', $v);
+      $values[$k] = preg_replace("/^$enclosure(.*) $enclosure$/", '$1', $v);
     }
   }
 
@@ -833,7 +828,6 @@ abstract class CRM_Contribute_Import_Parser {
       case CRM_Contribute_Import_Parser::CONFLICT:
       case CRM_Contribute_Import_Parser::DUPLICATE:
         //here constants get collides.
-        require_once 'CRM/Import/Parser.php';
         if ($type == CRM_Contribute_Import_Parser::ERROR) {
           $type = CRM_Import_Parser::ERROR;
         }
@@ -873,7 +867,6 @@ abstract class CRM_Contribute_Import_Parser {
       case CRM_Contribute_Import_Parser::CONFLICT:
       case CRM_Contribute_Import_Parser::DUPLICATE:
         //here constants get collides.
-        require_once 'CRM/Import/Parser.php';
         if ($type == CRM_Contribute_Import_Parser::ERROR) {
           $type = CRM_Import_Parser::ERROR;
         }

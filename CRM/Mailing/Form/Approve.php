@@ -1,9 +1,9 @@
 <?php
 /*
   +--------------------------------------------------------------------+
-  | CiviCRM version 4.1                                                |
+  | CiviCRM version 4.2                                                |
   +--------------------------------------------------------------------+
-  | Copyright CiviCRM LLC (c) 2004-2011                                |
+  | Copyright CiviCRM LLC (c) 2004-2012                                |
   +--------------------------------------------------------------------+
   | This file is a part of CiviCRM.                                    |
   |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 
 /**
  *
@@ -52,7 +50,6 @@ class CRM_Mailing_Form_Approve extends CRM_Core_Form {
    * @access public
    */
   public function preProcess() {
-    require_once 'CRM/Mailing/Info.php';
     if (CRM_Mailing_Info::workflowEnabled()) {
       if (!CRM_Core_Permission::check('approve mailings')) {
         $this->redirectToListing();
@@ -64,7 +61,6 @@ class CRM_Mailing_Form_Approve extends CRM_Core_Form {
 
 
     // when user come from search context.
-    require_once 'CRM/Contact/Form/Search.php';
     $this->_searchBasedMailing = CRM_Contact_Form_Search::isSearchContext($this->get('context'));
 
     //retrieve mid from different wizard and url contexts
@@ -78,7 +74,6 @@ class CRM_Mailing_Form_Approve extends CRM_Core_Form {
     $session = CRM_Core_Session::singleton();
     $this->_contactID = $session->get('userID');
 
-    require_once 'CRM/Mailing/BAO/Mailing.php';
     $this->_mailing = new CRM_Mailing_BAO_Mailing();
     $this->_mailing->id = $this->_mailingID;
     if (!$this->_mailing->find(TRUE)) {
@@ -117,11 +112,9 @@ class CRM_Mailing_Form_Approve extends CRM_Core_Form {
 
     $this->addElement('textarea', 'approval_note', ts('Approve/Reject Note'));
 
-    require_once 'CRM/Mailing/PseudoConstant.php';
     $mailApprovalStatus = CRM_Mailing_PseudoConstant::approvalStatus();
 
     // eliminate the none option
-    require_once 'CRM/Core/OptionGroup.php';
     $noneOptionID = CRM_Core_OptionGroup::getValue('mail_approval_status',
       'None',
       'name'
@@ -155,7 +148,6 @@ class CRM_Mailing_Form_Approve extends CRM_Core_Form {
     );
     $preview['viewURL'] = CRM_Utils_System::url('civicrm/mailing/view', "reset=1&id={$this->_mailingID}");
     $preview['type'] = $this->_mailing->body_html ? 'html' : 'text';
-    require_once 'CRM/Core/BAO/File.php';
     $preview['attachment'] = CRM_Core_BAO_File::attachmentInfo('civicrm_mailing',
       $this->_mailingID
     );
@@ -191,7 +183,6 @@ class CRM_Mailing_Form_Approve extends CRM_Core_Form {
     $params['approval_date'] = date('YmdHis');
 
     // if rejected, then we need to reset the scheduled date and scheduled id
-    require_once 'CRM/Core/OptionGroup.php';
     $rejectOptionID = CRM_Core_OptionGroup::getValue('mail_approval_status',
       'Rejected',
       'name'

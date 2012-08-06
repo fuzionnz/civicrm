@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -51,7 +51,15 @@ class CRM_Contact_BAO_Contact_Permission {
 
     # FIXME: push this somewhere below, to not give this permission so many rights
     $isDeleted = (bool) CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $id, 'is_deleted');
-    if (CRM_Core_Permission::check('access deleted contacts') and $isDeleted) {
+    if (CRM_Core_Permission::check('access deleted contacts') && $isDeleted) {
+      return TRUE;
+    }
+
+    // short circuit for admin rights here so we avoid unneeeded queries
+    // some duplication of code, but we skip 3-5 queries
+    if (CRM_Core_Permission::check('edit all contacts') ||
+      ($type == CRM_ACL_API::VIEW && CRM_Core_Permission::check('view all contacts'))
+    ) {
       return TRUE;
     }
 
@@ -60,14 +68,12 @@ class CRM_Contact_BAO_Contact_Permission {
       return TRUE;
     }
 
-    require_once 'CRM/ACL/API.php';
     $permission = CRM_ACL_API::whereClause($type, $tables, $whereTables);
 
-    require_once 'CRM/Contact/BAO/Query.php';
     $from = CRM_Contact_BAO_Query::fromClause($whereTables);
 
     $query = "
-SELECT count(DISTINCT contact_a.id) 
+SELECT count(DISTINCT contact_a.id)
        $from
 WHERE contact_a.id = %1 AND $permission";
     $params = array(1 => array($id, 'Integer'));
@@ -122,13 +128,10 @@ AND    $operationClause
     $tables = array();
     $whereTables = array();
 
-    require_once 'CRM/ACL/API.php';
     $permission = CRM_ACL_API::whereClause($type, $tables, $whereTables, $userID);
 
-    require_once 'CRM/Contact/BAO/Query.php';
     $from = CRM_Contact_BAO_Query::fromClause($whereTables);
 
-    require_once 'CRM/Core/DAO.php';
     CRM_Core_DAO::executeQuery("
 INSERT INTO civicrm_acl_contact_cache ( user_id, contact_id, operation )
 SELECT      $userID as user_id, contact_a.id as contact_id, '$operation' as operation
@@ -277,16 +280,12 @@ WHERE  (( contact_id_a = %1 AND contact_id_b = %2 AND is_permission_a_b = 1 ) OR
   static
   function validateOnlyChecksum($contactID, &$form, $redirect = TRUE) {
     // check if this is of the format cs=XXX
-    require_once 'CRM/Contact/BAO/Contact/Utils.php';
-    require_once 'CRM/Utils/Request.php';
-    require_once 'CRM/Utils/System.php';
     if (!CRM_Contact_BAO_Contact_Utils::validChecksum($contactID,
         CRM_Utils_Request::retrieve('cs', 'String', $form, FALSE)
       )) {
       if ($redirect) {
         // also set a message in the UF framework
         $message = ts('You do not have permission to edit this contact record. Contact the site administrator if you need assistance.');
-        require_once 'CRM/Utils/System.php';
         CRM_Utils_System::setUFMessage($message);
 
         $config = CRM_Core_Config::singleton();
@@ -308,7 +307,6 @@ WHERE  (( contact_id_a = %1 AND contact_id_b = %2 AND is_permission_a_b = 1 ) OR
 
   static
   function validateChecksumContact($contactID, &$form, $redirect = TRUE) {
-    require_once 'CRM/Core/Permission.php';
     if (!self::allow($contactID, CRM_Core_Permission::EDIT)) {
       // check if this is of the format cs=XXX
       return self::validateOnlyChecksum($contactID, $form, $redirect);

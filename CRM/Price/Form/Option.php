@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 
 /**
  * form to process actions on the field aspect of Custom
@@ -86,19 +84,15 @@ class CRM_Price_Form_Option extends CRM_Core_Form {
   function setDefaultValues() {
     $defaults = array();
 
-    require_once 'CRM/Price/BAO/FieldValue.php';
     if (isset($this->_oid)) {
       $params = array('id' => $this->_oid);
 
       CRM_Price_BAO_FieldValue::retrieve($params, $defaults);
 
       // fix the display of the monetary value, CRM-4038
-      require_once 'CRM/Utils/Money.php';
       $defaults['value'] = CRM_Utils_Money::format(CRM_Utils_Array::value('value', $defaults), NULL, '%a');
     }
 
-    require_once 'CRM/Core/DAO.php';
-    require_once 'CRM/Utils/Weight.php';
 
     if (!isset($defaults['weight']) || !$defaults['weight']) {
       $fieldValues = array('price_field_id' => $this->_fid);
@@ -158,7 +152,6 @@ class CRM_Price_Form_Option extends CRM_Core_Form {
       $this->assign('showMember', FALSE);
       if ($memberComponentId == $extendComponentId) {
         $this->assign('showMember', TRUE);
-        require_once 'CRM/Member/PseudoConstant.php';
         $membershipTypes = CRM_Member_PseudoConstant::membershipType();
         $this->add('select', 'membership_type_id', ts('Membership Type'), array(
           '' => ' ') + $membershipTypes, FALSE,
@@ -260,7 +253,7 @@ class CRM_Price_Form_Option extends CRM_Core_Form {
   static
   function formRule($fields, $files, $form) {
     $errors = array();
-    if ($fields['count'] && $fields['max_value'] &&
+    if (CRM_Utils_Array::value('count', $fields) && CRM_Utils_Array::value('max_value', $fields) &&
       $fields['count'] > $fields['max_value']
     ) {
       $errors['count'] = ts('Participant count can not be greater than max participants.');
@@ -278,7 +271,6 @@ class CRM_Price_Form_Option extends CRM_Core_Form {
    * @access public
    */
   public function postProcess() {
-    require_once 'CRM/Price/BAO/FieldValue.php';
     if ($this->_action == CRM_Core_Action::DELETE) {
       $fieldValues = array('price_field_id' => $this->_fid);
       $wt          = CRM_Utils_Weight::delWeight('CRM_Price_DAO_FieldValue', $this->_oid, $fieldValues);

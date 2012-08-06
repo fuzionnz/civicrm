@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contact/Form/Task.php';
 
 /**
  * This class provides the functionality to save a search
@@ -55,10 +53,17 @@ class CRM_Contact_Form_Task_Print extends CRM_Contact_Form_Task {
     $this->assign('id', $this->get('id'));
     $this->assign('pageTitle', ts('CiviCRM Contact Listing'));
 
+    //using _contactIds field for creating params for query so that multiple selections on multiple pages can be print
+    //can be print.
+    foreach ($this->_contactIds as $contactId) {
+      $rowElements[CRM_Core_Form::CB_PREFIX . $contactId] = 1;
+    }
+
     // create the selector, controller and run - store results in session
     $fv = $this->get('formValues');
 
-    $params = $this->get('queryParams');
+    $params = CRM_Contact_BAO_Query::convertFormValues($rowElements);
+
     $returnProperties = $this->get('returnProperties');
 
     $sortID = NULL;

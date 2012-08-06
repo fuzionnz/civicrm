@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,21 +28,15 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
 require_once 'Mail/mime.php';
-require_once 'CRM/Utils/Mail.php';
 
 require_once 'ezc/Base/src/ezc_bootstrap.php';
 require_once 'ezc/autoload/mail_autoload.php';
-
-require_once 'CRM/Mailing/Event/DAO/Reply.php';
-
-require_once 'CRM/Mailing/BAO/Job.php';
-require_once 'CRM/Mailing/BAO/Mailing.php';
 class CRM_Mailing_Event_BAO_Reply extends CRM_Mailing_Event_DAO_Reply {
 
   /**
@@ -115,6 +109,23 @@ class CRM_Mailing_Event_BAO_Reply extends CRM_Mailing_Event_DAO_Reply {
    * @static
    */
   public static function send($queue_id, &$mailing, &$bodyTxt, $replyto, &$bodyHTML = NULL, &$fullEmail = NULL) {
+    $domain   = CRM_Core_BAO_Domain::getDomain();
+    $emails   = CRM_Core_BAO_Email::getTableName();
+    $queue    = CRM_Mailing_Event_BAO_Queue::getTableName();
+    $contacts = CRM_Contact_BAO_Contact::getTableName();
+
+    $eq = new CRM_Core_DAO();
+    $eq->query("SELECT     $contacts.display_name as display_name,
+                               $emails.email as email
+                   FROM        $queue
+                   INNER JOIN  $contacts
+                           ON  $queue.contact_id = $contacts.id
+                   INNER JOIN  $emails
+                           ON  $queue.email_id = $emails.id
+                   WHERE       $queue.id = " . CRM_Utils_Type::escape($queue_id, 'Integer')
+    );
+    $eq->fetch();
+
     if ($fullEmail) {
       // parse the email and set a new destination
       $parser     = new ezcMailParser;
@@ -147,33 +158,14 @@ class CRM_Mailing_Event_BAO_Reply extends CRM_Mailing_Event_DAO_Reply {
       }
     }
     else {
-      $domain = CRM_Core_BAO_Domain::getDomain();
+      $emailDomain = CRM_Core_BAO_MailSettings::defaultDomain();
 
-      $emails   = CRM_Core_BAO_Email::getTableName();
-      $eq       = CRM_Mailing_Event_BAO_Queue::getTableName();
-      $contacts = CRM_Contact_BAO_Contact::getTableName();
-
-      $dao = new CRM_Core_DAO();
-      $dao->query("SELECT     $contacts.display_name as display_name,
-                                    $emails.email as email
-                        FROM        $eq
-                        INNER JOIN  $contacts
-                                ON  $eq.contact_id = $contacts.id
-                        INNER JOIN  $emails
-                                ON  $eq.email_id = $emails.id
-                        WHERE       $eq.id = " . CRM_Utils_Type::escape($queue_id, 'Integer')
-      );
-      $dao->fetch();
-
-      if (empty($dao->display_name)) {
-        $from = $dao->email;
+      if (empty($eq->display_name)) {
+        $from = $eq->email;
       }
       else {
-        $from = "\"{$dao->display_name}\" <{$dao->email}>";
+        $from = "\"{$eq->display_name}\" <{$eq->email}>";
       }
-
-      require_once 'CRM/Core/BAO/MailSettings.php';
-      $emailDomain = CRM_Core_BAO_MailSettings::defaultDomain();
 
       $message = new Mail_mime("\n");
 
@@ -191,6 +183,7 @@ class CRM_Mailing_Event_BAO_Reply extends CRM_Mailing_Event_DAO_Reply {
       $h = &$message->headers($headers);
     }
 
+    CRM_Mailing_BAO_Mailing::addMessageIdHeader($h, 'r', $eq->job_id, $queue_id, $eq->hash);
     $config = CRM_Core_Config::singleton();
     $mailer = &$config->getMailer();
 
@@ -225,6 +218,8 @@ class CRM_Mailing_Event_BAO_Reply extends CRM_Mailing_Event_DAO_Reply {
     $eq->query(
       "SELECT     $contacts.preferred_mail_format as format,
                     $email.email as email
+                    $queue.job_id as job_id
+                    $queue.hash as hash
         FROM        $contacts
         INNER JOIN  $queue ON $queue.contact_id = $contacts.id
         INNER JOIN  $email ON $queue.email_id = $email.id
@@ -240,11 +235,9 @@ class CRM_Mailing_Event_BAO_Reply extends CRM_Mailing_Event_DAO_Reply {
 
     $message = new Mail_Mime("\n");
 
-    require_once 'CRM/Core/BAO/Domain.php';
     $domain = CRM_Core_BAO_Domain::getDomain();
     list($domainEmailName, $_) = CRM_Core_BAO_Domain::getNameAndEmail();
 
-    require_once 'CRM/Core/BAO/MailSettings.php';
     $emailDomain = CRM_Core_BAO_MailSettings::defaultDomain();
 
     $headers = array(
@@ -265,20 +258,17 @@ class CRM_Mailing_Event_BAO_Reply extends CRM_Mailing_Event_DAO_Reply {
       $text = CRM_Utils_String::htmlToText($component->body_html);
     }
 
-    require_once 'CRM/Mailing/BAO/Mailing.php';
     $bao            = new CRM_Mailing_BAO_Mailing();
     $bao->body_text = $text;
     $bao->body_html = $html;
     $tokens         = $bao->getTokens();
 
     if ($eq->format == 'HTML' || $eq->format == 'Both') {
-      require_once 'CRM/Utils/Token.php';
       $html = CRM_Utils_Token::replaceDomainTokens($html, $domain, TRUE, $tokens['html']);
       $html = CRM_Utils_Token::replaceMailingTokens($html, $mailing, NULL, $tokens['html']);
       $message->setHTMLBody($html);
     }
     if (!$html || $eq->format == 'Text' || $eq->format == 'Both') {
-      require_once 'CRM/Utils/Token.php';
       $text = CRM_Utils_Token::replaceDomainTokens($text, $domain, FALSE, $tokens['text']);
       $text = CRM_Utils_Token::replaceMailingTokens($text, $mailing, NULL, $tokens['text']);
       $message->setTxtBody($text);
@@ -286,6 +276,7 @@ class CRM_Mailing_Event_BAO_Reply extends CRM_Mailing_Event_DAO_Reply {
 
     $b = CRM_Utils_Mail::setMimeParams($message);
     $h = &$message->headers($headers);
+    CRM_Mailing_BAO_Mailing::addMessageIdHeader($h, 'a', $eq->job_id, queue_id, $eq->hash);
 
     $mailer = &$config->getMailer();
     PEAR::setErrorHandling(PEAR_ERROR_CALLBACK,

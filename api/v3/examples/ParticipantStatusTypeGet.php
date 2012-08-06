@@ -9,7 +9,7 @@ function participant_status_type_get_example(){
 $params = array( 
   'version' => 3,
   'name' => 'test status',
-  'label' => 'I'm a test',
+  'label' => 'I am a test',
   'class' => 'Positive',
   'is_reserved' => 0,
   'is_active' => 1,
@@ -33,12 +33,12 @@ function participant_status_type_get_expectedresult(){
   'is_error' => 0,
   'version' => 3,
   'count' => 1,
-  'id' => 13,
+  'id' => 14,
   'values' => array( 
-      '13' => array( 
-          'id' => '13',
+      '14' => array( 
+          'id' => '14',
           'name' => 'test status',
-          'label' => 'I'm a test',
+          'label' => 'I am a test',
           'class' => 'Positive',
           'is_reserved' => 0,
           'is_active' => '1',

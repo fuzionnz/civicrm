@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +33,7 @@
  * @package CiviCRM_APIv3
  * @subpackage API_UF
  *
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * @version $Id: UFGroup.php 30171 2010-10-14 09:11:27Z mover $
  *
  */
@@ -42,6 +44,14 @@
 
 require_once 'CRM/Core/BAO/UFGroup.php';
 
+function _civicrm_api3_uf_group_create_spec(&$params) {
+  $session = CRM_Core_Session::singleton();
+  $params['title']['api.required'] = 1;
+  $params['is_active']['api.default'] = 1;
+  $params['is_update_dupe']['api.default'] = 1;
+  $params['created_id']['api.default'] = 'user_contact_id';//the current user
+  $params['created_date']['api.default'] = 'now';
+}
 /**
  * Use this API to create a new group. See the CRM Data Model for uf_group property definitions
  *

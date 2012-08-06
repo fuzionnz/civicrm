@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -53,9 +53,7 @@ class CRM_Core_BAO_CustomOption {
    * @access public
    * @static
    */
-  static
-  function retrieve(&$params, &$defaults) {
-    require_once 'CRM/Core/DAO/OptionValue.php';
+  static function retrieve(&$params, &$defaults) {
     $customOption = new CRM_Core_DAO_OptionValue();
     $customOption->copyValues($params);
     if ($customOption->find(TRUE)) {
@@ -74,8 +72,8 @@ class CRM_Core_BAO_CustomOption {
    * @return array $customOption all active options for fieldId
    * @static
    */
-  static
-  function getCustomOption($fieldID,
+  static function getCustomOption(
+    $fieldID,
     $inactiveNeeded = FALSE
   ) {
     $options = array();
@@ -83,32 +81,27 @@ class CRM_Core_BAO_CustomOption {
       return $options;
     }
 
+    $field = CRM_Core_BAO_CustomField::getFieldObject($fieldID);
+
     // get the option group id
-    $optionGroupID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_CustomField',
-      $fieldID,
-      'option_group_id'
-    );
+    $optionGroupID = $field->option_group_id;
     if (!$optionGroupID) {
       return $options;
     }
 
-    require_once 'CRM/Core/DAO/OptionValue.php';
-    $dao = new CRM_Core_DAO_OptionValue();
-    $dao->option_group_id = $optionGroupID;
-    if (!$inactiveNeeded) {
-      $dao->is_active = 1;
-    }
-    $dao->orderBy('weight ASC, label ASC');
-    $dao->find();
+    $optionValues = CRM_Core_BAO_OptionValue::getOptionValuesArray($optionGroupID);
 
-    while ($dao->fetch()) {
-      $options[$dao->id] = array();
-      $options[$dao->id]['id'] = $dao->id;
-      $options[$dao->id]['label'] = $dao->label;
-      $options[$dao->id]['value'] = $dao->value;
+    foreach ($optionValues as $id => $value) {
+      if (!$inactiveNeeded && !CRM_Utils_Array::value('is_active', $value)) {
+        continue;
+      }
+
+      $options[$id] = array();
+      $options[$id]['id'] = $id;
+      $options[$id]['label'] = $value['label'];
+      $options[$id]['value'] = $value['value'];
     }
 
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::customFieldOptions($fieldID, $options, TRUE);
 
     return $options;
@@ -127,8 +120,7 @@ class CRM_Core_BAO_CustomOption {
    * @static
    * @access public
    */
-  static
-  function getOptionLabel($fieldId, $value, $htmlType = NULL, $dataType = NULL) {
+  static function getOptionLabel($fieldId, $value, $htmlType = NULL, $dataType = NULL) {
     if (!$fieldId) {
       return NULL;
     }
@@ -164,7 +156,6 @@ WHERE  id = %1
         }
     }
 
-    require_once 'CRM/Core/BAO/CustomField.php';
     return CRM_Core_BAO_CustomField::getDisplayValueCommon($value,
       $options,
       $htmlType,
@@ -180,8 +171,7 @@ WHERE  id = %1
    * @static
    * @access public
    */
-  static
-  function del($optionId) {
+  static function del($optionId) {
     // get the customFieldID
     $query = "
 SELECT f.id as id, f.data_type as dataType
@@ -220,8 +210,7 @@ WHERE  id = %1";
     }
   }
 
-  static
-  function updateCustomValues($params) {
+  static function updateCustomValues($params) {
     $optionDAO = new CRM_Core_DAO_OptionValue();
     $optionDAO->id = $params['optionId'];
     $optionDAO->find(TRUE);
@@ -241,7 +230,6 @@ WHERE  f.custom_group_id = g.id
     $dao = CRM_Core_DAO::executeQuery($query, $queryParams);
     if ($dao->fetch()) {
       if ($dao->dataType == 'Money') {
-        require_once 'CRM/Utils/Rule.php';
         $params['value'] = CRM_Utils_Rule::cleanMoney($params['value']);
       }
       CRM_Core_Error::debug($params);
@@ -290,8 +278,7 @@ SET    {$dao->columnName} = REPLACE( {$dao->columnName}, %1, %2 )";
     }
   }
 
-  static
-  function &valuesByID($customFieldID, $optionGroupID = NULL) {
+  static function &valuesByID($customFieldID, $optionGroupID = NULL) {
     if (!$optionGroupID) {
       $optionGroupID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_CustomField',
         $customFieldID,
@@ -299,10 +286,8 @@ SET    {$dao->columnName} = REPLACE( {$dao->columnName}, %1, %2 )";
       );
     }
 
-    require_once 'CRM/Core/OptionGroup.php';
     $options = CRM_Core_OptionGroup::valuesByID($optionGroupID);
 
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::customFieldOptions($customFieldID, $options, FALSE);
 
     return $options;

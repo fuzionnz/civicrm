@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
 class CRM_Report_Form_Mailing_Clicks extends CRM_Report_Form {
 
   protected $_summary = NULL;
@@ -58,18 +58,10 @@ class CRM_Report_Form_Mailing_Clicks extends CRM_Report_Form {
           'title' => ts('Contact ID'),
           'required' => TRUE,
         ),
-        'first_name' => array(
-          'title' => ts('First Name'),
-          'required' => TRUE,
-          'no_repeat' => TRUE,
-        ),
-        'last_name' => array(
-          'title' => ts('Last Name'),
-          'required' => TRUE,
-          'no_repeat' => TRUE,
-        ),
-        'sort_name' => array(
+        'sort_name' =>
+        array(
           'title' => ts('Contact Name'),
+          'required' => TRUE,
         ),
       ),
       'filters' => array(
@@ -88,7 +80,7 @@ class CRM_Report_Form_Mailing_Clicks extends CRM_Report_Form {
       'order_bys' =>
       array(
         'sort_name' =>
-        array('title' => ts('Last Name, First Name'), 'default_order' => 'ASC'),
+        array('title' => ts('Contact Name'), 'default' => TRUE, 'default_order' => 'ASC'),
       ),
       'grouping' => 'contact-fields',
     );
@@ -108,12 +100,12 @@ class CRM_Report_Form_Mailing_Clicks extends CRM_Report_Form {
         ),
       ),
       'filters' => array(
-        'mailing_name' => array(
-          'name' => 'name',
+        'mailing_id' => array(
+          'name' => 'id',
           'title' => ts('Mailing'),
           'operatorType' => CRM_Report_Form::OP_MULTISELECT,
-          'type' => CRM_Utils_Type::T_STRING,
-          'options' => self::mailing_select(),
+          'type' => CRM_Utils_Type::T_INT,
+          'options' => CRM_Mailing_BAO_Mailing::getMailingsList(),
           'operator' => 'like',
         ),
       ),
@@ -250,6 +242,12 @@ class CRM_Report_Form_Mailing_Clicks extends CRM_Report_Form {
     }
   }
 
+  function where() {
+    $clauses = array();
+    //to avoid the sms listings
+    $this->_where = "WHERE {$this->_aliases['civicrm_mailing']}.sms_provider_id IS NULL";
+  }
+
   function groupBy() {
 
     $this->_groupBy = '';
@@ -294,7 +292,6 @@ class CRM_Report_Form_Mailing_Clicks extends CRM_Report_Form {
     }
 
     // build the chart.
-    require_once 'CRM/Utils/OpenFlashChart.php';
     CRM_Utils_OpenFlashChart::buildChart($chartInfo, $this->_params['charts']);
     $this->assign('chartType', $this->_params['charts']);
   }
@@ -305,32 +302,17 @@ class CRM_Report_Form_Mailing_Clicks extends CRM_Report_Form {
     foreach ($rows as $rowNum => $row) {
       // make count columns point to detail report
       // convert display name to links
-      if (array_key_exists('civicrm_contact_display_name', $row) &&
+      if (array_key_exists('civicrm_contact_sort_name', $row) &&
         array_key_exists('civicrm_contact_id', $row)
       ) {
-        $url = CRM_Report_Utils_Report::getNextUrl('contact/detail',
-          'reset=1&force=1&id_op=eq&id_value=' . $row['civicrm_contact_id'],
-          $this->_absoluteUrl, $this->_id
+        $url = CRM_Utils_System::url('civicrm/contact/view',
+          'reset=1&cid=' . $row['civicrm_contact_id'],
+          $this->_absoluteUrl
         );
-        $rows[$rowNum]['civicrm_contact_display_name_link'] = $url;
-        $rows[$rowNum]['civicrm_contact_display_name_hover'] = ts("View Contact details for this contact.");
+        $rows[$rowNum]['civicrm_contact_sort_name_link'] = $url;
+        $rows[$rowNum]['civicrm_contact_sort_name_hover'] = ts("View Contact details for this contact.");
         $entryFound = TRUE;
       }
-
-      // handle country
-      if (array_key_exists('civicrm_address_country_id', $row)) {
-        if ($value = $row['civicrm_address_country_id']) {
-          $rows[$rowNum]['civicrm_address_country_id'] = CRM_Core_PseudoConstant::country($value, FALSE);
-        }
-        $entryFound = TRUE;
-      }
-      if (array_key_exists('civicrm_address_state_province_id', $row)) {
-        if ($value = $row['civicrm_address_state_province_id']) {
-          $rows[$rowNum]['civicrm_address_state_province_id'] = CRM_Core_PseudoConstant::stateProvince($value, FALSE);
-        }
-        $entryFound = TRUE;
-      }
-
 
       // skip looking further in rows, if first row itself doesn't
       // have the column we need
@@ -338,21 +320,6 @@ class CRM_Report_Form_Mailing_Clicks extends CRM_Report_Form {
         break;
       }
     }
-  }
-
-  function mailing_select() {
-    require_once ('CRM/Mailing/BAO/Mailing.php');
-
-    $data    = array();
-    $mailing = new CRM_Mailing_BAO_Mailing();
-    $query   = "SELECT name FROM civicrm_mailing ";
-    $mailing->query($query);
-
-    while ($mailing->fetch()) {
-      $data[mysql_real_escape_string($mailing->name)] = $mailing->name;
-    }
-
-    return $data;
   }
 }
 

@@ -7,9 +7,8 @@
  */
 function group_nesting_delete_example(){
 $params = array( 
-  'parent_group_id' => 1,
-  'child_group_id' => 2,
   'version' => 3,
+  'id' => 1,
 );
 
   require_once 'api/api.php';
@@ -27,10 +26,7 @@ function group_nesting_delete_expectedresult(){
   'is_error' => 0,
   'version' => 3,
   'count' => 1,
-  'id' => 'is_error',
-  'values' => array( 
-      'is_error' => 0,
-    ),
+  'values' => 1,
 );
 
   return $expectedResult  ;

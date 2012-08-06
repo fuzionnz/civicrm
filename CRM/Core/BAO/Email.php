@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,17 +28,46 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/Email.php';
 
 /**
  * This class contains functions for email handling
  */
 class CRM_Core_BAO_Email extends CRM_Core_DAO_Email {
+  /*
+   * Create email address - note that the create function calls 'add' but
+   * has more business logic & calls the hooks
+   *
+   * @param array $params input parameters
+   */
+
+  static function create($params) {
+    if (!empty($params['d'])) {
+      CRM_Utils_Hook::pre('edit', 'Email', $params['id'], $params);
+    }
+    else {
+      CRM_Utils_Hook::pre('create', 'Email', NULL, $params);
+      $isEdit = FALSE;
+    }
+    if (is_numeric(CRM_Utils_Array::value('is_primary', $params)) ||
+      // if id is set & is_primary isn't we can assume no change
+      empty($params['id'])
+    ) {
+      CRM_Core_BAO_Block::handlePrimary($params, get_class());
+    }
+    $email = CRM_Core_BAO_Email::add($params);
+
+    if (CRM_Utils_Array::value('id', $params)) {
+      CRM_Utils_Hook::post('edit', 'Email', $email->id, $email);
+    }
+    else {
+      CRM_Utils_Hook::post('create', 'Email', $email->id, $email);
+    }
+    return $email;
+  }
 
   /**
    * takes an associative array and adds email
@@ -49,8 +78,7 @@ class CRM_Core_BAO_Email extends CRM_Core_DAO_Email {
    * @access public
    * @static
    */
-  static
-  function add(&$params) {
+  static function add(&$params) {
     $email = new CRM_Core_DAO_Email();
     $email->copyValues($params);
 
@@ -60,12 +88,12 @@ class CRM_Core_BAO_Email extends CRM_Core_DAO_Email {
 
     // since we're setting bulkmail for 1 of this contact's emails, first reset all their emails to is_bulkmail false
     // (only 1 email address can have is_bulkmail = true)
-    if ($email->is_bulkmail != 'null' && $params['contact_id']) {
+    if ($email->is_bulkmail != 'null' && $params['contact_id'] && !self::isMultipleBulkMail()) {
       $sql = "
-UPDATE civicrm_email 
-SET is_bulkmail = 0
-WHERE 
-contact_id = {$params['contact_id']}";
+UPDATE civicrm_email
+SET    is_bulkmail = 0
+WHERE  contact_id = {$params['contact_id']}
+";
       CRM_Core_DAO::executeQuery($sql);
     }
 
@@ -85,8 +113,7 @@ contact_id = {$params['contact_id']}";
    * @access public
    * @static
    */
-  static
-  function &getValues($entityBlock) {
+  static function &getValues($entityBlock) {
     return CRM_Core_BAO_Block::getValues('email', $entityBlock);
   }
 
@@ -99,23 +126,29 @@ contact_id = {$params['contact_id']}";
    * @access public
    * @static
    */
-  static
-  function allEmails($id, $updateBlankLocInfo = FALSE) {
+  static function allEmails($id, $updateBlankLocInfo = FALSE) {
     if (!$id) {
       return NULL;
     }
 
     $query = "
-SELECT email, civicrm_location_type.name as locationType, civicrm_email.is_primary as is_primary, civicrm_email.on_hold as on_hold,
-civicrm_email.id as email_id, civicrm_email.location_type_id as locationTypeId
+SELECT    email,
+          civicrm_location_type.name as locationType,
+          civicrm_email.is_primary as is_primary,
+          civicrm_email.on_hold as on_hold,
+          civicrm_email.id as email_id,
+          civicrm_email.location_type_id as locationTypeId
 FROM      civicrm_contact
 LEFT JOIN civicrm_email ON ( civicrm_email.contact_id = civicrm_contact.id )
 LEFT JOIN civicrm_location_type ON ( civicrm_email.location_type_id = civicrm_location_type.id )
-WHERE
-  civicrm_contact.id = %1
-ORDER BY
-  civicrm_email.is_primary DESC, email_id ASC ";
-    $params = array(1 => array($id, 'Integer'));
+WHERE     civicrm_contact.id = %1
+ORDER BY  civicrm_email.is_primary DESC, email_id ASC ";
+    $params = array(
+      1 => array(
+        $id,
+        'Integer',
+      ),
+    );
 
     $emails = $values = array();
     $dao    = CRM_Core_DAO::executeQuery($query, $params);
@@ -150,8 +183,7 @@ ORDER BY
    * @access public
    * @static
    */
-  static
-  function allEntityEmails(&$entityElements) {
+  static function allEntityEmails(&$entityElements) {
     if (empty($entityElements)) {
       return NULL;
     }
@@ -160,7 +192,7 @@ ORDER BY
     $entityTable = $entityElements['entity_table'];
 
 
-    $sql = " SELECT email, ltype.name as locationType, e.is_primary as is_primary, e.on_hold as on_hold,e.id as email_id, e.location_type_id as locationTypeId 
+    $sql = " SELECT email, ltype.name as locationType, e.is_primary as is_primary, e.on_hold as on_hold,e.id as email_id, e.location_type_id as locationTypeId
 FROM civicrm_loc_block loc, civicrm_email e, civicrm_location_type ltype, {$entityTable} ev
 WHERE ev.id = %1
 AND   loc.id = ev.loc_block_id
@@ -168,7 +200,12 @@ AND   e.id IN (loc.email_id, loc.email_2_id)
 AND   ltype.id = e.location_type_id
 ORDER BY e.is_primary DESC, email_id ASC ";
 
-    $params = array(1 => array($entityId, 'Integer'));
+    $params = array(
+      1 => array(
+        $entityId,
+        'Integer',
+      ),
+    );
 
     $emails = array();
     $dao = CRM_Core_DAO::executeQuery($sql, $params);
@@ -194,26 +231,36 @@ ORDER BY e.is_primary DESC, email_id ASC ";
    * @return void
    * @static
    */
-  static
-  function holdEmail(&$email) {
+  static function holdEmail(&$email) {
     //check for update mode
     if ($email->id) {
-      //get hold date
-      $holdDate = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Email', $email->id, 'hold_date');
-
-      //get reset date
-      $resetDate = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Email', $email->id, 'reset_date');
-
-      //set hold date only if it is not set and e
-      if (($email->on_hold != 'null') && !$holdDate && $email->on_hold) {
-        $email->hold_date = date('YmdHis');
-        $email->reset_date = '';
+      $params = array(1 => array($email->id, 'Integer'));
+      if ($email->on_hold && $email->on_hold != 'null') {
+        $sql = "
+SELECT id
+FROM   civicrm_email
+WHERE  id = %1
+AND    hold_date IS NULL
+";
+        if (CRM_Core_DAO::singleValueQuery($sql, $params)) {
+          $email->hold_date = date('YmdHis');
+          $email->reset_date = 'null';
+        }
       }
-      elseif ($holdDate && ($email->on_hold == 'null') && !$resetDate) {
-        //set reset date only if it is not set and if hold date is set
-        $email->on_hold    = FALSE;
-        $email->hold_date  = '';
-        $email->reset_date = date('YmdHis');
+      elseif ($email->on_hold == 'null') {
+        $sql = "
+SELECT id
+FROM   civicrm_email
+WHERE  id = %1
+AND    hold_date IS NOT NULL
+AND    reset_date IS NULL
+";
+        if (CRM_Core_DAO::singleValueQuery($sql, $params)) {
+          //set reset date only if it is not set and if hold date is set
+          $email->on_hold    = FALSE;
+          $email->hold_date  = 'null';
+          $email->reset_date = date('YmdHis');
+        }
       }
     }
     else {
@@ -231,14 +278,12 @@ ORDER BY e.is_primary DESC, email_id ASC ";
    * @access public
    * @static
    */
-  static
-  function getFromEmail() {
+  static function getFromEmail() {
     $session         = CRM_Core_Session::singleton();
     $contactID       = $session->get('userID');
     $fromEmailValues = array();
 
     // add the domain email id
-    require_once 'CRM/Core/BAO/Domain.php';
     $domainEmail = CRM_Core_BAO_Domain::getNameAndEmail();
     $domainEmail = "$domainEmail[0] <$domainEmail[1]>";
     $fromEmailValues[$domainEmail] = htmlspecialchars($domainEmail);
@@ -263,6 +308,10 @@ ORDER BY e.is_primary DESC, email_id ASC ";
       }
     }
     return $fromEmailValues;
+  }
+
+  static function isMultipleBulkMail() {
+    return CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::MAILING_PREFERENCES_NAME, 'civimail_multiple_bulk_emails', NULL, FALSE);
   }
 }
 

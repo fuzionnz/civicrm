@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
-require_once 'CRM/Contribute/PseudoConstant.php';
-require_once 'CRM/Core/OptionGroup.php';
 class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
   protected $_addressField = FALSE;
 
@@ -48,6 +46,13 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
 
   protected $_customGroupExtends = array(
     'Contribution'); function __construct() {
+    $config = CRM_Core_Config::singleton();
+    $campaignEnabled = in_array("CiviCampaign", $config->enableComponents);
+    if ($campaignEnabled) {
+      $getCampaigns = CRM_Campaign_BAO_Campaign::getPermissionedCampaigns(NULL, NULL, TRUE, FALSE, TRUE);
+      $this->activeCampaigns = $getCampaigns['campaigns'];
+      asort($this->activeCampaigns);
+    }
     $this->_columns = array(
       'civicrm_contact' =>
       array(
@@ -74,6 +79,16 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
           'id' =>
           array('title' => ts('Contact ID'),
             'no_display' => TRUE,
+            'type' => CRM_Utils_Type::T_INT,
+          ),
+        ),
+        'order_bys' =>
+        array( 
+          'sort_name' => array( 
+            'title' => ts('Last Name, First Name'), 
+            'default' => '1',
+            'default_weight' => '0',
+            'default_order' => 'ASC'
           ),
         ),
         'grouping' => 'contact-fields',
@@ -180,20 +195,28 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
           array('title' => ts('Contribution Type'),
             'operatorType' => CRM_Report_Form::OP_MULTISELECT,
             'options' => CRM_Contribute_PseudoConstant::contributionType(),
+            'type' => CRM_Utils_Type::T_INT,
           ),
           'payment_instrument_id' =>
           array('title' => ts('Payment Type'),
             'operatorType' => CRM_Report_Form::OP_MULTISELECT,
             'options' => CRM_Contribute_PseudoConstant::paymentInstrument(),
+            'type' => CRM_Utils_Type::T_INT,
           ),
           'contribution_status_id' =>
           array('title' => ts('Contribution Status'),
             'operatorType' => CRM_Report_Form::OP_MULTISELECT,
             'options' => CRM_Contribute_PseudoConstant::contributionStatus(),
             'default' => array(1),
+            'type' => CRM_Utils_Type::T_INT,
           ),
           'total_amount' =>
           array('title' => ts('Contribution Amount')),
+        ),
+        'order_bys' => array( 
+          'contribution_type_id' => array('title' => ts('Contribution Type')), 
+          'contribution_status_id' => array('title' => ts('Contribution Status')), 
+          'payment_instrument_id' => array('title' => ts('Payment Instrument')), 
         ),
         'grouping' => 'contri-fields',
       ),
@@ -210,6 +233,7 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
             'operatorType' => CRM_Report_Form::OP_MULTISELECT,
             'group' => TRUE,
             'options' => CRM_Core_PseudoConstant::group(),
+            'type' => CRM_Utils_Type::T_INT,
           ),
         ),
       ),
@@ -226,12 +250,70 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
               0 => 'First by Contributor',
               1 => 'Second or Later by Contributor',
             ),
+            'type' => CRM_Utils_Type::T_INT,
+          ),
+        ),
+      ),
+      'civicrm_note' => 
+      array(
+        'dao' => 'CRM_Core_DAO_Note',
+        'fields' =>
+        array(
+          'contribution_note' =>
+          array(
+            'name' => 'note',
+            'title' => ts('Contribution Note'),
+          ),
+        ),
+        'filters' =>
+        array(
+          'note' =>
+          array(
+                'name'  => 'note',
+                'title' => ts('Contribution Note'),
+                'operator' => 'like',
+                'type'  => CRM_Utils_Type::T_STRING,
           ),
         ),
       ),
     ) + $this->addAddressFields(FALSE);
 
     $this->_tagFilter = TRUE;
+    
+    // Don't show Batch display column and filter unless batches are being used
+    $this->_closedBatches = CRM_Core_BAO_Batch::getBatches();
+    if (!empty($this->_closedBatches)) {
+      $this->_columns['civicrm_batch']['dao'] = 'CRM_Core_DAO_Batch';
+      $this->_columns['civicrm_batch']['fields']['batch_id'] = array(
+        'name' => 'id',
+        'title' => ts('Batch Name'),        
+      );
+      $this->_columns['civicrm_batch']['filters']['bid'] = array(
+        'name' => 'id',
+        'title' => ts('Batch Name'),
+        'type' => CRM_Utils_Type::T_INT,
+        'operatorType' => CRM_Report_Form::OP_MULTISELECT,
+        'options' => $this->_closedBatches,
+      );
+      $this->_columns['civicrm_entity_batch']['dao'] = 'CRM_Core_DAO_EntityBatch';
+      $this->_columns['civicrm_entity_batch']['fields']['entity_batch_id'] = array(
+        'name' => 'batch_id',    
+        'default' => TRUE,
+        'no_display' => TRUE,
+      );
+    }
+
+    if ($campaignEnabled && !empty($this->activeCampaigns)) {
+      $this->_columns['civicrm_contribution']['fields']['campaign_id'] = array(
+        'title' => ts('Campaign'),
+        'default' => 'false',
+      );
+      $this->_columns['civicrm_contribution']['filters']['campaign_id'] = array('title' => ts('Campaign'),
+        'operatorType' => CRM_Report_Form::OP_MULTISELECT,
+        'options' => $this->activeCampaigns,
+      );
+      $this->_columns['civicrm_contribution']['order_bys']['campaign_id'] = array('title' => ts('Campaign'));
+    }
     parent::__construct();
   }
 
@@ -272,12 +354,14 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
                     $this->_columnHeaders["{$tableName}_{$fieldName}_{$stat}"]['title'] = $label;
                     $this->_columnHeaders["{$tableName}_{$fieldName}_{$stat}"]['type'] = $field['type'];
                     $this->_statFields[] = "{$tableName}_{$fieldName}_{$stat}";
+                    $this->_selectAliases[] = "{$tableName}_{$fieldName}_{$stat}";
                     break;
 
                   case 'count':
                     $select[] = "COUNT({$field['dbAlias']}) as {$tableName}_{$fieldName}_{$stat}";
                     $this->_columnHeaders["{$tableName}_{$fieldName}_{$stat}"]['title'] = $label;
                     $this->_statFields[] = "{$tableName}_{$fieldName}_{$stat}";
+                    $this->_selectAliases[] = "{$tableName}_{$fieldName}_{$stat}";
                     break;
 
                   case 'avg':
@@ -285,6 +369,7 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
                     $this->_columnHeaders["{$tableName}_{$fieldName}_{$stat}"]['type'] = $field['type'];
                     $this->_columnHeaders["{$tableName}_{$fieldName}_{$stat}"]['title'] = $label;
                     $this->_statFields[] = "{$tableName}_{$fieldName}_{$stat}";
+                    $this->_selectAliases[] = "{$tableName}_{$fieldName}_{$stat}";
                     break;
                 }
               }
@@ -293,6 +378,7 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
               $select[] = "{$field['dbAlias']} as {$tableName}_{$fieldName}";
               $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = CRM_Utils_Array::value('title', $field);
               $this->_columnHeaders["{$tableName}_{$fieldName}"]['type'] = CRM_Utils_Array::value('type', $field);
+              $this->_selectAliases[] = "{$tableName}_{$fieldName}";
             }
           }
         }
@@ -348,14 +434,26 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
                       ON emailhonor.contact_id = {$this->_aliases['civicrm_contribution']}.honor_contact_id
                       AND emailhonor.is_primary = 1\n";
     }
+    // include contribution note
+    if (CRM_Utils_Array::value('contribution_note', $this->_params['fields'])) {
+      $this->_from.= "
+            LEFT JOIN civicrm_note {$this->_aliases['civicrm_note']}
+                      ON ( {$this->_aliases['civicrm_note']}.entity_table = 'civicrm_contribution' AND
+                           {$this->_aliases['civicrm_contribution']}.id = {$this->_aliases['civicrm_note']}.entity_id )";
+    }
+    //for contribution batches
+    if ($this->_closedBatches && CRM_Utils_Array::value('batch_id', $this->_params['fields'])) {
+      $this->_from .= "
+                 LEFT JOIN  civicrm_entity_batch {$this->_aliases['civicrm_entity_batch']} 
+                        ON ({$this->_aliases['civicrm_entity_batch']}.entity_id = {$this->_aliases['civicrm_contribution']}.id AND
+                        {$this->_aliases['civicrm_entity_batch']}.entity_table = 'civicrm_contribution')
+                 LEFT JOIN civicrm_batch {$this->_aliases['civicrm_batch']} 
+                        ON {$this->_aliases['civicrm_batch']}.id = {$this->_aliases['civicrm_entity_batch']}.batch_id";
+    }
   }
 
   function groupBy() {
     $this->_groupBy = " GROUP BY {$this->_aliases['civicrm_contact']}.id, {$this->_aliases['civicrm_contribution']}.id ";
-  }
-
-  function orderBy() {
-    $this->_orderBy = " ORDER BY {$this->_aliases['civicrm_contact']}.sort_name, {$this->_aliases['civicrm_contact']}.id ";
   }
 
   function statistics(&$rows) {
@@ -424,7 +522,8 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
 
             if ($display_flag) {
               foreach ($row as $colName => $colVal) {
-                if (in_array($colName, $this->_noRepeats)) {
+                // Hide repeats in no-repeat columns, but not if the field's a section header
+                if (in_array($colName, $this->_noRepeats) && !array_key_exists($colName, $this->_sections)) {
                   unset($rows[$rowNum][$colName]);
                 }
               }
@@ -479,6 +578,14 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
         $rows[$rowNum]['civicrm_contribution_honor_type_id'] = $honorTypes[$value];
         $entryFound = TRUE;
       }
+      if (array_key_exists('civicrm_batch_batch_id', $row)) {
+        if ($value = $row['civicrm_batch_batch_id']) {
+          $rows[$rowNum]['civicrm_batch_batch_id'] = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Batch', $value, 'title');
+        }
+        $entryFound = TRUE;
+      }
+
+      // Contribution amount links to viewing contribution
       if (($value = CRM_Utils_Array::value('civicrm_contribution_total_amount_sum', $row)) &&
         CRM_Core_Permission::check('access CiviContribute')
       ) {
@@ -490,6 +597,15 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
         $rows[$rowNum]['civicrm_contribution_total_amount_sum_hover'] = ts("View Details of this Contribution.");
         $entryFound = TRUE;
       }
+
+      // convert campaign_id to campaign title
+      if (array_key_exists('civicrm_contribution_campaign_id', $row)) {
+        if ($value = $row['civicrm_contribution_campaign_id']) {
+          $rows[$rowNum]['civicrm_contribution_campaign_id'] = $this->activeCampaigns[$value];
+          $entryFound = TRUE;
+        }
+      }
+
       $entryFound = $this->alterDisplayAddressFields($row, $rows, $rowNum, 'contribute/detail', 'List all contribution(s) for this ') ? TRUE : $entryFound;
 
       // skip looking further in rows, if first row itself doesn't
@@ -498,6 +614,89 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
         break;
       }
       $lastKey = $rowNum;
+    }
+  }
+  
+  function sectionTotals( ) {
+
+    // Reports using order_bys with sections must populate $this->_selectAliases in select() method.
+    if (empty($this->_selectAliases)) {
+      return;
+    }
+
+    if (!empty($this->_sections)) {
+      // build the query with no LIMIT clause
+      $select = str_ireplace( 'SELECT SQL_CALC_FOUND_ROWS ', 'SELECT ', $this->_select );
+      $sql = "{$select} {$this->_from} {$this->_where} {$this->_groupBy} {$this->_having} {$this->_orderBy}";
+
+      // pull section aliases out of $this->_sections
+      $sectionAliases = array_keys($this->_sections);
+
+      $ifnulls = array();
+      foreach (array_merge($sectionAliases, $this->_selectAliases) as $alias) {
+        $ifnulls[] = "ifnull($alias, '') as $alias";
+      }
+
+      /* Group (un-limited) report by all aliases and get counts. This might
+      * be done more efficiently when the contents of $sql are known, ie. by
+      * overriding this method in the report class.
+      */
+
+      $addtotals = '';
+
+      if (array_search("civicrm_contribution_total_amount_sum", $this->_selectAliases) !== FALSE) {
+        $addtotals = ", sum(civicrm_contribution_total_amount_sum) as sumcontribs";
+        $showsumcontribs = TRUE;
+      }
+
+      $query = "select "
+        . implode(", ", $ifnulls)
+        ."$addtotals, count(*) as ct from ($sql) as subquery group by ".  implode(", ", $sectionAliases);
+      // initialize array of total counts
+      $sumcontribs = $totals = array();
+      $dao = CRM_Core_DAO::executeQuery($query);
+      while ($dao->fetch()) {
+
+        // let $this->_alterDisplay translate any integer ids to human-readable values.
+        $rows[0] = $dao->toArray();
+        $this->alterDisplay($rows);
+        $row = $rows[0];
+
+        // add totals for all permutations of section values
+        $values = array();
+        $i = 1;
+        $aliasCount = count($sectionAliases);
+        foreach ($sectionAliases as $alias) {
+          $values[] = $row[$alias];
+          $key = implode(CRM_Core_DAO::VALUE_SEPARATOR, $values);
+          if ($i == $aliasCount) {
+            // the last alias is the lowest-level section header; use count as-is
+            $totals[$key] = $dao->ct;
+            if ($showsumcontribs) { $sumcontribs[$key] = $dao->sumcontribs; }
+          } 
+          else {
+            // other aliases are higher level; roll count into their total
+            $totals[$key] = (array_key_exists($key, $totals)) ? $totals[$key] + $dao->ct : $dao->ct;  
+            if ($showsumcontribs) { 
+              $sumcontribs[$key] = array_key_exists($key, $sumcontribs) ? $sumcontribs[$key] + $dao->sumcontribs : $dao->sumcontribs;  
+            }
+          }
+        }
+      }
+      if ($showsumcontribs) {
+        $totalandsum = array();
+        foreach ($totals as $key => $total) {
+          $totalandsumvals = array( 
+            1 => $total, 
+            2 => CRM_Utils_Money::format($sumcontribs[$key]),
+          );
+          $totalandsum[$key] = ts("%1 contributions: %2", $totalandsumvals);
+        }
+        $this->assign('sectionTotals', $totalandsum);
+      }
+      else {
+        $this->assign('sectionTotals', $totals);
+      }
     }
   }
 }

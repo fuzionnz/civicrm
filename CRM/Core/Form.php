@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,21 +31,12 @@
  * machine. Each form can also operate in various modes
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
 require_once 'HTML/QuickForm/Page.php';
-
-require_once 'CRM/Utils/Rule.php';
-require_once 'CRM/Utils/Request.php';
-require_once 'CRM/Utils/Weight.php';
-require_once 'CRM/Core/Permission.php';
-require_once 'CRM/Core/Smarty.php';
-require_once 'CRM/Core/Form/Renderer.php';
-require_once 'CRM/Core/SelectValues.php';
-require_once 'CRM/Utils/String.php';
 class CRM_Core_Form extends HTML_QuickForm_Page {
 
   /**
@@ -124,7 +115,9 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
    *
    * @return object
    * @access public
-   */ function __construct($state = NULL,
+   */
+  function __construct(
+    $state = NULL,
     $action = CRM_Core_Action::NONE,
     $method = 'post',
     $name   = NULL
@@ -139,7 +132,10 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
 
     $this->HTML_QuickForm_Page($this->_name, $method);
 
-    $this->_state = $state;
+    $this->_state =& $state;
+    if ($this->_state) {
+      $this->_state->setName($this->_name);
+    }
     $this->_action = (int) $action;
 
     $this->registerRules();
@@ -150,8 +146,8 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
     }
   }
 
-  static
-  function generateID() {}
+  static function generateID() {
+  }
 
   /**
    * register all the standard rules that most forms potentially use
@@ -304,11 +300,26 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
   function validate() {
     $error = parent::validate();
 
-    require_once 'CRM/Utils/Hook.php';
-    $hookErrors = CRM_Utils_Hook::validate(get_class($this),
-      $this->_submitValues, $this->_submitFiles, $this
+    $hookErrors = CRM_Utils_Hook::validate(
+      get_class($this),
+      $this->_submitValues,
+      $this->_submitFiles,
+      $this
     );
-    if ($hookErrors !== TRUE && is_array($hookErrors) && !empty($hookErrors)) {
+
+    if (!is_array($hookErrors)) {
+      $hookErrors = array();
+    }
+
+    CRM_Utils_Hook::validateForm(
+      get_class($this),
+      $this->_submitValues,
+      $this->_submitFiles,
+      $this,
+      $hookErrors
+    );
+
+    if (!empty($hookErrors)) {
       $this->_errors += $hookErrors;
     }
 
@@ -335,7 +346,6 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
       $this->assign('qfKey', $this->controller->_key);
     }
 
-    require_once 'CRM/Utils/Hook.php';
 
     $this->buildQuickForm();
 
@@ -563,7 +573,6 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
    * @access public
    */
   function getTemplateFileName() {
-    require_once ('CRM/Core/Extensions.php');
     $ext = new CRM_Core_Extensions();
     if ($ext->isExtensionClass(CRM_Utils_System::getClassName($this))) {
       $filename = $ext->getTemplateName(CRM_Utils_System::getClassName($this));
@@ -576,6 +585,17 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
       ) . '.tpl';
     }
     return $tplname;
+  }
+
+  /**
+   * Default extra tpl file basically just replaces .tpl with .extra.tpl
+   * i.e. we dont override
+   *
+   * @return string
+   * @access public
+   */
+  function overrideExtraTemplateFileName() {
+    return NULL;
   }
 
   /**
@@ -678,7 +698,7 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
   function &addRadio($name, $title, &$values, $attributes = NULL, $separator = NULL, $required = FALSE) {
     $options = array();
     foreach ($values as $key => $var) {
-      $options[] = HTML_QuickForm::createElement('radio', NULL, NULL, $var, $key, $attributes);
+      $options[] = $this->createElement('radio', NULL, NULL, $var, $key, $attributes);
     }
     $group = $this->addGroup($options, $name, $title, $separator);
     if ($required) {
@@ -711,20 +731,20 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
     if ($javascriptMethod) {
       foreach ($values as $key => $var) {
         if (!$flipValues) {
-          $options[] = HTML_QuickForm::createElement('checkbox', $var, NULL, $key, $javascriptMethod);
+          $options[] = $this->createElement('checkbox', $var, NULL, $key, $javascriptMethod);
         }
         else {
-          $options[] = HTML_QuickForm::createElement('checkbox', $key, NULL, $var, $javascriptMethod);
+          $options[] = $this->createElement('checkbox', $key, NULL, $var, $javascriptMethod);
         }
       }
     }
     else {
       foreach ($values as $key => $var) {
         if (!$flipValues) {
-          $options[] = HTML_QuickForm::createElement('checkbox', $var, NULL, $key);
+          $options[] = $this->createElement('checkbox', $var, NULL, $key);
         }
         else {
-          $options[] = HTML_QuickForm::createElement('checkbox', $key, NULL, $var);
+          $options[] = $this->createElement('checkbox', $key, NULL, $var);
         }
       }
     }
@@ -781,13 +801,12 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
     $this->addButtons($buttons);
   }
 
-  function addDateRange($name, $label = 'From:', $dateFormat = 'searchDate', $required = FALSE) {
-    $this->addDate($name . '_from', $label, $required, array('formatType' => $dateFormat));
-    $this->addDate($name . '_to', ts('To:'), $required, array('formatType' => $dateFormat));
+  function addDateRange($name, $from = '_from', $to = '_to', $label = 'From:', $dateFormat = 'searchDate', $required = FALSE) {
+    $this->addDate($name . $from, $label, $required, array('formatType' => $dateFormat));
+    $this->addDate($name . $to, ts('To:'), $required, array('formatType' => $dateFormat));
   }
 
   function addSelect($name, $label, $prefix = NULL, $required = NULL, $extra = NULL, $select = '- select -') {
-    require_once "CRM/Core/OptionGroup.php";
     if ($prefix) {
       $this->addElement('select', $name . '_id' . $prefix, $label,
         array(
@@ -798,7 +817,6 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
       }
     }
     else {
-      require_once 'CRM/Core/OptionGroup.php';
       $this->addElement('select', $name . '_id', $label,
         array(
           '' => $select) + CRM_Core_OptionGroup::values($name), $extra
@@ -812,7 +830,6 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
   function addWysiwyg($name, $label, $attributes, $forceTextarea = FALSE) {
     // 1. Get configuration option for editor (tinymce, ckeditor, pure textarea)
     // 2. Based on the option, initialise proper editor
-    require_once 'CRM/Core/BAO/Setting.php';
     $editorID = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
       'editor_id'
     );
@@ -835,6 +852,16 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
 
     $this->addElement($editor, $name, $label, $attributes);
     $this->assign('editor', $editor);
+
+    // include wysiwyg editor js files
+    $includeWysiwygEditor = FALSE;
+    $includeWysiwygEditor = $this->get('includeWysiwygEditor');
+    if (!$includeWysiwygEditor) {
+      $includeWysiwygEditor = TRUE;
+      $this->set('includeWysiwygEditor', $includeWysiwygEditor);
+    }
+
+    $this->assign('includeWysiwygEditor', $includeWysiwygEditor);
   }
 
   function addCountry($id, $title, $required = NULL, $extra = NULL) {
@@ -1019,7 +1046,17 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
       // get actual format
       $params = array('name' => $attributes['formatType']);
       $values = array();
-      CRM_Core_DAO::commonRetrieve('CRM_Core_DAO_PreferencesDate', $params, $values);
+
+      // cache date information
+      static $dateFormat;
+      $key = "dateFormat_" . str_replace(' ', '_', $attributes['formatType']);
+      if (!CRM_Utils_Array::value($key, $dateFormat)) {
+        CRM_Core_DAO::commonRetrieve('CRM_Core_DAO_PreferencesDate', $params, $values);
+        $dateFormat[$key] = $values;
+      }
+      else {
+        $values = $dateFormat[$key];
+      }
 
       if ($values['date_format']) {
         $attributes['format'] = $values['date_format'];
@@ -1108,13 +1145,14 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
     $attributes      = NULL,
     $addCurrency     = TRUE,
     $currencyName    = 'currency',
-    $defaultCurrency = NULL
+    $defaultCurrency = NULL,
+    $freezeCurrency  = FALSE
   ) {
     $element = $this->add('text', $name, $label, $attributes, $required);
     $this->addRule($name, ts('Please enter a valid amount.'), 'money');
 
     if ($addCurrency) {
-      $this->addCurrency($currencyName, NULL, TRUE, $defaultCurrency);
+      $ele = $this->addCurrency($currencyName, NULL, TRUE, $defaultCurrency, $freezeCurrency);
     }
 
     return $element;
@@ -1126,15 +1164,18 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
   function addCurrency($name = 'currency',
     $label           = NULL,
     $required        = TRUE,
-    $defaultCurrency = NULL
+    $defaultCurrency = NULL,
+    $freezeCurrency  = FALSE
   ) {
-    require_once 'CRM/Core/OptionGroup.php';
     $currencies = CRM_Core_OptionGroup::values('currencies_enabled');
     if (!$required) {
       $currencies = array(
         '' => ts('- select -')) + $currencies;
     }
-    $this->add('select', $name, $label, $currencies, $required);
+    $ele = $this->add('select', $name, $label, $currencies, $required);
+    if ($freezeCurrency) {
+      $ele->freeze();
+    }
     if (!$defaultCurrency) {
       $config = CRM_Core_Config::singleton();
       $defaultCurrency = $config->defaultCurrency;
@@ -1155,5 +1196,13 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
       }
     }
   }
+
+  /**
+   * Function that can be defined in Form to override or
+   * perform specific action on cancel action
+   *
+   * @access public
+   */
+  function cancelAction() {}
 }
 

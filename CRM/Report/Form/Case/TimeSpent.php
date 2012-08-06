@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
 class CRM_Report_Form_Case_TimeSpent extends CRM_Report_Form {
   function __construct() {
 
@@ -108,9 +108,10 @@ class CRM_Report_Form_Case_TimeSpent extends CRM_Report_Form {
         'filters' =>
         array(
           'activity_date_time' =>
-            //'default'      => 'this.month',
+          //'default'      => 'this.month',
           array(
-            'operatorType' => CRM_Report_Form::OP_DATE),
+            'operatorType' => CRM_Report_Form::OP_DATE,
+          ),
           'subject' =>
           array('title' => ts('Activity Subject'),
             'operator' => 'like',

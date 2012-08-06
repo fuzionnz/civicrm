@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,14 +29,10 @@
  * Redefine the display action.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/QuickForm/Action.php';
-
-require_once 'CRM/Core/Config.php';
 class CRM_Core_QuickForm_Action_Display extends CRM_Core_QuickForm_Action {
 
   /**
@@ -117,7 +113,16 @@ class CRM_Core_QuickForm_Action_Display extends CRM_Core_QuickForm_Action {
   function renderForm(&$page, $ret = FALSE) {
     $this->_setRenderTemplates($page);
     $template = CRM_Core_Smarty::singleton();
-    $template->assign('form', $page->toSmarty());
+    $form = $page->toSmarty();
+
+    $json = CRM_Utils_Request::retrieve('json', 'Boolean', CRM_Core_DAO::$_nullObject);
+
+    if ($json) {
+      echo json_encode($form);
+      CRM_Utils_System::civiExit();
+    }
+
+    $template->assign('form', $form);
     $template->assign('isForm', 1);
 
     $controller = &$page->controller;
@@ -132,10 +137,15 @@ class CRM_Core_QuickForm_Action_Display extends CRM_Core_QuickForm_Action {
 
     $content = $template->fetch($controller->getTemplateFile());
 
-    CRM_Utils_System::appendTPLFile($pageTemplateFile, $content);
+    if ($region = CRM_Core_Region::instance('html-header', FALSE)) {
+      CRM_Utils_System::addHTMLHead($region->render(''));
+    }
+    CRM_Utils_System::appendTPLFile($pageTemplateFile,
+      $content,
+      $page->overrideExtraTemplateFileName()
+    );
 
     //its time to call the hook.
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::alterContent($content, 'form', $pageTemplateFile, $page);
 
     $print = $controller->getPrint();
@@ -152,7 +162,6 @@ class CRM_Core_QuickForm_Action_Display extends CRM_Core_QuickForm_Action {
 
     if ($print) {
       if ($print == CRM_Core_Smarty::PRINT_PDF) {
-        require_once 'CRM/Utils/PDF/Utils.php';
         CRM_Utils_PDF_Utils::html2pdf($content, "{$page->_name}.pdf", FALSE,
           array('paper_size' => 'a3', 'orientation' => 'landscape')
         );

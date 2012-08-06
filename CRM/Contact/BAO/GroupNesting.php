@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | Copyright U.S. PIRG Education Fund (c) 2007                        |
  | Licensed to CiviCRM under the Academic Free License version 3.0.   |
@@ -33,8 +33,6 @@
  * $Id$
  *
  */
-
-require_once 'CRM/Contact/DAO/GroupNesting.php';
 class CRM_Contact_BAO_GroupNesting extends CRM_Contact_DAO_GroupNesting implements Iterator {
 
   static $_sortOrder = 'ASC';
@@ -171,7 +169,6 @@ class CRM_Contact_BAO_GroupNesting extends CRM_Contact_DAO_GroupNesting implemen
   }
 
   function _getNextParentlessGroup(&$group = NULL) {
-    require_once 'CRM/Contact/BAO/Group.php';
     $lastParentlessGroup = $this->_lastParentlessGroup;
     $nextGroup           = new CRM_Contact_BAO_Group();
     $nextGroup->order_by = 'title ' . self::$_sortOrder;
@@ -197,7 +194,6 @@ class CRM_Contact_BAO_GroupNesting extends CRM_Contact_DAO_GroupNesting implemen
     $children = self::getChildGroupIds($parentGroup->id);
     if (count($children) > 0) {
       // we have child groups, so get the first one based on _sortOrder
-      require_once 'CRM/Contact/BAO/Group.php';
       $childGroup = new CRM_Contact_BAO_Group();
       $cgQuery = "SELECT * FROM civicrm_group WHERE id IN (" . implode(',', $children) . ") ORDER BY title " . self::$_sortOrder;
       $childGroup->query($cgQuery);
@@ -574,7 +570,6 @@ class CRM_Contact_BAO_GroupNesting extends CRM_Contact_DAO_GroupNesting implemen
   function getAncestorGroups($groupIds, $includeSelf = TRUE) {
     $groupIds = self::getAncestorGroupIds($groupIds, $includeSelf);
     $params['id'] = $groupIds;
-    require_once 'CRM/Contact/BAO/Group.php';
     return CRM_Contact_BAO_Group::getGroups($params);
   }
 
@@ -678,7 +673,6 @@ class CRM_Contact_BAO_GroupNesting extends CRM_Contact_DAO_GroupNesting implemen
   function getDescendentGroups($groupIds, $includeSelf = TRUE) {
     $groupIds = self::getDescendentGroupIds($groupIds, $includeSelf);
     $params['id'] = $groupIds;
-    require_once 'CRM/Contact/BAO/Group.php';
     return CRM_Contact_BAO_Group::getGroups($params);
   }
 
@@ -694,7 +688,6 @@ class CRM_Contact_BAO_GroupNesting extends CRM_Contact_DAO_GroupNesting implemen
 
   static
   function getPotentialChildGroupIds($groupId) {
-    require_once 'CRM/Contact/BAO/Group.php';
     $groups = CRM_Contact_BAO_Group::getGroups();
     $potentialChildGroupIds = array();
     foreach ($groups as $group) {

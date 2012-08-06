@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -43,19 +43,7 @@ class CRM_Upgrade_Incremental_php_ThreeTwo {
     $config = CRM_Core_Config::singleton();
     if ($config->userSystem->is_drupal) {
 
-      // CRM-7896
-      $roles = user_roles(FALSE, 'access CiviCase');
-      if (!empty($roles)) {
-        $changePermissions = array(
-          'access CiviCase' => FALSE,
-          'access my cases and activities' => TRUE,
-          'access all cases and activities' => TRUE,
-          'administer CiviCase' => TRUE,
-        );
-        foreach (array_keys($roles) as $rid) {
-          user_role_change_permissions($rid, $changePermissions);
-        }
-      }
+      $config->userSystem->replacePermission('access CiviCase', array('access my cases and activities', 'access all cases and activities', 'administer CiviCase'));
 
       //insert core acls.
       $casePermissions = array(
@@ -64,7 +52,6 @@ class CRM_Upgrade_Incremental_php_ThreeTwo {
         'access my cases and activities',
         'access all cases and activities',
       );
-      require_once 'CRM/ACL/DAO/ACL.php';
       $aclParams = array(
         'name' => 'Core ACL',
         'deny' => 0,
@@ -216,7 +203,6 @@ class CRM_Upgrade_Incremental_php_ThreeTwo {
       ),
     );
 
-    require_once 'CRM/Member/DAO/MembershipStatus.php';
     $statusIds = array();
     $insertedNewRecord = FALSE;
     foreach ($statuses as $status) {
@@ -276,7 +262,6 @@ UPDATE  civicrm_membership_status
     }
     // CRM-6563: restrict access to the upload dir, tighten access to the config-and-log dir
     $config = CRM_Core_Config::singleton();
-    require_once 'CRM/Utils/File.php';
     CRM_Utils_File::restrictAccess($config->uploadDir);
     CRM_Utils_File::restrictAccess($config->configAndLogDir);
     $upgrade = new CRM_Upgrade_Form;

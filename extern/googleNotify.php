@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -36,11 +36,9 @@
 session_start();
 
 require_once '../civicrm.config.php';
-require_once 'CRM/Core/Config.php';
 
 $config = CRM_Core_Config::singleton();
 
-require_once 'CRM/Core/Payment/GoogleIPN.php';
 $rawPostData = file_get_contents('php://input');
 CRM_Core_Payment_GoogleIPN::main($rawPostData);
 

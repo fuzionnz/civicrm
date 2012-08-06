@@ -34,7 +34,7 @@
         <li>{ts}Check <strong>View/Edit User Account</strong> to include it in the view and edit screens for existing user accounts.{/ts}</li>
     {/if}
     </ul>
-    {docURL page="Profiles Admin"}
+    {docURL page="user/the-user-interface/profiles"}
 {/htxt}
 
 {htxt id='id-profile_weight'}
@@ -72,7 +72,7 @@
 {capture assign="miscURL"}{crmURL p="civicrm/admin/setting/misc" q="reset=1"}{/capture}
 {htxt id='id-add_captcha'}
 {ts}When reCAPTCHA is included in an add / edit profile form, users are required to read an image with letters and numbers and enter the value in a field. This helps prevent abuse by automated scripts.{/ts}
-<p>{ts 1="http://recaptcha.net/api/getkey" 2=$miscURL}To use reCAPTCHA you must get an API key from <a href="%1" target="_blank">reCAPTCHA.net</a>, and enter the key information in <a href="%2">Administer CiviCRM &raquo; Global Settings &raquo; Miscellaneous Settings</a>.{/ts}</p>
+<p>{ts 1="http://recaptcha.net/api/getkey" 2=$miscURL}To use reCAPTCHA you must get an API key from <a href="%1" target="_blank">reCAPTCHA.net</a>, and enter the key information in <a href="%2">Administer CiviCRM &raquo; System Settings &raquo; Undelete, Logging and ReCAPTCHA</a>.{/ts}</p>
 <p><strong>{ts}Do not enable this feature for stand-alone profile forms. reCAPTCHA requires dynamic page generation. Submitting a stand-alone form with reCAPTCHA included will always result in a reCAPTCHA validation error.{/ts}</strong></p>
 {if $config->userSystem->supports_form_extensions EQ '1'} 
     <p><strong>{ts}reCAPTCHA is also not available when a profile is used inside the User Registration and My Account screens.{/ts}</strong></p>
@@ -87,11 +87,11 @@
 {elseif $config->userFramework EQ 'Joomla'}
     {ts}This feature requires the 'Allow User Registration' setting to be 'Yes' in Joomla Global Configuration >> System Settings.{/ts}
 {/if}
- {ts}In addition, you must include a Primary Email Address field in the profile.{/ts} {docURL page="How to Create Profiles"}
+ {ts}In addition, you must include a Primary Email Address field in the profile.{/ts}
 {/htxt}
 
 {htxt id='id-is_update_dupe'}
-<p>{ts}If you are using the profile as a contact signup and editing form - this option controls what happens if the data matches an existing contact record. Using this option user can update the matching record or create a duplicate record or otherwise he will get a 'duplicate record' warning, and their input will not be saved. Contact matching is based on your configured 'Strict' rule for identifying duplicate contacts.{/ts} {docURL page="Find and Merge Duplicate Contacts"}</p>
+<p>{ts}If you are using the profile as a contact signup and editing form - this option controls what happens if the data matches an existing contact record. Using this option user can update the matching record or create a duplicate record or otherwise he will get a 'duplicate record' warning, and their input will not be saved. Contact matching is based on your configured 'Strict' rule for identifying duplicate contacts.{/ts} {docURL page="user/common-workflows/deduping-and-merging"}</p>
 <p>{ts}This setting is ignored if the profile is embedded in an online contribution, membership signup or event registration form. In this case a contact match always results in the transaction being linked to the matching contact.</p>{/ts}
 <p>{ts}In all cases, the check for an existing matching contact uses the default "Individual Strict Duplicate Matching Rule" (match on email address). If you are concerned with existing contact data being over-written by anonymous visitors, you can modify this rule to make matches less likely (or even impossible).
 For example, if you NEVER want anonymous input to match (i.e. always create a new contact record) - edit that rule and set the 'weight threshold' higher than 10. You will then need to run Find Duplicates periodically using a different rule, and merge any duplicate records with their associated memberships, contributions, etc.{/ts}</p>

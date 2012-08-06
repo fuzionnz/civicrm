@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once "CRM/Core/Form.php";
 
 /**
  * This class generates form components for OpenCase Activity
@@ -59,13 +57,11 @@ class CRM_Case_Form_Activity_ChangeCaseStartDate {
   function setDefaultValues(&$form) {
     $defaults = array();
 
-    require_once 'CRM/Core/OptionGroup.php';
     $openCaseActivityType = CRM_Core_OptionGroup::getValue('activity_type',
       'Open Case',
       'name'
     );
     $openCaseParams = array('activity_type_id' => $openCaseActivityType);
-    require_once 'CRM/Case/BAO/Case.php';
     $openCaseInfo = CRM_Case_BAO_Case::getCaseActivityDates($form->_caseId, $openCaseParams, TRUE);
     if (empty($openCaseInfo)) {
       list($defaults['start_date'], $defaults['start_date_time']) = CRM_Utils_Date::setDateDefaults();
@@ -189,7 +185,6 @@ WHERE civicrm_case.id=  %1";
     // Multiple steps since revisioned
     if ($form->openCaseActivityId) {
 
-      require_once 'CRM/Activity/BAO/Activity.php';
       $abao                = new CRM_Activity_BAO_Activity();
       $oldParams           = array('id' => $form->openCaseActivityId);
       $oldActivityDefaults = array();
@@ -206,7 +201,6 @@ WHERE civicrm_case.id=  %1";
         'id' => $form->openCaseActivityId,
         'is_current_revision' => 0,
       );
-      require_once 'CRM/Activity/DAO/Activity.php';
       $oldActivity = new CRM_Activity_DAO_Activity();
       $oldActivity->copyValues($oldParams);
       $oldActivity->save();
@@ -233,7 +227,6 @@ WHERE civicrm_case.id=  %1";
           'case_id' => $form->_caseId,
         );
 
-        require_once "CRM/Case/BAO/Case.php";
         CRM_Case_BAO_Case::processCaseActivity($caseActivityParams);
 
         $caseActivityParams = array(

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,16 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once "CRM/Core/PseudoConstant.php";
-require_once "CRM/Case/PseudoConstant.php";
-require_once 'CRM/Case/XMLProcessor/Process.php';
-require_once 'CRM/Case/BAO/Case.php';
 
 /**
  * This class generates view mode for CiviCase
@@ -60,7 +54,6 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form {
     $this->_showRelatedCases = CRM_Utils_Array::value('relatedCases', $_GET);
 
 
-    require_once 'CRM/Case/XMLProcessor/Process.php';
     $xmlProcessorProcess = new CRM_Case_XMLProcessor_Process();
     $isMultiClient = $xmlProcessorProcess->getAllowMultipleCaseClients();
     $this->assign('multiClient', $isMultiClient);
@@ -127,7 +120,6 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form {
       CRM_Utils_Array::value('case_type_id', $values)
     );
 
-    require_once 'CRM/Case/PseudoConstant.php';
     $statuses     = CRM_Case_PseudoConstant::caseStatus('label', FALSE);
     $caseTypeName = CRM_Case_BAO_Case::getCaseType($this->_caseID, 'name');
     $caseType     = CRM_Case_BAO_Case::getCaseType($this->_caseID);
@@ -161,8 +153,6 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form {
     $this->assign('reportUrl', $reportUrl);
 
     // add to recently viewed
-    require_once 'CRM/Utils/Recent.php';
-    require_once 'CRM/Contact/BAO/Contact.php';
 
     $url = CRM_Utils_System::url('civicrm/contact/view/case',
       "action=view&reset=1&id={$this->_caseID}&cid={$this->_contactID}&context=home"
@@ -250,7 +240,6 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form {
 
     $aTypes = $xmlProcessor->get($this->_caseType, 'ActivityTypes', TRUE);
 
-    require_once 'CRM/Core/PseudoConstant.php';
     $allActTypes = CRM_Core_PseudoConstant::activityType(TRUE, TRUE, FALSE, 'name');
 
     // remove Open Case activity type since we're inside an existing case
@@ -346,7 +335,6 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form {
     $this->addDate('activity_date_low', ts('Activity Dates - From'), FALSE, array('formatType' => 'searchDate'));
     $this->addDate('activity_date_high', ts('To'), FALSE, array('formatType' => 'searchDate'));
 
-    require_once "CRM/Core/Permission.php";
     if (CRM_Core_Permission::check('administer CiviCRM')) {
       $this->add('checkbox', 'activity_deleted', ts('Deleted Activities'));
     }
@@ -376,7 +364,7 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form {
 
     // take all case activity types for search filter, CRM-7187
     $aTypesFilter = array();
-    $allCaseActTypes = CRM_Case_PseudoConstant::activityType();
+    $allCaseActTypes = CRM_Case_PseudoConstant::caseActivityType();
     foreach ($allCaseActTypes as $typeDetails) {
       if (!in_array($typeDetails['name'], array(
         'Open Case'))) {
@@ -418,7 +406,6 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form {
     $this->assign('globalGroupInfo', $globalGroupInfo);
 
     // List of relationship types
-    require_once 'CRM/Contact/BAO/Relationship.php';
     $baoRel    = new CRM_Contact_BAO_Relationship();
     $relType   = $baoRel->getRelationType('Individual');
     $roleTypes = array();
@@ -427,14 +414,11 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form {
     }
     $this->add('select', 'role_type', ts('Relationship Type'), array('' => ts('- select type -')) + $roleTypes);
 
-    require_once ('CRM/Utils/Hook.php');
     $hookCaseSummary = CRM_Utils_Hook::caseSummary($this->_caseID);
     if (is_array($hookCaseSummary)) {
       $this->assign('hookCaseSummary', $hookCaseSummary);
     }
 
-    require_once 'CRM/Core/BAO/EntityTag.php';
-    require_once 'CRM/Core/BAO/Tag.php';
 
     $allTags = CRM_Core_BAO_Tag::getTags('civicrm_case');
 
@@ -459,7 +443,6 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form {
     }
 
     // build tagset widget
-    require_once 'CRM/Core/Form/Tag.php';
 
     // see if we have any tagsets which can be assigned to cases
     $parentNames = CRM_Core_BAO_Tag::getTagSet('civicrm_case');

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -61,7 +61,6 @@ class CRM_Utils_String {
   function titleToVar($title, $maxLength = 31) {
     $variable = self::munge($title, '_', $maxLength);
 
-    require_once "CRM/Utils/Rule.php";
     if (CRM_Utils_Rule::title($variable, $maxLength)) {
       return $variable;
     }
@@ -99,14 +98,14 @@ class CRM_Utils_String {
   }
 
 
-  /*
+  /* 
      * Takes a variable name and munges it randomly into another variable name
-     *
+     *  
      * @param  string $name    Initial Variable Name
      * @param int     $len  length of valid variables
      *
      * @return string  Randomized Variable Name
-     * @access public
+     * @access public 
      * @static
      */
 
@@ -323,6 +322,7 @@ class CRM_Utils_String {
    * @access public
    * @static
    */
+  static
   function match($url1, $url2) {
     $url1 = strtolower($url1);
     $url2 = strtolower($url2);
@@ -345,7 +345,9 @@ class CRM_Utils_String {
    *
    * @return mix $v  returns civicrm url (eg: civicrm/contact/search/...)
    * @access public
+   * @static
    */
+  static
   function extractURLVarValue($query) {
     $config = CRM_Core_Config::singleton();
     $urlVar = $config->userFrameworkURLVar;
@@ -536,23 +538,7 @@ class CRM_Utils_String {
    */
   static
   function stripSpaces($string) {
-    if (empty($string)) {
-      return $string;
-    }
-
-    $pat = array(
-      0 => "/^\s+/",
-      1 => "/\s{2,}/",
-      2 => "/\s+\$/",
-    );
-
-    $rep = array(
-      0 => "",
-      1 => " ",
-      2 => "",
-    );
-
-    return preg_replace($pat, $rep, $string);
+    return (empty($string)) ? $string : preg_replace("/\s{2,}/", " ", trim($string));
   }
 
   /**
@@ -601,6 +587,7 @@ class CRM_Utils_String {
     return str_replace($search, $replace, $string);
   }
 
+
   /**
    * Use HTMLPurifier to clean up a text string and remove any potential
    * xss attacks. This is primarily used in public facing pages which
@@ -612,22 +599,22 @@ class CRM_Utils_String {
    * @public
    * @static
    */
-  static
-  function purifyHTML($string) {
-    static $_filter = NULL;
-    if (!$_filter) {
+  static function purifyHTML($string) {
+    static $_filter = null;
+    if ( ! $_filter ) {
       require_once 'packages/IDS/vendors/htmlpurifier/HTMLPurifier.auto.php';
 
       $config = HTMLPurifier_Config::createDefault();
       $config->set('Core.Encoding', 'UTF-8');
 
       // Disable the cache entirely
-      $config->set('Cache.DefinitionImpl', NULL);
+      $config->set('Cache.DefinitionImpl', null);
 
-      $_filter = new HTMLPurifier();
-    }
+      $_filter = new HTMLPurifier($config);
+}
 
     return $_filter->purify($string);
   }
+
 }
 

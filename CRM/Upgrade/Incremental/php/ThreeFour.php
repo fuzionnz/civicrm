@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -39,7 +39,6 @@ class CRM_Upgrade_Incremental_php_ThreeFour {
 
   function upgrade_3_4_alpha3($rev) {
     // CRM-7681, update report instance criteria.
-    require_once 'CRM/Report/DAO/Instance.php';
     $modifiedReportIds = array('contact/summary', 'contact/detail', 'event/participantListing', 'member/summary', 'pledge/summary', 'pledge/pbnp', 'member/detail', 'member/lapse', 'grant/detail', 'contribute/bookkeeping', 'contribute/lybunt', 'contribute/summary', 'contribute/repeat', 'contribute/detail', 'contribute/organizationSummary', 'contribute/sybunt', 'contribute/householdSummary', 'contact/relationship', 'contact/currentEmployer', 'case/demographics', 'walklist', 'case/detail', 'contact/log', 'activitySummary', 'case/timespent', 'case/summary');
 
     $instances = CRM_Core_DAO::executeQuery("SELECT id, form_values, report_id FROM civicrm_report_instance WHERE report_id IN ('" . implode("','", $modifiedReportIds) . "')");
@@ -102,7 +101,6 @@ class CRM_Upgrade_Incremental_php_ThreeFour {
   }
 
   function upgrade_3_4_beta2($rev) {
-    require_once 'CRM/Core/DAO.php';
     $addPetitionOptionGroup = !(boolean) CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionGroup', 'msg_tpl_workflow_petition', 'id', 'name');
     $upgrade = new CRM_Upgrade_Form();
     $upgrade->assign('addPetitionOptionGroup', $addPetitionOptionGroup);
@@ -115,8 +113,6 @@ class CRM_Upgrade_Incremental_php_ThreeFour {
     $upgrade->processSQL($rev);
 
     if ($upgrade->multilingual) {
-      require_once 'CRM/Core/I18n/Schema.php';
-      require_once 'CRM/Core/I18n/SchemaStructure_3_4_beta2.php';
 
       // rebuild schema, because due to a CRM-7854 mis-fix some indices might be missing
       CRM_Core_I18n_Schema::rebuildMultilingualSchema($upgrade->locales, $rev);
@@ -124,15 +120,19 @@ class CRM_Upgrade_Incremental_php_ThreeFour {
       // turn a set of columns singlelingual
       $config = CRM_Core_Config::singleton();
       $tables = array('civicrm_address', 'civicrm_contact', 'civicrm_mailing', 'civicrm_mailing_component');
+      $triggers = array(array('when' => 'before', 'event' => 'update'), array('when' => 'before', 'event' => 'insert'));
+      
+      // FIXME: Doing require_once is a must here because a call like CRM_Core_I18n_SchemaStructure_3_4_beta2 makes
+      // class loader look for file like - CRM/Core/I18n/SchemaStructure/3/4/beta2.php which is not what we want to be loaded
+      require_once "CRM/Core/I18n/SchemaStructure_3_4_beta2.php";
       foreach ($tables as $table) {
-        CRM_Core_I18n_Schema::makeSinglelingualTable($config->lcMessages, $table, 'CRM_Core_I18n_SchemaStructure_3_4_beta2');
+        CRM_Core_I18n_Schema::makeSinglelingualTable($config->lcMessages, $table, 'CRM_Core_I18n_SchemaStructure_3_4_beta2', $triggers);
       }
     }
   }
 
   function upgrade_3_4_3($rev) {
     // CRM-8147, update group_type for uf groups, check and add component field types
-    require_once 'CRM/Core/BAO/UFGroup.php';
     $ufGroups = new CRM_Core_DAO_UFGroup();
     $ufGroups->find();
     $skipGroupTypes = array('Individual,Contact', 'Organization,Contact', 'Household,Contact', 'Contact', 'Individual', 'Organization', 'Household');
@@ -145,7 +145,6 @@ class CRM_Upgrade_Incremental_php_ThreeFour {
     $ufGroups->free();
 
     // CRM-8134 add phone_ext column if it wasn't already added for this site in 3.3.7 upgrade (3.3.7 was released after 3.4.0)
-    require_once 'CRM/Contact/DAO/Contact.php';
     $dao = new CRM_Contact_DAO_Contact();
     $dbName = $dao->_database;
 
@@ -175,7 +174,6 @@ INSERT INTO civicrm_location_type ( name, description, is_reserved, is_active )
 
   function upgrade_3_4_4($rev) {
     // CRM-8315, update report instance criteria.
-    require_once 'CRM/Report/DAO/Instance.php';
     $modifiedReportIds = array('member/summary', 'member/detail');
 
     $instances = CRM_Core_DAO::executeQuery("SELECT id, form_values, report_id FROM civicrm_report_instance WHERE report_id IN ('" . implode("','", $modifiedReportIds) . "')");
@@ -210,7 +208,6 @@ INSERT INTO civicrm_location_type ( name, description, is_reserved, is_active )
   function upgrade_3_4_5($rev) {
     // handle db changes done for CRM-8218
     $alterContactDashboard = FALSE;
-    require_once 'CRM/Contact/DAO/DashboardContact.php';
     $dao = new CRM_Contact_DAO_DashboardContact();
     $dbName = $dao->_database;
 
@@ -230,7 +227,6 @@ INSERT INTO civicrm_location_type ( name, description, is_reserved, is_active )
   }
 
   function upgrade_3_4_6($rev) {
-    require_once 'CRM/Report/DAO/Instance.php';
     $modifiedReportIds = array('event/summary', 'activity', 'Mailing/bounce', 'Mailing/clicks', 'Mailing/opened');
 
     $instances = CRM_Core_DAO::executeQuery("SELECT id, form_values, report_id FROM civicrm_report_instance WHERE report_id IN ('" . implode("','", $modifiedReportIds) . "')");
@@ -297,7 +293,6 @@ WHERE  v.option_group_id = g.id
       ));
 
     // CRM-8852, reset contact field cache
-    require_once 'CRM/Core/BAO/Cache.php';
     CRM_Core_BAO_Cache::deleteGroup('contact fields');
 
     $upgrade = new CRM_Upgrade_Form();
@@ -307,7 +302,6 @@ WHERE  v.option_group_id = g.id
   }
 
   function upgrade_3_4_7($rev) {
-    require_once 'CRM/Core/DAO.php';
     $onBehalfProfileId = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_UFGroup', 'on_behalf_organization', 'id', 'name');
     if (!$onBehalfProfileId) {
       CRM_Core_Error::fatal();

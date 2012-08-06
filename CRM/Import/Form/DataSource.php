@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Import/Parser/Contact.php';
 
 /**
  * This class delegates to the chosen DataSource to grab the data to be
@@ -143,16 +140,16 @@ class CRM_Import_Form_DataSource extends CRM_Core_Form {
 
     // duplicate handling options
     $duplicateOptions = array();
-    $duplicateOptions[] = HTML_QuickForm::createElement('radio',
+    $duplicateOptions[] = $this->createElement('radio',
       NULL, NULL, ts('Skip'), CRM_Import_Parser::DUPLICATE_SKIP
     );
-    $duplicateOptions[] = HTML_QuickForm::createElement('radio',
+    $duplicateOptions[] = $this->createElement('radio',
       NULL, NULL, ts('Update'), CRM_Import_Parser::DUPLICATE_UPDATE
     );
-    $duplicateOptions[] = HTML_QuickForm::createElement('radio',
+    $duplicateOptions[] = $this->createElement('radio',
       NULL, NULL, ts('Fill'), CRM_Import_Parser::DUPLICATE_FILL
     );
-    $duplicateOptions[] = HTML_QuickForm::createElement('radio',
+    $duplicateOptions[] = $this->createElement('radio',
       NULL, NULL, ts('No Duplicate Checking'), CRM_Import_Parser::DUPLICATE_NOCHECK
     );
 
@@ -160,8 +157,6 @@ class CRM_Import_Form_DataSource extends CRM_Core_Form {
       ts('For Duplicate Contacts')
     );
 
-    require_once "CRM/Core/BAO/Mapping.php";
-    require_once "CRM/Core/OptionGroup.php";
     $mappingArray = CRM_Core_BAO_Mapping::getMappings(CRM_Core_OptionGroup::getValue('mapping_type',
         'Import Contact',
         'name'
@@ -173,20 +168,19 @@ class CRM_Import_Form_DataSource extends CRM_Core_Form {
 
     $js = array('onClick' => "buildSubTypes();buildDedupeRules();");
     // contact types option
-    require_once 'CRM/Contact/BAO/ContactType.php';
     $contactOptions = array();
     if (CRM_Contact_BAO_ContactType::isActive('Individual')) {
-      $contactOptions[] = HTML_QuickForm::createElement('radio',
+      $contactOptions[] = $this->createElement('radio',
         NULL, NULL, ts('Individual'), CRM_Import_Parser::CONTACT_INDIVIDUAL, $js
       );
     }
     if (CRM_Contact_BAO_ContactType::isActive('Household')) {
-      $contactOptions[] = HTML_QuickForm::createElement('radio',
+      $contactOptions[] = $this->createElement('radio',
         NULL, NULL, ts('Household'), CRM_Import_Parser::CONTACT_HOUSEHOLD, $js
       );
     }
     if (CRM_Contact_BAO_ContactType::isActive('Organization')) {
-      $contactOptions[] = HTML_QuickForm::createElement('radio',
+      $contactOptions[] = $this->createElement('radio',
         NULL, NULL, ts('Organization'), CRM_Import_Parser::CONTACT_ORGANIZATION, $js
       );
     }
@@ -198,7 +192,6 @@ class CRM_Import_Form_DataSource extends CRM_Core_Form {
     $this->addElement('select', 'subType', ts('Subtype'));
     $this->addElement('select', 'dedupe', ts('Dedupe Rule'));
 
-    require_once 'CRM/Core/Form/Date.php';
     CRM_Core_Form_Date::buildAllowedDateFormats($this);
 
     $config = CRM_Core_Config::singleton();
@@ -263,7 +256,7 @@ class CRM_Import_Form_DataSource extends CRM_Core_Form {
       ) {
         $dataSourceClass = "CRM_Import_DataSource_" . $matches[1];
         require_once $dataSourceDir . DIRECTORY_SEPARATOR . $dataSourceFile;
-        eval("\$info = $dataSourceClass::getInfo();");
+        eval("\$object = new $dataSourceClass(); \$info = \$object->getInfo();");
         $dataSources[$dataSourceClass] = $info['title'];
       }
     }

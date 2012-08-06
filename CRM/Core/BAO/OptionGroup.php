@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/OptionGroup.php';
 class CRM_Core_BAO_OptionGroup extends CRM_Core_DAO_OptionGroup {
 
   /**
@@ -57,8 +55,7 @@ class CRM_Core_BAO_OptionGroup extends CRM_Core_DAO_OptionGroup {
    * @access public
    * @static
    */
-  static
-  function retrieve(&$params, &$defaults) {
+  static function retrieve(&$params, &$defaults) {
     $optionGroup = new CRM_Core_DAO_OptionGroup();
     $optionGroup->copyValues($params);
     if ($optionGroup->find(TRUE)) {
@@ -77,8 +74,7 @@ class CRM_Core_BAO_OptionGroup extends CRM_Core_DAO_OptionGroup {
    * @return Object             DAO object on sucess, null otherwise
    * @static
    */
-  static
-  function setIsActive($id, $is_active) {
+  static function setIsActive($id, $is_active) {
     return CRM_Core_DAO::setFieldValue('CRM_Core_DAO_OptionGroup', $id, 'is_active', $is_active);
   }
 
@@ -93,8 +89,7 @@ class CRM_Core_BAO_OptionGroup extends CRM_Core_DAO_OptionGroup {
    *
    * @return object
    */
-  static
-  function add(&$params, &$ids) {
+  static function add(&$params, &$ids) {
     $params['is_active'] = CRM_Utils_Array::value('is_active', $params, FALSE);
     $params['is_default'] = CRM_Utils_Array::value('is_default', $params, FALSE);
 
@@ -122,10 +117,8 @@ class CRM_Core_BAO_OptionGroup extends CRM_Core_DAO_OptionGroup {
    * @access public
    * @static
    */
-  static
-  function del($optionGroupId) {
+  static function del($optionGroupId) {
     // need to delete all option value field before deleting group
-    require_once 'CRM/Core/DAO/OptionValue.php';
     $optionValue = new CRM_Core_DAO_OptionValue();
     $optionValue->option_group_id = $optionGroupId;
     $optionValue->delete();
@@ -145,8 +138,7 @@ class CRM_Core_BAO_OptionGroup extends CRM_Core_DAO_OptionGroup {
    * @access public
    * @static
    */
-  static
-  function getTitle($optionGroupId) {
+  static function getTitle($optionGroupId) {
     $optionGroup = new CRM_Core_DAO_OptionGroup();
     $optionGroup->id = $optionGroupId;
     $optionGroup->find(TRUE);
@@ -172,8 +164,7 @@ class CRM_Core_BAO_OptionGroup extends CRM_Core_DAO_OptionGroup {
    * @access public
    * @static
    */
-  static
-  function copyValue($component, $fromId, $toId, $defaultId = FALSE, $discountSuffix = NULL) {
+  static function copyValue($component, $fromId, $toId, $defaultId = FALSE, $discountSuffix = NULL) {
     $page = '_page';
     if ($component == 'event') {
       //fix for CRM-3391.

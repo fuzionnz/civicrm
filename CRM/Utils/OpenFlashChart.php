@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -103,7 +103,6 @@ class CRM_Utils_OpenFlashChart {
     }
 
     // get the currency.
-    require_once 'CRM/Utils/Money.php';
     $config = CRM_Core_Config::singleton();
     $symbol = $config->defaultCurrencySymbol;
 
@@ -190,7 +189,6 @@ class CRM_Utils_OpenFlashChart {
     $graphTitle = CRM_Utils_Array::value('legend', $params) ? $params['legend'] : ts('Pie Chart');
 
     //get the currency.
-    require_once 'CRM/Utils/Money.php';
     $config = CRM_Core_Config::singleton();
     $symbol = $config->defaultCurrencySymbol;
 
@@ -273,7 +271,6 @@ class CRM_Utils_OpenFlashChart {
     }
 
     // get the currency.
-    require_once 'CRM/Utils/Money.php';
     $config = CRM_Core_Config::singleton();
     $symbol = $config->defaultCurrencySymbol;
 
@@ -431,6 +428,10 @@ class CRM_Utils_OpenFlashChart {
 
     // rotate the x labels.
     $chartData['xLabelAngle'] = CRM_Utils_Array::value('xLabelAngle', $rows, 20);
+    if (CRM_Utils_Array::value('tip', $rows)) {
+      $chartData['tip'] = $rows['tip'];
+    }
+
     //legend
     $chartData['xname'] = CRM_Utils_Array::value('xname', $rows);
     $chartData['yname'] = CRM_Utils_Array::value('yname', $rows);
@@ -461,6 +462,9 @@ class CRM_Utils_OpenFlashChart {
 
     // rotate the x labels.
     $chartData['xLabelAngle'] = CRM_Utils_Array::value('xLabelAngle', $chartInfo, 20);
+    if (CRM_Utils_Array::value('tip', $chartInfo)) {
+      $chartData['tip'] = $chartInfo['tip'];
+    }
 
     // carry some chart params if pass.
     foreach (array(
@@ -476,7 +480,6 @@ class CRM_Utils_OpenFlashChart {
   function buildChart(&$params, $chart) {
     $openFlashChart = array();
     if ($chart && is_array($params) && !empty($params)) {
-      require_once 'CRM/Utils/OpenFlashChart.php';
       // build the chart objects.
       eval("\$chartObj = CRM_Utils_OpenFlashChart::" . $chart . '( $params );');
 

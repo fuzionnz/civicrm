@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,12 +29,10 @@
  * This class stores logic for managing CiviCRM extensions.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Config.php';
 class CRM_Core_Extensions_Payment {
 
   public function __construct($ext) {
@@ -51,7 +49,6 @@ class CRM_Core_Extensions_Payment {
     if (array_key_exists($this->ext->name, $ppByName)) {
       CRM_Core_Error::fatal('This payment processor type already exists.');
     }
-
 
     $dao = new CRM_Core_DAO_PaymentProcessorType();
 
@@ -74,7 +71,6 @@ class CRM_Core_Extensions_Payment {
     $dao->url_button_default = trim($this->ext->typeInfo['urlButtonDefault']);
     $dao->url_button_test_default = trim($this->ext->typeInfo['urlButtonTestDefault']);
 
-    require_once 'CRM/Core/Payment.php';
     switch (trim($this->ext->typeInfo['billingMode'])) {
       case 'form':
         $dao->billing_mode = CRM_Core_Payment::BILLING_MODE_FORM;
@@ -108,39 +104,32 @@ class CRM_Core_Extensions_Payment {
       CRM_Core_Error::fatal('This payment processor type is not registered.');
     }
 
-    require_once 'CRM/Core/PseudoConstant.php';
     $paymentProcessors = CRM_Core_PseudoConstant::paymentProcessor(TRUE);
 
-    require_once "CRM/Core/DAO/PaymentProcessor.php";
     foreach ($paymentProcessors as $id => $name) {
       $dao = new CRM_Core_DAO_PaymentProcessor();
       $dao->id = $id;
       $dao->find();
       while ($dao->fetch()) {
         if ($dao->payment_processor_type == $this->ext->name) {
-          CRM_Core_Error::fatal('Cannot uninstall this extension - there is at least one payment processor using payment processor type provided by it.');
+          CRM_Core_Session::setStatus('Cannot uninstall this extension - there is at least one payment processor using payment processor type provided by it.');
+          return;
         }
       }
     }
-
-    require_once "CRM/Core/BAO/PaymentProcessorType.php";
-    CRM_Core_BAO_PaymentProcessorType::del($this->paymentProcessorTypes[$this->ext->key]);
+    return CRM_Core_BAO_PaymentProcessorType::del($this->paymentProcessorTypes[$this->ext->key]);
   }
 
   public function disable() {
-    require_once "CRM/Core/BAO/PaymentProcessorType.php";
     CRM_Core_BAO_PaymentProcessorType::setIsActive($this->paymentProcessorTypes[$this->ext->key], 0);
   }
 
   public function enable() {
-    require_once "CRM/Core/BAO/PaymentProcessorType.php";
     CRM_Core_BAO_PaymentProcessorType::setIsActive($this->paymentProcessorTypes[$this->ext->key], 1);
   }
 
   private function _getAllPaymentProcessorTypes($attr) {
     $ppt = array();
-    require_once "CRM/Core/DAO/PaymentProcessorType.php";
-    require_once "CRM/Core/DAO.php";
     $dao = new CRM_Core_DAO_PaymentProcessorType();
     $dao->find();
     while ($dao->fetch()) {

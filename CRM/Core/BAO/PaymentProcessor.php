@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/PaymentProcessor.php';
 
 /**
  * This class contains payment processor related functions.
@@ -44,6 +42,17 @@ class CRM_Core_BAO_PaymentProcessor extends CRM_Core_DAO_PaymentProcessor {
    * static holder for the default payment processor
    */
   static $_defaultPaymentProcessor = NULL;
+  /*
+     * Create Payment Processor
+     * 
+     * @params array parameters for Processor entity
+     */
+  function create(&$params) {
+    $processor = new CRM_Core_DAO_PaymentProcessor();
+    $processor->copyValues($params);
+    $processor->save();
+    return $processor;
+  }
 
   /**
    * class constructor
@@ -64,8 +73,7 @@ class CRM_Core_BAO_PaymentProcessor extends CRM_Core_DAO_PaymentProcessor {
    * @access public
    * @static
    */
-  static
-  function retrieve(&$params, &$defaults) {
+  static function retrieve(&$params, &$defaults) {
     $paymentProcessor = new CRM_Core_DAO_PaymentProcessor();
     $paymentProcessor->copyValues($params);
     if ($paymentProcessor->find(TRUE)) {
@@ -86,8 +94,7 @@ class CRM_Core_BAO_PaymentProcessor extends CRM_Core_DAO_PaymentProcessor {
    * @access public
    * @static
    */
-  static
-  function setIsActive($id, $is_active) {
+  static function setIsActive($id, $is_active) {
     return CRM_Core_DAO::setFieldValue('CRM_Core_DAO_PaymentProcessor', $id, 'is_active', $is_active);
   }
 
@@ -101,8 +108,7 @@ class CRM_Core_BAO_PaymentProcessor extends CRM_Core_DAO_PaymentProcessor {
    * @static
    * @access public
    */
-  static
-  function &getDefault() {
+  static function &getDefault() {
     if (self::$_defaultPaymentProcessor == NULL) {
       $params = array('is_default' => 1);
       $defaults = array();
@@ -177,6 +183,38 @@ class CRM_Core_BAO_PaymentProcessor extends CRM_Core_DAO_PaymentProcessor {
     }
   }
 
+
+  static
+  function getPayments($paymentProcessorIDs, $mode) {
+    if (!$paymentProcessorIDs) {
+      CRM_Core_Error::fatal(ts('Invalid value passed to getPayment function'));
+    }
+    foreach ($paymentProcessorIDs as $paymentProcessorID) {
+      $dao            = new CRM_Core_DAO_PaymentProcessor();
+      $dao->id        = $paymentProcessorID;
+      $dao->is_active = 1;
+      if (!$dao->find(TRUE)) {
+        return NULL;
+      }
+
+      if ($mode == 'test') {
+        $testDAO            = new CRM_Core_DAO_PaymentProcessor();
+        $testDAO->name      = $dao->name;
+        $testDAO->is_active = 1;
+        $testDAO->is_test   = 1;
+        if (!$testDAO->find(TRUE)) {
+          CRM_Core_Error::fatal(ts('Could not retrieve payment processor details'));
+        }
+        $paymentDAO[$testDAO->id] = self::buildPayment($testDAO);
+      }
+      else {
+        $paymentDAO[$dao->id] = self::buildPayment($dao);
+      }
+    }
+    asort($paymentDAO);
+    return $paymentDAO;
+  }
+
   /**
    * Function to build payment processor details
    *
@@ -192,7 +230,7 @@ class CRM_Core_BAO_PaymentProcessor extends CRM_Core_DAO_PaymentProcessor {
       'id', 'name', 'payment_processor_type', 'user_name', 'password',
       'signature', 'url_site', 'url_api', 'url_recur', 'url_button',
       'subject', 'class_name', 'is_recur', 'billing_mode',
-      'payment_type',
+      'payment_type', 'is_default',
     );
     $result = array();
     foreach ($fields as $name) {
@@ -216,13 +254,13 @@ class CRM_Core_BAO_PaymentProcessor extends CRM_Core_DAO_PaymentProcessor {
   function getProcessorForEntity($entityID, $component = 'contribute', $type = 'id') {
     $result = NULL;
     if (!in_array($component, array(
-      'membership', 'contribute'))) {
+      'membership', 'contribute', 'recur'))) {
       return $result;
     }
-
+    //FIXME:
     if ($component == 'membership') {
       $sql = " 
-    SELECT cr.payment_processor_id as ppID1, cp.payment_processor_id as ppID2, con.is_test 
+    SELECT cr.payment_processor_id as ppID1, cp.payment_processor as ppID2, con.is_test 
       FROM civicrm_membership mem
 INNER JOIN civicrm_membership_payment mp  ON ( mem.id = mp.membership_id ) 
 INNER JOIN civicrm_contribution       con ON ( mp.contribution_id = con.id )
@@ -232,11 +270,17 @@ INNER JOIN civicrm_contribution       con ON ( mp.contribution_id = con.id )
     }
     elseif ($component == 'contribute') {
       $sql = " 
-    SELECT cr.payment_processor_id as ppID1, cp.payment_processor_id as ppID2, con.is_test 
+    SELECT cr.payment_processor_id as ppID1, cp.payment_processor as ppID2, con.is_test 
       FROM civicrm_contribution       con
  LEFT JOIN civicrm_contribution_recur cr  ON ( con.contribution_recur_id = cr.id )
  LEFT JOIN civicrm_contribution_page  cp  ON ( con.contribution_page_id  = cp.id )
      WHERE con.id = %1";
+    }
+    elseif ($component == 'recur') {
+      $sql = " 
+    SELECT cr.payment_processor_id as ppID1, NULL as ppID2, cr.is_test 
+      FROM civicrm_contribution_recur cr
+     WHERE cr.id = %1";
     }
 
     //we are interesting in single record.

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +30,7 @@
  * CiviCRM components
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -79,7 +79,6 @@ class CRM_Core_Component {
     if (!$_cache || $force) {
       $_cache = array();
 
-      require_once 'CRM/Core/DAO/Component.php';
       $cr = new CRM_Core_DAO_Component();
       $cr->find(FALSE);
       while ($cr->fetch()) {
@@ -97,11 +96,11 @@ class CRM_Core_Component {
     return $_cache;
   }
 
-  public function &getEnabledComponents($force = FALSE) {
+  static public function &getEnabledComponents($force = FALSE) {
     return self::_info($force);
   }
 
-  public function &getNames($translated = FALSE) {
+  public static function &getNames($translated = FALSE) {
     $allComponents = self::getComponents();
 
     $names = array();

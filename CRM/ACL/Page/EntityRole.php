@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,17 +30,15 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
-require_once 'CRM/Core/Page/Basic.php';
-
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -138,7 +138,6 @@ class CRM_ACL_Page_EntityRole extends CRM_Core_Page_Basic {
 
     // reset cache if enabled/disabled
     if ($action & (CRM_Core_Action::DISABLE | CRM_Core_Action::ENABLE)) {
-      require_once 'CRM/ACL/BAO/Cache.php';
       CRM_ACL_BAO_Cache::resetCache();
     }
 
@@ -159,14 +158,12 @@ class CRM_ACL_Page_EntityRole extends CRM_Core_Page_Basic {
    * @static
    */
   function browse() {
-    require_once 'CRM/ACL/DAO/EntityRole.php';
 
     // get all acl's sorted by weight
     $entityRoles = array();
     $dao = new CRM_ACL_DAO_EntityRole();
     $dao->find();
 
-    require_once 'CRM/Core/OptionGroup.php';
     $aclRoles = CRM_Core_OptionGroup::values('acl_role');
     $groups = CRM_Core_PseudoConstant::staticGroup();
 

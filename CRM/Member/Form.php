@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 
 /**
  * This class generates form components generic to Mobile provider
@@ -53,7 +51,9 @@ class CRM_Member_Form extends CRM_Core_Form {
    *
    * @var string
    */
-  protected $_BAOName; function preProcess() {
+  protected $_BAOName; 
+
+  function preProcess() {
     $this->_id = $this->get('id');
     $this->_BAOName = $this->get('BAOName');
   }
@@ -77,7 +77,6 @@ class CRM_Member_Form extends CRM_Core_Form {
     }
 
     if (isset($defaults['minimum_fee'])) {
-      require_once 'CRM/Utils/Money.php';
       $defaults['minimum_fee'] = CRM_Utils_Money::format($defaults['minimum_fee'], NULL, '%a');
     }
 
@@ -153,6 +152,48 @@ class CRM_Member_Form extends CRM_Core_Form {
           ),
         )
       );
+    }
+  }
+  /*
+   * Function to extract values from the contact create boxes on the form and assign appropriatley  to
+   *
+   *  - $this->_contributorEmail,
+   *  - $this->_memberEmail &
+   *  - $this->_contributonName
+   *  - $this->_memberName
+   *  - $this->_contactID (effectively memberContactId but changing might have spin-off effects)
+   *  - $this->_contributorContactId - id of the contributor
+   *  - $this->_receiptContactId
+   *
+   * If the member & contributor are the same then the values will be the same. But if different people paid
+   * then they weill differ
+   *
+   * @param $formValues array values from form. The important values we are looking for are
+   *  - contact_select_id[1]
+   *  - contribution_contact_select_id[1]
+   */
+  function storeContactFields($formValues){
+
+    // in a 'standalone form' (contact id not in the url) the contact will be in the form values
+    if (CRM_Utils_Array::value('contact_select_id', $formValues)) {
+      $this->_contactID = $formValues['contact_select_id'][1];
+    }
+
+    list($this->_memberDisplayName,
+         $this->_memberEmail
+    ) = CRM_Contact_BAO_Contact_Location::getEmailDetails($this->_contactID);
+
+    //CRM-10375 Where the payer differs to the member the payer should get the email.
+    // here we store details in order to do that
+    if (CRM_Utils_Array::value('contribution_contact_select_id', $formValues) && CRM_Utils_Array::value('1', $formValues['contribution_contact_select_id'])) {
+      $this->_receiptContactId = $this->_contributorContactID = $formValues['contribution_contact_select_id'][1];
+       list( $this->_contributorDisplayName,
+         $this->_contributorEmail ) = CRM_Contact_BAO_Contact_Location::getEmailDetails( $this->_contributorContactID );
+    }
+    else{
+      $this->_receiptContactId = $this->_contributorContactID = $this->_contactID;
+      $this->_contributorDisplayName = $this->_memberDisplayName;
+      $this->_contributorEmail = $this->_memberEmail;
     }
   }
 }

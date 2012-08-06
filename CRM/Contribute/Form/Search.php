@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -36,10 +36,6 @@
 /**
  * Files required
  */
-
-require_once 'CRM/Contribute/PseudoConstant.php';
-require_once 'CRM/Contribute/Selector/Search.php';
-require_once 'CRM/Core/Selector/Controller.php';
 
 /**
  * advanced search, extends basic search
@@ -152,9 +148,9 @@ class CRM_Contribute_Form_Search extends CRM_Core_Form {
     $this->_done = FALSE;
     $this->defaults = array();
 
-    /* 
-         * we allow the controller to set force/reset externally, useful when we are being 
-         * driven by the wizard framework 
+    /*
+         * we allow the controller to set force/reset externally, useful when we are being
+         * driven by the wizard framework
          */
 
 
@@ -196,7 +192,6 @@ class CRM_Contribute_Form_Search extends CRM_Core_Form {
       );
     }
 
-    require_once 'CRM/Contact/BAO/Query.php';
     $this->_queryParams = CRM_Contact_BAO_Query::convertFormValues($this->_formValues);
     $selector = new CRM_Contribute_Selector_Search($this->_queryParams,
       $this->_action,
@@ -254,12 +249,11 @@ class CRM_Contribute_Form_Search extends CRM_Core_Form {
       )
     );
 
-    require_once 'CRM/Contribute/BAO/Query.php';
     CRM_Contribute_BAO_Query::buildSearchForm($this);
 
-    /* 
-         * add form checkboxes for each row. This is needed out here to conform to QF protocol 
-         * of all elements being declared in builQuickForm 
+    /*
+         * add form checkboxes for each row. This is needed out here to conform to QF protocol
+         * of all elements being declared in builQuickForm
          */
 
 
@@ -282,10 +276,8 @@ class CRM_Contribute_Form_Search extends CRM_Core_Form {
 
       $total = $cancel = 0;
 
-      require_once "CRM/Core/Permission.php";
       $permission = CRM_Core_Permission::getPermission();
 
-      require_once 'CRM/Contribute/Task.php';
       $tasks = array('' => ts('- actions -')) + CRM_Contribute_Task::permissionedTaskTitles($permission);
       $this->add('select', 'task', ts('Actions:') . ' ', $tasks);
       $this->add('submit', $this->_actionButtonName, ts('Go'),
@@ -364,10 +356,8 @@ class CRM_Contribute_Form_Search extends CRM_Core_Form {
       }
     }
 
-    require_once 'CRM/Core/BAO/CustomValue.php';
     CRM_Core_BAO_CustomValue::fixFieldValueOfTypeMemo($this->_formValues);
 
-    require_once 'CRM/Contact/BAO/Query.php';
     $this->_queryParams = CRM_Contact_BAO_Query::convertFormValues($this->_formValues);
 
     $this->set('formValues', $this->_formValues);
@@ -392,7 +382,6 @@ class CRM_Contribute_Form_Search extends CRM_Core_Form {
       );
     }
 
-    require_once 'CRM/Contact/BAO/Query.php';
     $this->_queryParams = CRM_Contact_BAO_Query::convertFormValues($this->_formValues);
     $selector = new CRM_Contribute_Selector_Search($this->_queryParams,
       $this->_action,
@@ -450,7 +439,6 @@ class CRM_Contribute_Form_Search extends CRM_Core_Form {
     if ($cid) {
       $cid = CRM_Utils_Type::escape($cid, 'Integer');
       if ($cid > 0) {
-        require_once 'CRM/Contact/BAO/Contact.php';
         $this->_formValues['contact_id'] = $cid;
         list($display, $image) = CRM_Contact_BAO_Contact::getDisplayAndImage($cid);
         $this->_defaults['sort_name'] = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $cid,

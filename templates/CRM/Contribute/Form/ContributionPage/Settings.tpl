@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -116,6 +116,11 @@
 	</tr>
 </table>
 <table class="form-layout-compressed">
+        <tr class="crm-contribution-contributionpage-settings-form-block-is_confirm_enabled">
+    		<td>&nbsp;</td>
+    		<td>{$form.is_confirm_enabled.html} {$form.is_confirm_enabled.label}<br />
+    		<span class="description">{ts}If you disable this contributions will be processed immediately after submitting the contribution form.{/ts}</span></td>
+    	</tr>
         <tr class="crm-contribution-contributionpage-settings-form-block-is_share">
     		<td>&nbsp;</td>
     		<td>{$form.is_share.html} {$form.is_share.label}<br />
@@ -128,7 +133,7 @@
             	{ts}When your page is active, you can link people to the page by copying and pasting the following URL:{/ts}<br />
             	<strong>{crmURL a=true p='civicrm/contribute/transact' q="reset=1&id=`$contributionPageID`"}</strong>
         	{elseif $config->userFramework EQ 'Joomla'}
-            	{ts 1=$title}When your page is active, create front-end links to the contribution page using the Menu Manager. Select <strong>CiviCRM &raquo; Contribution Pages</strong> and select <strong>%1</strong> for the contribution page.{/ts}
+            	{ts 1=$title}When your page is active, create front-end links to the contribution page using the Menu Manager. Select <strong>Administer CiviCRM &raquo; CiviContribute &raquo; Manage Contribution Pages</strong> and select <strong>%1</strong> for the contribution page.{/ts}
         	{/if}
 		</span>
     	{/if}

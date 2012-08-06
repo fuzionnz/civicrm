@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -37,7 +37,6 @@
  * Main page for viewing contact.
  *
  */
-require_once 'CRM/Core/Page.php';
 class CRM_Profile_Page_View extends CRM_Core_Page {
 
   /**
@@ -85,7 +84,6 @@ class CRM_Profile_Page_View extends CRM_Core_Page {
       }
 
       // check if we are rendering mixed profiles
-      require_once 'CRM/Core/BAO/UFGroup.php';
       if (CRM_Core_BAO_UFGroup::checkForMixProfiles($profileIds)) {
         CRM_Core_Error::fatal(ts('You cannot combine profiles of multiple types.'));
       }
@@ -99,7 +97,6 @@ class CRM_Profile_Page_View extends CRM_Core_Page {
 
     $anyContent = TRUE;
     if ($this->_gid) {
-      require_once 'CRM/Profile/Page/Dynamic.php';
       $page = new CRM_Profile_Page_Dynamic($this->_id, $this->_gid, 'Profile', FALSE, $profileIds);
       $profileGroup = array();
       $profileGroup['title'] = NULL;
@@ -133,12 +130,10 @@ class CRM_Profile_Page_View extends CRM_Core_Page {
       }
     }
     else {
-      require_once 'CRM/Core/BAO/UFGroup.php';
       $ufGroups = CRM_Core_BAO_UFGroup::getModuleUFGroup('Profile');
 
       $profileGroups = array();
       foreach ($ufGroups as $groupid => $group) {
-        require_once 'CRM/Profile/Page/Dynamic.php';
         $page = new CRM_Profile_Page_Dynamic($this->_id, $groupid, 'Profile', FALSE, $profileIds);
         $profileGroup = array();
         $profileGroup['title'] = $group['title'];
@@ -179,9 +174,9 @@ class CRM_Profile_Page_View extends CRM_Core_Page {
     return parent::run();
   }
 
-  function getTemplateFileName() {
+  function checkTemplateFileExists($suffix = '') {
     if ($this->_gid) {
-      $templateFile = "CRM/Profile/Page/{$this->_gid}/View.tpl";
+      $templateFile = "CRM/Profile/Page/{$this->_gid}/View.{$suffix}tpl";
       $template = CRM_Core_Page::getTemplate();
       if ($template->template_exists($templateFile)) {
         return $templateFile;
@@ -190,13 +185,23 @@ class CRM_Profile_Page_View extends CRM_Core_Page {
       // lets see if we have customized by name
       $ufGroupName = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_UFGroup', $this->_gid, 'name');
       if ($ufGroupName) {
-        $templateFile = "CRM/Profile/Page/{$ufGroupName}/View.tpl";
+        $templateFile = "CRM/Profile/Page/{$ufGroupName}/View.{$suffix}tpl";
         if ($template->template_exists($templateFile)) {
           return $templateFile;
         }
       }
     }
-    return parent::getTemplateFileName();
+    return NULL;
+  }
+
+  function getTemplateFileName() {
+    $fileName = $this->checkTemplateFileExists();
+    return $fileName ? $fileName : parent::getTemplateFileName();
+  }
+
+  function overrideExtraTemplateFileName() {
+    $fileName = $this->checkTemplateFileExists('extra.');
+    return $fileName ? $fileName : parent::overrideExtraTemplateFileName();
   }
 }
 

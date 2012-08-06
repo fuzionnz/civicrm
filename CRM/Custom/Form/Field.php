@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Core/ShowHideBlocks.php';
 
 /**
  * form to process actions on the field aspect of Custom
@@ -97,7 +94,6 @@ class CRM_Custom_Form_Field extends CRM_Core_Form {
    * @access public
    */
   public function preProcess() {
-    require_once 'CRM/Core/BAO/CustomField.php';
     if (!(self::$_dataTypeKeys)) {
       self::$_dataTypeKeys = array_keys(CRM_Core_BAO_CustomField::dataType());
       self::$_dataTypeValues = array_values(CRM_Core_BAO_CustomField::dataType());
@@ -226,7 +222,6 @@ class CRM_Custom_Form_Field extends CRM_Core_Form {
 
       $defaults['option_type'] = 2;
 
-      require_once 'CRM/Custom/Form/ChangeFieldType.php';
       $this->assign('changeFieldType', CRM_Custom_Form_ChangeFieldType::fieldTypeTransitions($this->_values['data_type'], $this->_values['html_type']));
     }
     else {
@@ -821,7 +816,6 @@ AND    option_group_id = %2";
       }
     }
 
-    require_once 'CRM/Core/Page.php';
     $assignError = new CRM_Core_Page();
     if ($_rowError) {
       $_showHide->addToTemplate();
@@ -971,7 +965,6 @@ SELECT id
     $customField = CRM_Core_BAO_CustomField::create($params);
 
     // reset the cache
-    require_once 'CRM/Core/BAO/Cache.php';
     CRM_Core_BAO_Cache::deleteGroup('contact fields');
 
     CRM_Core_Session::setStatus(ts('Your custom field \'%1\' has been saved.',

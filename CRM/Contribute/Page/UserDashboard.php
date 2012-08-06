@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contact/Page/View/UserDashBoard.php';
 class CRM_Contribute_Page_UserDashboard extends CRM_Contact_Page_View_UserDashBoard {
 
   /**
@@ -54,7 +52,6 @@ class CRM_Contribute_Page_UserDashboard extends CRM_Contact_Page_View_UserDashBo
     $controller->run();
 
     //add honor block
-    require_once 'CRM/Contribute/BAO/Contribution.php';
     $params = array();
     $params = CRM_Contribute_BAO_Contribution::getHonorContacts($this->_contactId);
 
@@ -64,8 +61,6 @@ class CRM_Contribute_Page_UserDashboard extends CRM_Contact_Page_View_UserDashBo
       $this->assign('honor', TRUE);
     }
 
-    require_once 'CRM/Contribute/Form/ContributionBase.php';
-    require_once 'CRM/Contribute/BAO/ContributionRecur.php';
 
     $recur             = new CRM_Contribute_DAO_ContributionRecur();
     $recur->contact_id = $this->_contactId;
@@ -76,7 +71,6 @@ class CRM_Contribute_Page_UserDashboard extends CRM_Contact_Page_View_UserDashBo
 
     $recurStatus = CRM_Contribute_PseudoConstant::contributionStatus();
 
-    require_once 'CRM/Core/Payment.php';
     $recurRow = array();
     $recurIDs = array();
     while ($recur->fetch()) {
@@ -95,9 +89,26 @@ class CRM_Contribute_Page_UserDashboard extends CRM_Contact_Page_View_UserDashBo
       //@todo calling api functions directly is not supported
       _civicrm_api3_object_to_array($recur, $values);
 
-      $values['cancelSubscriptionUrl'] = $paymentObject->cancelSubscriptionURL();
       $values['recur_status'] = $recurStatus[$values['contribution_status_id']];
       $recurRow[$values['id']] = $values;
+
+      $action = array_sum(array_keys(CRM_Contribute_Page_Tab::recurLinks($recur->id, 'dashboard')));
+
+      $details = CRM_Contribute_BAO_ContributionRecur::getSubscriptionDetails($recur->id, 'recur');
+      $hideUpdate = $details->membership_id & $details->auto_renew;
+
+      if ($hideUpdate) {
+        $action -= CRM_Core_Action::UPDATE;
+      }
+
+      $recurRow[$values['id']]['action'] = CRM_Core_Action::formLink(CRM_Contribute_Page_Tab::recurLinks($recur->id, 'dashboard'),
+        $action, array(
+          'cid' => $this->_contactId,
+          'crid' => $values['id'],
+          'cxt' => 'contribution',
+        )
+      );
+
       $recurIDs[] = $values['id'];
 
       //reset $paymentObject for checking other paymenet processor
@@ -113,8 +124,8 @@ class CRM_Contribute_Page_UserDashboard extends CRM_Contact_Page_View_UserDashBo
         );
       }
     }
-    $this->assign('recurRows', $recurRow);
 
+    $this->assign('recurRows', $recurRow);
     if (!empty($recurRow)) {
       $this->assign('recur', TRUE);
     }

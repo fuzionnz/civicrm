@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
-require_once 'CRM/Core/BAO/UFGroup.php';
 
 /**
  * Create a page for displaying CiviCRM Profile Fields.
@@ -122,13 +119,11 @@ class CRM_Profile_Page_Dynamic extends CRM_Core_Page {
 
     $this->_activityId = CRM_Utils_Request::retrieve('aid', 'Positive', $this, FALSE, 0, 'GET');
     if (is_numeric($this->_activityId)) {
-      require_once 'CRM/Activity/BAO/Activity.php';
       $latestRevisionId = CRM_Activity_BAO_Activity::getLatestActivityId($this->_activityId);
       if ($latestRevisionId) {
         $this->_activityId = $latestRevisionId;
       }
     }
-    require_once 'CRM/Core/BAO/UFField.php';
     $this->_isContactActivityProfile = CRM_Core_BAO_UFField::checkContactActivityProfileType($this->_gid);
   }
 
@@ -163,7 +158,6 @@ class CRM_Profile_Page_Dynamic extends CRM_Core_Page {
       );
       $config = CRM_Core_Config::singleton();
       if ($limitListingsGroupsID) {
-        require_once 'CRM/Contact/BAO/GroupContact.php';
 
         if (!CRM_Contact_BAO_GroupContact::isContactInGroup($this->_id,
             $limitListingsGroupsID
@@ -181,7 +175,6 @@ class CRM_Profile_Page_Dynamic extends CRM_Core_Page {
       );
 
       if ($this->_isContactActivityProfile && $this->_gid) {
-        require_once 'CRM/Profile/Form.php';
         $errors = CRM_Profile_Form::validateContactActivityProfile($this->_activityId, $this->_id, $this->_gid);
         if (!empty($errors)) {
           CRM_Core_Error::fatal(array_pop($errors));
@@ -192,11 +185,8 @@ class CRM_Profile_Page_Dynamic extends CRM_Core_Page {
       $userID = $session->get('userID');
 
       $this->_isPermissionedChecksum = FALSE;
-      require_once 'CRM/Contact/BAO/Contact/Utils.php';
-      require_once 'CRM/Contact/BAO/Contact/Permission.php';
       if ($this->_id != $userID) {
         // do not allow edit for anon users in joomla frontend, CRM-4668, unless u have checksum CRM-5228
-        require_once 'CRM/Contact/BAO/Contact/Permission.php';
         if ($config->userFrameworkFrontend) {
           $this->_isPermissionedChecksum = CRM_Contact_BAO_Contact_Permission::validateOnlyChecksum($this->_id, $this, FALSE);
         }
@@ -228,6 +218,13 @@ class CRM_Profile_Page_Dynamic extends CRM_Core_Page {
         }
       }
 
+      // also eliminate all formatting fields
+      foreach ($fields as $name => $field) {
+        if (CRM_Utils_Array::value('field_type', $field) == 'Formatting') {
+          unset($fields[$name]);
+        }
+      }
+
       if ($this->_isContactActivityProfile) {
         $contactFields = $activityFields = array();
 
@@ -242,7 +239,13 @@ class CRM_Profile_Page_Dynamic extends CRM_Core_Page {
 
         CRM_Core_BAO_UFGroup::getValues($this->_id, $contactFields, $values);
         if ($this->_activityId) {
-          CRM_Core_BAO_UFGroup::getValues(NULL, $activityFields, $values, TRUE, array(array('activity_id', '=', $this->_activityId, 0, 0)));
+          CRM_Core_BAO_UFGroup::getValues(
+            NULL,
+            $activityFields,
+            $values,
+            TRUE,
+            array(array('activity_id', '=', $this->_activityId, 0, 0))
+          );
         }
       }
       else {
@@ -279,8 +282,6 @@ class CRM_Profile_Page_Dynamic extends CRM_Core_Page {
     //CRM-4131.
     $displayName = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $this->_id, 'display_name');
     if ($displayName) {
-      require_once 'CRM/Core/Permission.php';
-      require_once 'CRM/Contact/BAO/Contact/Permission.php';
       $session = CRM_Core_Session::singleton();
       $config = CRM_Core_Config::singleton();
       if ($session->get('userID') &&
@@ -298,15 +299,14 @@ class CRM_Profile_Page_Dynamic extends CRM_Core_Page {
     CRM_Utils_System::setTitle($title);
 
     // invoke the pagRun hook, CRM-3906
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::pageRun($this);
 
     return trim($template->fetch($this->getTemplateFileName()));
   }
 
-  function getTemplateFileName() {
+  function checkTemplateFileExists($suffix = '') {
     if ($this->_gid) {
-      $templateFile = "CRM/Profile/Page/{$this->_gid}/Dynamic.tpl";
+      $templateFile = "CRM/Profile/Page/{$this->_gid}/Dynamic.{$suffix}tpl";
       $template = CRM_Core_Page::getTemplate();
       if ($template->template_exists($templateFile)) {
         return $templateFile;
@@ -315,13 +315,23 @@ class CRM_Profile_Page_Dynamic extends CRM_Core_Page {
       // lets see if we have customized by name
       $ufGroupName = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_UFGroup', $this->_gid, 'name');
       if ($ufGroupName) {
-        $templateFile = "CRM/Profile/Page/{$ufGroupName}/Dynamic.tpl";
+        $templateFile = "CRM/Profile/Page/{$ufGroupName}/Dynamic.{$suffix}tpl";
         if ($template->template_exists($templateFile)) {
           return $templateFile;
         }
       }
     }
-    return parent::getTemplateFileName();
+    return NULL;
+  }
+
+  function getTemplateFileName() {
+    $fileName = $this->checkTemplateFileExists();
+    return $fileName ? $fileName : parent::getTemplateFileName();
+  }
+
+  function overrideExtraTemplateFileName() {
+    $fileName = $this->checkTemplateFileExists('extra.');
+    return $fileName ? $fileName : parent::overrideExtraTemplateFileName();
   }
 }
 

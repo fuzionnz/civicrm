@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Event/Form/Task.php';
 
 /**
  * This class provides the functionality to save a search
@@ -70,7 +68,6 @@ class CRM_Event_Form_Task_SaveSearch extends CRM_Event_Form_Task {
    */
   function buildQuickForm() {
     CRM_Utils_System::setTitle(ts('Smart Group'));
-    require_once "CRM/Event/BAO/Query.php";
     // get the qill
     $query = new CRM_Event_BAO_Query($this->get('formValues'));
     $qill = $query->qill();
@@ -91,7 +88,6 @@ class CRM_Event_Form_Task_SaveSearch extends CRM_Event_Form_Task {
     $groupId = NULL;
     if (isset($this->_id)) {
       $params = array('saved_search_id' => $this->_id);
-      require_once "CRM/Contact/BAO/Group.php";
       CRM_Contact_BAO_Group::retrieve($params, $values);
       $groupId = $values['id'];
 
@@ -120,7 +116,6 @@ class CRM_Event_Form_Task_SaveSearch extends CRM_Event_Form_Task {
     $session = CRM_Core_Session::singleton();
 
     //save the search
-    require_once "CRM/Contact/BAO/SavedSearch.php";
     $savedSearch = new CRM_Contact_BAO_SavedSearch();
     $savedSearch->id = $this->_id;
     $savedSearch->form_values = serialize($this->get('formValues'));
@@ -140,7 +135,6 @@ class CRM_Event_Form_Task_SaveSearch extends CRM_Event_Form_Task {
     if ($this->_id) {
       $params['id'] = CRM_Contact_BAO_SavedSearch::getName($this->_id, 'id');
     }
-    require_once "CRM/Contact/BAO/Group.php";
     $group = CRM_Contact_BAO_Group::create($params);
   }
 }

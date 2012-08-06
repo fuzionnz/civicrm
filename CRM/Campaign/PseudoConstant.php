@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/OptionGroup.php';
 
 /**
  * This class holds all the Pseudo constants those
@@ -79,7 +77,6 @@ class CRM_Campaign_PseudoConstant extends CRM_Core_PseudoConstant {
   public static function &activityType($returnColumn = 'name') {
     $cacheKey = $returnColumn;
     if (!isset(self::$activityType[$cacheKey])) {
-      require_once 'CRM/Core/OptionGroup.php';
       $campaingCompId = CRM_Core_Component::getComponentID('CiviCampaign');
       if ($campaingCompId) {
         self::$activityType[$cacheKey] = CRM_Core_OptionGroup::values('activity_type',
@@ -106,7 +103,6 @@ class CRM_Campaign_PseudoConstant extends CRM_Core_PseudoConstant {
    */
   public static function &campaignType() {
     if (!self::$campaignType) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$campaignType = CRM_Core_OptionGroup::values('campaign_type');
     }
     asort(self::$campaignType);
@@ -126,7 +122,6 @@ class CRM_Campaign_PseudoConstant extends CRM_Core_PseudoConstant {
    */
   public static function &campaignStatus() {
     if (!self::$campaignStatus) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$campaignStatus = CRM_Core_OptionGroup::values('campaign_status');
     }
     asort(self::$campaignStatus);
@@ -145,7 +140,6 @@ class CRM_Campaign_PseudoConstant extends CRM_Core_PseudoConstant {
    */
   public static function &engagementLevel() {
     if (!isset(self::$engagementLevel)) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$engagementLevel = CRM_Core_OptionGroup::values('engagement_index');
     }
 

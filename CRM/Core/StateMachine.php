@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,16 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Config.php';
-require_once 'CRM/Core/Session.php';
-require_once 'CRM/Core/State.php';
-require_once 'CRM/Core/Action.php';
-require_once 'CRM/Utils/String.php';
 
 /**
  * Core StateMachine. All statemachines subclass for the core one
@@ -224,7 +218,22 @@ class CRM_Core_StateMachine {
    * @access public
    */
   function &getState($name) {
-    return $this->_states[$name];
+    if (isset($this->_states[$name])) {
+      return $this->_states[$name];
+    }
+
+    /*
+     * This is a gross hack for ajax driven requests where
+     * we change the form name to allow multiple edits to happen
+     * We need a cleaner way of doing this going forward
+     */
+    foreach ($this->_states as $n => $s ) {
+      if (substr($name, 0, strlen($n)) == $n) {
+        return $s;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -355,6 +364,10 @@ class CRM_Core_StateMachine {
 
   function fini() {
     return $this->_controller->fini();
+  }
+
+  function cancelAction() {
+    return $this->_controller->cancelAction();
   }
 }
 

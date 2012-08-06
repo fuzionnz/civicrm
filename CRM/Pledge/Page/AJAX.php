@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -42,7 +42,6 @@ class CRM_Pledge_Page_AJAX {
    * Function for building Pledge Name combo box
    */
   function pledgeName(&$config) {
-    require_once 'CRM/Utils/Type.php';
 
     $getRecords = FALSE;
     if (isset($_GET['name']) && $_GET['name']) {
@@ -84,7 +83,6 @@ WHERE {$whereClause}
       );
     }
 
-    require_once "CRM/Utils/JSON.php";
     echo CRM_Utils_JSON::encode($elements, 'value');
     CRM_Utils_System::civiExit();
   }

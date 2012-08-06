@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,11 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
-require_once 'CRM/Activity/Import/Parser.php';
 require_once 'api/api.php';
 
 /**
@@ -69,8 +68,6 @@ class CRM_Activity_Import_Parser_Activity extends CRM_Activity_Import_Parser {
    * @access public
    */
   function init() {
-    require_once 'CRM/Activity/BAO/Activity.php';
-    require_once 'CRM/Activity/BAO/ActivityTarget.php';
     $fields = array_merge(CRM_Activity_BAO_Activity::importableFields(),
       CRM_Activity_BAO_ActivityTarget::import()
     );
@@ -183,7 +180,6 @@ class CRM_Activity_Import_Parser_Activity extends CRM_Activity_Import_Parser {
 
     $params = &$this->getActiveFieldParams();
 
-    require_once 'CRM/Import/Parser/Contact.php';
     $errorMessage = NULL;
 
     //for date-Formats
@@ -322,7 +318,6 @@ class CRM_Activity_Import_Parser_Activity extends CRM_Activity_Import_Parser {
           'contact_type' => 'Individual',
           'level' => 'Strict',
         );
-        require_once 'CRM/Dedupe/BAO/Rule.php';
         $fieldsArray = CRM_Dedupe_BAO_Rule::dedupeRuleFields($ruleParams);
 
         $disp = NULL;
@@ -407,7 +402,6 @@ class CRM_Activity_Import_Parser_Activity extends CRM_Activity_Import_Parser {
     $dateKey = 'date';
     $dateParams = array($dateKey => $date);
 
-    require_once 'CRM/Utils/Date.php';
     if (CRM_Utils_Date::convertToDefaultDate($dateParams, $dateType, $dateKey)) {
       $dateVal = $dateParams[$dateKey];
       $ruleName = 'date';
@@ -422,7 +416,6 @@ class CRM_Activity_Import_Parser_Activity extends CRM_Activity_Import_Parser {
       }
 
       // validate date.
-      require_once 'CRM/Utils/Rule.php';
       eval('$valid = CRM_Utils_Rule::' . $ruleName . '( $dateVal );');
 
       if ($valid) {

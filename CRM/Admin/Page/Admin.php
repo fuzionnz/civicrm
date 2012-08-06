@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,19 +28,16 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 
 /**
  * Page for displaying Administer CiviCRM Control Panel
  */
 class CRM_Admin_Page_Admin extends CRM_Core_Page {
   function run() {
-    // ensure that all CiviCRM tables are InnoDB, else abort
     // ensure that all CiviCRM tables are InnoDB, else abort
     // this is not a very fast operation, so we do it randomly 10% of the times
     // but we do it for most / all tables
@@ -49,7 +46,6 @@ class CRM_Admin_Page_Admin extends CRM_Core_Page {
       CRM_Core_DAO::isDBMyISAM(150)
     ) {
       $errorMessage = 'Your database is configured to use the MyISAM database engine. CiviCRM  requires InnoDB. You will need to convert any MyISAM tables in your database to InnoDB. Using MyISAM tables will result in data integrity issues.';
-      require_once 'CRM/Core/Session.php';
       CRM_Core_Session::setStatus($errorMessage);
     }
 
@@ -93,21 +89,25 @@ class CRM_Admin_Page_Admin extends CRM_Core_Page {
       $groups['CiviCampaign'] = ts('CiviCampaign');
     }
 
-    require_once 'CRM/Core/Menu.php';
     $values = CRM_Core_Menu::getAdminLinks();
 
-    require_once 'CRM/Core/ShowHideBlocks.php';
     $this->_showHide = new CRM_Core_ShowHideBlocks();
     foreach ($groups as $group => $title) {
       $this->_showHide->addShow("id_{$group}_show");
       $this->_showHide->addHide("id_{$group}");
       $v = CRM_Core_ShowHideBlocks::links($this, $group, '', '', FALSE);
-      $adminPanel[$group] = $values[$group];
-      $adminPanel[$group]['show'] = $v['show'];
-      $adminPanel[$group]['hide'] = $v['hide'];
-      $adminPanel[$group]['title'] = $title;
+      if (isset($values[$group])) {
+        $adminPanel[$group] = $values[$group];
+        $adminPanel[$group]['show'] = $v['show'];
+        $adminPanel[$group]['hide'] = $v['hide'];
+        $adminPanel[$group]['title'] = $title;
+      } else {
+        $adminPanel[$group] = array();
+        $adminPanel[$group]['show'] = '';
+        $adminPanel[$group]['hide'] = '';
+        $adminPanel[$group]['title'] = $title;
+      }
     }
-    require_once 'CRM/Utils/VersionCheck.php';
     $versionCheck = CRM_Utils_VersionCheck::singleton();
     $this->assign('newVersion', $versionCheck->newerVersion());
     $this->assign('localVersion', $versionCheck->localVersion);

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contribute/Form/ContributionBase.php';
 
 /**
  * form for thank-you / success page - 3rd step of online contribution process
@@ -68,6 +66,12 @@ class CRM_Contribute_Form_Contribution_ThankYou extends CRM_Contribute_Form_Cont
     // Make the contributionPageID avilable to the template
     $this->assign('contributionPageID', $this->_id);
     $this->assign('isShare', $this->_values['is_share']);
+
+    $this->_params['is_pay_later'] = $this->get('is_pay_later');
+    $this->assign('is_pay_later', $this->_params['is_pay_later']);
+    if ($this->_params['is_pay_later']) {
+      $this->assign('pay_later_receipt', $this->_values['pay_later_receipt']);
+    }
   }
 
   /**
@@ -100,11 +104,17 @@ class CRM_Contribute_Form_Contribution_ThankYou extends CRM_Contribute_Form_Cont
     $this->assign('receiptFromEmail', CRM_Utils_Array::value('receipt_from_email', $this->_values));
 
     if ($productID) {
-      require_once 'CRM/Contribute/BAO/Premium.php';
       CRM_Contribute_BAO_Premium::buildPremiumBlock($this, $this->_id, FALSE, $productID, $option);
     }
-
-    $this->assign('lineItem', $this->_lineItem);
+    if ($this->_priceSetId && !CRM_Core_DAO::getFieldValue('CRM_Price_DAO_Set', $this->_priceSetId, 'is_quick_config')) {
+      $this->assign('lineItem', $this->_lineItem);
+    } else {
+      if (is_array($membershipTypeID)) {
+        $membershipTypeID = current($membershipTypeID);
+      }
+      $this->assign('is_quick_config', 1);
+      $this->_params['is_quick_config'] = 1;
+    }
     $this->assign('priceSetID', $this->_priceSetId);
     $this->assign('useForMember', $this->get('useForMember'));
 
@@ -119,7 +129,6 @@ class CRM_Contribute_Form_Contribution_ThankYou extends CRM_Contribute_Form_Cont
       $this->assign('honor_block_is_active', $honor_block_is_active);
       $this->assign('honor_block_title', CRM_Utils_Array::value('honor_block_title', $this->_values));
 
-      require_once "CRM/Core/PseudoConstant.php";
       $prefix = CRM_Core_PseudoConstant::individualPrefix();
       $honor = CRM_Core_PseudoConstant::honor();
       $this->assign('honor_type', $honor[$params["honor_type_id"]]);
@@ -129,7 +138,7 @@ class CRM_Contribute_Form_Contribution_ThankYou extends CRM_Contribute_Form_Cont
       $this->assign('honor_email', $params["honor_email"]);
     }
 
-    $qParams = "reset=1&amp;id={$this->_id}";
+        $qParams = "reset=1&amp;id={$this->_id}";
     //pcp elements
     if ($this->_pcpId) {
       $qParams .= "&amp;pcpId={$this->_pcpId}";
@@ -142,7 +151,7 @@ class CRM_Contribute_Form_Contribution_ThankYou extends CRM_Contribute_Form_Cont
       }
     }
 
-    $this->assign('qParams', $qParams);
+        $this->assign( 'qParams' , $qParams );
 
     if ($membershipTypeID) {
       $transactionID    = $this->get('membership_trx_id');
@@ -167,7 +176,6 @@ class CRM_Contribute_Form_Contribution_ThankYou extends CRM_Contribute_Form_Cont
     $this->buildCustom($this->_values['custom_pre_id'], 'customPre', TRUE);
     $this->buildCustom($this->_values['custom_post_id'], 'customPost', TRUE);
     if (CRM_Utils_Array::value('hidden_onbehalf_profile', $params)) {
-      require_once 'CRM/Core/BAO/UFJoin.php';
       $ufJoinParams = array(
         'module' => 'onBehalf',
         'entity_table' => 'civicrm_contribution_page',
@@ -176,7 +184,9 @@ class CRM_Contribute_Form_Contribution_ThankYou extends CRM_Contribute_Form_Cont
       $OnBehalfProfile = CRM_Core_BAO_UFJoin::getUFGroupIds($ufJoinParams);
       $profileId = $OnBehalfProfile[0];
 
-      $fieldTypes = array('Contact', 'Organization');
+      $fieldTypes     = array('Contact', 'Organization');
+      $contactSubType = CRM_Contact_BAO_ContactType::subTypes('Organization');
+      $fieldTypes     = array_merge($fieldTypes, $contactSubType);
       if (is_array($this->_membershipBlock) && !empty($this->_membershipBlock)) {
         $fieldTypes = array_merge($fieldTypes, array('Membership'));
       }
@@ -197,9 +207,8 @@ class CRM_Contribute_Form_Contribution_ThankYou extends CRM_Contribute_Form_Cont
     );
 
     $defaults = array();
-    $options  = array();
-    $fields   = array();
-    require_once "CRM/Core/BAO/CustomGroup.php";
+    $options = array();
+    $fields = array();
     $removeCustomFieldTypes = array('Contribution');
     foreach ($this->_fields as $name => $dontCare) {
       if ($name == 'onbehalf') {
@@ -217,7 +226,14 @@ class CRM_Contribute_Form_Contribution_ThankYou extends CRM_Contribute_Form_Cont
     foreach ($fields as $name => $dontCare) {
       if ($name == 'onbehalf') {
         foreach ($dontCare as $key => $value) {
-          $defaults[$key] = $contact['onbehalf'][$key];
+          //$defaults[$key] = $contact['onbehalf'][$key];
+          if (isset($contact['onbehalf'][$key])) {
+            $defaults[$key] = $contact['onbehalf'][$key];
+          }
+          if (isset($contact['onbehalf']["{$key}_id"])) {
+            $defaults["{$key}_id"] = $contact['onbehalf']["{$key}_id"];
+          }
+
         }
       }
       elseif (isset($contact[$name])) {
@@ -235,10 +251,13 @@ class CRM_Contribute_Form_Contribution_ThankYou extends CRM_Contribute_Form_Cont
         }
       }
     }
+    
+    // now fix all state country selectors
+    CRM_Core_BAO_Address::fixAllStateSelects($this, $defaults);
 
     $this->_submitValues = array_merge($this->_submitValues, $defaults);
     $this->setDefaults($defaults);
-    require_once 'CRM/Friend/BAO/Friend.php';
+    
     $values['entity_id'] = $this->_id;
     $values['entity_table'] = 'civicrm_contribution_page';
 

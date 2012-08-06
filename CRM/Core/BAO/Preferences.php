@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -89,7 +89,6 @@ AND    v.option_group_id = g.id
 AND    v.name = %3
 ";
 
-    require_once 'CRM/Utils/File.php';
     foreach ($params as $name => $value) {
       // always try to store relative directory or url from CMS root
       if ($type == 'directory') {
@@ -122,7 +121,6 @@ AND    v.option_group_id = g.id
 AND    v.is_active = 1
 ";
 
-    require_once 'CRM/Utils/File.php';
 
     $dao = CRM_Core_DAO::executeQuery($sql);
     while ($dao->fetch()) {

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 class CRM_Mailing_Form_Search extends CRM_Core_Form {
 
   public function preProcess() {
@@ -45,20 +43,20 @@ class CRM_Mailing_Form_Search extends CRM_Core_Form {
       CRM_Core_DAO::getAttribute('CRM_Mailing_DAO_Mailing', 'title')
     );
 
-    $this->addDate('mailing_from', ts('From'), FALSE, array('formatType' => 'searchDate'));
-    $this->addDate('mailing_to', ts('To'), FALSE, array('formatType' => 'searchDate'));
+    CRM_Core_Form_Date::buildDateRange($this, 'mailing', 1, '_from', '_to', ts('From'), FALSE, FALSE);
 
     $this->add('text', 'sort_name', ts('Created or Sent by'),
       CRM_Core_DAO::getAttribute('CRM_Contact_DAO_Contact', 'sort_name')
     );
 
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     CRM_Campaign_BAO_Campaign::addCampaignInComponentSearch($this);
 
     foreach (array(
       'Scheduled', 'Complete', 'Running') as $status) {
       $this->addElement('checkbox', "mailing_status[$status]", NULL, $status);
     }
+
+    $this->addElement('checkbox', "sms", 'Is SMS');
 
     $this->addButtons(array(
         array(
@@ -75,21 +73,28 @@ class CRM_Mailing_Form_Search extends CRM_Core_Form {
       'Scheduled', 'Complete', 'Running') as $status) {
       $defaults['mailing_status'][$status] = 1;
     }
+
+    $parent = $this->controller->getParent();
+    if ($parent->_sms) {
+      $defaults['sms'] = 1;
+    }
     return $defaults;
   }
 
   function postProcess() {
     $params = $this->controller->exportValues($this->_name);
 
+    CRM_Contact_BAO_Query::fixDateValues($params["mailing_relative"], $params['mailing_from'], $params['mailing_to']);
+
     $parent = $this->controller->getParent();
     if (!empty($params)) {
-      $fields = array('mailing_name', 'mailing_from', 'mailing_to', 'sort_name', 'campaign_id', 'mailing_status');
+      $fields = array('mailing_name', 'mailing_from', 'mailing_to', 'sort_name', 'campaign_id', 'mailing_status', 'sms');
       foreach ($fields as $field) {
         if (isset($params[$field]) &&
           !CRM_Utils_System::isNull($params[$field])
         ) {
           if (in_array($field, array(
-            'mailing_from', 'mailing_to'))) {
+            'mailing_from', 'mailing_to')) && !$params["mailing_relative"]) {
             $time = ($field == 'mailing_to') ? '235959' : NULL;
             $parent->set($field, CRM_Utils_Date::processDate($params[$field], $time));
           }

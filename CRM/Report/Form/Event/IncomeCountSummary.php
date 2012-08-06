@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -27,14 +29,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
-require_once 'CRM/Event/PseudoConstant.php';
-require_once 'CRM/Core/OptionGroup.php';
 class CRM_Report_Form_Event_IncomeCountSummary extends CRM_Report_Form {
 
   protected $_summary = NULL;
@@ -296,7 +294,6 @@ class CRM_Report_Form_Event_IncomeCountSummary extends CRM_Report_Form {
     //set pager before execution of query in function participantInfo()
     $this->setPager();
 
-    require_once 'CRM/Utils/OpenFlashChart.php';
     $rows = $graphRows = array();
     $count = 0;
 
@@ -367,7 +364,6 @@ class CRM_Report_Form_Event_IncomeCountSummary extends CRM_Report_Form {
           $chartInfo['xLabelAngle'] = 20;
 
           // build the chart.
-          require_once 'CRM/Utils/OpenFlashChart.php';
           CRM_Utils_OpenFlashChart::buildChart($chartInfo, $this->_params['charts']);
         }
       }

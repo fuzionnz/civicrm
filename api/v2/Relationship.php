@@ -1,9 +1,12 @@
 <?php
+// $Id: Relationship.php 40968 2012-06-12 14:28:16Z kurund $
+
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,8 +34,8 @@
  * @package CiviCRM_APIv2
  * @subpackage API_Relationship
  *
- * @copyright CiviCRM LLC (c) 2004-2011
- * @version $Id: Relationship.php 40475 2012-05-17 00:55:16Z allen $
+ * @copyright CiviCRM LLC (c) 2004-2012
+ * @version $Id: Relationship.php 40968 2012-06-12 14:28:16Z kurund $
  *
  */
 
@@ -156,6 +159,7 @@ function civicrm_relationship_update($params) {
         * CRM_Contact_BAO_Relationship::getRelatonship throws up some issues
         * (CRM-6905) the relationship is retrieved with a direct query
         */
+
 
     civicrm_verify_mandatory($params, 'CRM_Contact_DAO_Relationship', array('relationship_id'));
 

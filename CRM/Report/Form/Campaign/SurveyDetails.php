@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
-require_once 'CRM/Campaign/BAO/Survey.php';
 class CRM_Report_Form_Campaign_SurveyDetails extends CRM_Report_Form {
 
   protected $_emailField = FALSE;
@@ -50,7 +49,6 @@ class CRM_Report_Form_Campaign_SurveyDetails extends CRM_Report_Form {
     //filter options for survey activity status.
     $responseStatus = array();
     self::$_surveyRespondentStatus = array();
-    require_once 'CRM/Core/PseudoConstant.php';
     $activityStatus = CRM_Core_PseudoConstant::activityStatus('name');
     if ($statusId = array_search('Scheduled', $activityStatus)) {
       $responseStatus[$statusId] = ts('Reserved');
@@ -511,7 +509,6 @@ class CRM_Report_Form_Campaign_SurveyDetails extends CRM_Report_Form {
         echo $outPut;
       }
       else {
-        require_once 'CRM/Utils/PDF/Utils.php';
         CRM_Utils_PDF_Utils::html2pdf($outPut, "CiviReport.pdf");
       }
 
@@ -838,8 +835,6 @@ INNER JOIN  civicrm_custom_group cg ON ( cg.id = cf.custom_group_id )
       return;
     }
 
-    require_once 'CRM/Campaign/BAO/Survey.php';
-    require_once 'CRM/Core/BAO/CustomField.php';
     $responseFields = array();
     foreach ($surveyIds as $surveyId) {
       $responseFields += CRM_Campaign_BAO_survey::getSurveyResponseFields($surveyId);
@@ -883,7 +878,7 @@ INNER  JOIN  civicrm_custom_field cf ON ( cg.id = cf.custom_group_id )
       if (!CRM_Utils_Array::value('alias', $this->_columns[$resTable])) {
         $this->_columns[$resTable]['alias'] = "{$resTable}_survey_response";
       }
-      if (!is_array($this->_columns[$resTable]['fields'])) {
+      if (!is_array(CRM_Utils_Array::value('fields', $this->_columns[$resTable]))) {
         $this->_columns[$resTable]['fields'] = array();
       }
       if (array_key_exists($fieldName, $this->_columns[$resTable]['fields'])) {

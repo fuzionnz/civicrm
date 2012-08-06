@@ -1,8 +1,7 @@
 <?php
-
 /*
  +--------------------------------------------------------------------+
- | FirstData Core Payment Module for CiviCRM version 4.1              |
+ | FirstData Core Payment Module for CiviCRM version 4.2              |
  +--------------------------------------------------------------------+
  | Licensed to CiviCRM under the Academic Free License version 3.0    |
  |                                                                    |
@@ -50,12 +49,6 @@ future.
 
 *For live testing uncomment the result field below and set the value to the response you wish to get from the payment processor
 ***************************/
-
-
-
-
-
-require_once 'CRM/Core/Payment.php';
 class CRM_Core_Payment_FirstData extends CRM_Core_Payment {
   # (not used, implicit in the API, might need to convert?)
   CONST CHARSET = 'UFT-8';
@@ -225,8 +218,7 @@ class CRM_Core_Payment_FirstData extends CRM_Core_Payment {
     curl_setopt($ch, CURLOPT_POSTFIELDS, $requestxml);
     curl_setopt($ch, CURLOPT_SSLCERT, $key);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-    // see - http://curl.haxx.se/docs/sslcerts.html
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'verifySSL'));
     // return the result on success, FALSE on failure
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_TIMEOUT, 36000);
@@ -254,7 +246,7 @@ class CRM_Core_Payment_FirstData extends CRM_Core_Payment {
       // Paranoia - in the unlikley event that 'curl' error fails
       if (strlen($errorDesc) == 0)
       $errorDesc = "Connection to payment gateway failed";
-      if ($errorNum = 60) {
+      if ($errorNum == 60) {
         return self::errorExit($errorNum, "Curl error - " . $errorDesc . " Try this link for more information http://curl.haxx.se/docs/sslcerts.html");
       }
 
@@ -330,7 +322,6 @@ class CRM_Core_Payment_FirstData extends CRM_Core_Payment {
    * @return bool                  True if ID exists, else false
    */
   function _checkDupe($invoiceId) {
-    require_once 'CRM/Contribute/DAO/Contribution.php';
     $contribution = new CRM_Contribute_DAO_Contribution();
     $contribution->invoice_id = $invoiceId;
     return $contribution->find();

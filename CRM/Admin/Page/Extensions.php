@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,12 +29,10 @@
  * This is a part of CiviCRM extension management functionality.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page/Basic.php';
 
 /**
  * This page displays the list of extensions registered in the system.
@@ -59,18 +57,16 @@ class CRM_Admin_Page_Extensions extends CRM_Core_Page_Basic {
    *
    */
   function preProcess() {
-    require_once 'CRM/Core/Extensions.php';
     $ext = new CRM_Core_Extensions();
     if ($ext->enabled === TRUE) {
       self::$_extensions = $ext->getExtensions();
     }
     CRM_Utils_System::setTitle(ts('CiviCRM Extensions'));
-    $destination = CRM_Utils_System::url('civicrm/admin/extensions',
-      'reset=1'
-    );
-
-    $destination = urlencode($destination);
-    $this->assign('destination', $destination);
+        $destination = CRM_Utils_System::url( 'civicrm/admin/extensions',
+                                              'reset=1' );
+        
+        $destination = urlencode( $destination );
+        $this->assign( 'destination', $destination );
   }
 
   /**
@@ -79,7 +75,7 @@ class CRM_Admin_Page_Extensions extends CRM_Core_Page_Basic {
    * @return string Classname of BAO.
    */
   function getBAOName() {
-    return 'CRM_Core_BAO_OptionValue';
+    return 'CRM_Core_BAO_Extension';
   }
 
   /**
@@ -98,13 +94,15 @@ class CRM_Admin_Page_Extensions extends CRM_Core_Page_Basic {
         ),
         CRM_Core_Action::ENABLE => array(
           'name' => ts('Enable'),
-          'extra' => 'onclick = "enableDisable( \'%%id%%\',\'' . 'CRM_Core_Extensions' . '\',\'' . 'disable-enable' . '\',\'' . 'true' . '\' );"',
+          'url' => 'civicrm/admin/extensions',
+          'qs' => 'action=enable&id=%%id%%&key=%%key%%',
           'ref' => 'enable-action',
           'title' => ts('Enable'),
         ),
         CRM_Core_Action::DISABLE => array(
           'name' => ts('Disable'),
-          'extra' => 'onclick = "enableDisable( \'%%id%%\',\'' . 'CRM_Core_Extensions' . '\',\'' . 'enable-disable' . '\',\'' . 'true' . '\' );"',
+          'url' => 'civicrm/admin/extensions',
+          'qs' => 'action=disable&id=%%id%%&key=%%key%%',
           'ref' => 'disable-action',
           'title' => ts('Disable'),
         ),
@@ -153,22 +151,22 @@ class CRM_Admin_Page_Extensions extends CRM_Core_Page_Basic {
       return;
     }
 
+    $this->assign('extDbUpgrades', CRM_Core_Extensions_Upgrades::hasPending());
+    $this->assign('extDbUpgradeUrl', CRM_Utils_System::url('civicrm/admin/extensions/upgrade', 'reset=1'));
+
     $extensionRows = array();
     $em = self::$_extensions;
 
     $fid = 1;
-    require_once 'CRM/Core/Extensions/Extension.php';
     foreach ($em as $key => $obj) {
 
-      // rewrite ids to be numeric, but keep those which are
-      // installed (they have option_value table id)
-      // It's totally unlikely, that installed extensions will
-      // have ids below 50.
+      // for extensions which aren't installed, create a
+      // dummy/placeholder id
       if (isset($obj->id)) {
         $id = $obj->id;
       }
       else {
-        $id = $fid++;
+        $id = 'x'. $fid++;
       }
 
       $extensionRows[$id] = (array) $obj;
@@ -189,7 +187,8 @@ class CRM_Admin_Page_Extensions extends CRM_Core_Page_Basic {
             $action -= CRM_Core_Action::UPDATE;
           }
         }
-        $extensionRows[$id]['action'] = CRM_Core_Action::formLink(self::links(), $action,
+        $extensionRows[$id]['action'] = CRM_Core_Action::formLink(self::links(),
+          $action,
           array(
             'id' => $id,
             'key' => $obj->key,
@@ -202,7 +201,8 @@ class CRM_Admin_Page_Extensions extends CRM_Core_Page_Basic {
         $action -= CRM_Core_Action::ENABLE;
         $action -= CRM_Core_Action::DELETE;
         $action -= CRM_Core_Action::UPDATE;
-        $extensionRows[$id]['action'] = CRM_Core_Action::formLink(self::links(), $action,
+        $extensionRows[$id]['action'] = CRM_Core_Action::formLink(self::links(),
+          $action,
           array(
             'id' => $id,
             'key' => $obj->key,

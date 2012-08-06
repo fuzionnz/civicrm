@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,17 +29,14 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 class CRM_Event_BAO_Query {
 
-  static
-  function &getFields() {
+  static function &getFields() {
     $fields = array();
-    require_once 'CRM/Event/DAO/Event.php';
-    require_once 'CRM/Core/DAO/Discount.php';
     $fields = array_merge($fields, CRM_Event_DAO_Event::import());
     $fields = array_merge($fields, self::getParticipantFields());
     $fields = array_merge($fields, CRM_Core_DAO_Discount::export());
@@ -47,9 +44,7 @@ class CRM_Event_BAO_Query {
     return $fields;
   }
 
-  static
-  function &getParticipantFields($onlyParticipant = FALSE) {
-    require_once 'CRM/Event/BAO/Participant.php';
+  static function &getParticipantFields($onlyParticipant = FALSE) {
     $fields = CRM_Event_BAO_Participant::importableFields('Individual', TRUE, $onlyParticipant);
     return $fields;
   }
@@ -60,8 +55,7 @@ class CRM_Event_BAO_Query {
    * @return void
    * @access public
    */
-  static
-  function select(&$query) {
+  static function select(&$query) {
     if (($query->_mode & CRM_Contact_BAO_Query::MODE_EVENT) ||
       CRM_Utils_Array::value('participant_id', $query->_returnProperties)
     ) {
@@ -213,8 +207,7 @@ class CRM_Event_BAO_Query {
     }
   }
 
-  static
-  function where(&$query) {
+  static function where(&$query) {
     $isTest = FALSE;
     $grouping = NULL;
     foreach (array_keys($query->_params) as $id) {
@@ -245,9 +238,7 @@ class CRM_Event_BAO_Query {
     }
   }
 
-
-  static
-  function whereClauseSingle(&$values, &$query) {
+  static function whereClauseSingle(&$values, &$query) {
     list($name, $op, $value, $grouping, $wildcard) = $values;
     switch ($name) {
       case 'event_start_date_low':
@@ -272,8 +263,6 @@ class CRM_Event_BAO_Query {
         return;
 
       case 'event_type_id':
-        require_once 'CRM/Core/OptionGroup.php';
-        require_once 'CRM/Utils/Array.php';
 
         $eventTypes = CRM_Core_OptionGroup::values("event_type");
         $query->_where[$grouping][] = "civicrm_participant.event_id = civicrm_event.id and civicrm_event.event_type_id = '{$value}'";
@@ -294,7 +283,7 @@ class CRM_Event_BAO_Query {
         return;
 
       case 'participant_fee_id':
-        $feeLabel = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionValue', $value, 'label');
+        $feeLabel = CRM_Core_DAO::getFieldValue('CRM_Price_DAO_FieldValue', $value, 'label');
         $feeLabel = CRM_Core_DAO::escapeString(trim($feeLabel));
         if ($value) {
           $query->_where[$grouping][] = "civicrm_participant.fee_level $op '$feeLabel'";
@@ -354,7 +343,6 @@ class CRM_Event_BAO_Query {
           $status = "({$status})";
         }
 
-        require_once 'CRM/Event/PseudoConstant.php';
         $statusTypes = CRM_Event_PseudoConstant::participantStatus();
         $names = array();
 
@@ -390,7 +378,6 @@ class CRM_Event_BAO_Query {
           $value = array($value => 1);
         }
 
-        require_once 'CRM/Event/PseudoConstant.php';
         $roleTypes = CRM_Event_PseudoConstant::participantRole();
 
         $names = array();
@@ -460,7 +447,6 @@ class CRM_Event_BAO_Query {
         return;
 
       case 'participant_campaign_id':
-        require_once 'CRM/Campaign/BAO/Query.php';
         $campParams = array(
           'op' => $op,
           'campaign' => $value,
@@ -472,8 +458,7 @@ class CRM_Event_BAO_Query {
     }
   }
 
-  static
-  function from($name, $mode, $side) {
+  static function from($name, $mode, $side) {
     $from = NULL;
     switch ($name) {
       case 'civicrm_participant':
@@ -522,8 +507,7 @@ class CRM_Event_BAO_Query {
     return (isset($this->_qill)) ? $this->_qill : "";
   }
 
-  static
-  function defaultReturnProperties($mode,
+  static function defaultReturnProperties($mode,
     $includeCustomFields = TRUE
   ) {
     $properties = NULL;
@@ -556,7 +540,6 @@ class CRM_Event_BAO_Query {
 
       if ($includeCustomFields) {
         // also get all the custom participant properties
-        require_once "CRM/Core/BAO/CustomField.php";
         $fields = CRM_Core_BAO_CustomField::getFieldsForImport('Participant');
         if (!empty($fields)) {
           foreach ($fields as $name => $dontCare) {
@@ -569,8 +552,7 @@ class CRM_Event_BAO_Query {
     return $properties;
   }
 
-  static
-  function buildSearchForm(&$form) {
+  static function buildSearchForm(&$form) {
     $dataURLEvent = CRM_Utils_System::url('civicrm/ajax/event',
       "reset=1",
       FALSE, NULL, FALSE
@@ -597,10 +579,8 @@ class CRM_Event_BAO_Query {
     $eventTypeId      = &$form->add('hidden', 'event_type_id', '', array('id' => 'event_type_id'));
     $participantFeeId = &$form->add('hidden', 'participant_fee_id', '', array('id' => 'participant_fee_id'));
 
-    $form->addDate('event_start_date_low', ts('Event Dates - From'), FALSE, array('formatType' => 'searchDate'));
-    $form->addDate('event_end_date_high', ts('To'), FALSE, array('formatType' => 'searchDate'));
+    CRM_Core_Form_Date::buildDateRange($form, 'event', 1, '_start_date_low', '_end_date_high', ts('From'), FALSE, FALSE);
 
-    require_once 'CRM/Event/PseudoConstant.php';
     $status = CRM_Event_PseudoConstant::participantStatus(NULL, NULL, 'label');
     asort($status);
     foreach ($status as $id => $Name) {
@@ -619,11 +599,9 @@ class CRM_Event_BAO_Query {
     $form->addRule('participant_fee_amount_low', ts('Please enter a valid money value.'), 'money');
     $form->addRule('participant_fee_amount_high', ts('Please enter a valid money value.'), 'money');
     // add all the custom  searchable fields
-    require_once 'CRM/Core/BAO/CustomGroup.php';
     $extends = array('Participant');
     $groupDetails = CRM_Core_BAO_CustomGroup::getGroupDetail(NULL, TRUE, $extends);
     if ($groupDetails) {
-      require_once 'CRM/Core/BAO/CustomField.php';
       $form->assign('participantGroupTree', $groupDetails);
       foreach ($groupDetails as $group) {
         foreach ($group['fields'] as $field) {
@@ -638,17 +616,14 @@ class CRM_Event_BAO_Query {
       }
     }
 
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     CRM_Campaign_BAO_Campaign::addCampaignInComponentSearch($form, 'participant_campaign_id');
 
     $form->assign('validCiviEvent', TRUE);
   }
 
-  static
-  function searchAction(&$row, $id) {}
+  static function searchAction(&$row, $id) {}
 
-  static
-  function tableNames(&$tables) {
+  static function tableNames(&$tables) {
     //add participant table
     if (CRM_Utils_Array::value('civicrm_event', $tables)) {
       $tables = array_merge(array('civicrm_participant' => 1), $tables);

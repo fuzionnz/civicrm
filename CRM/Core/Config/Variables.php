@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,12 +31,10 @@
  * it need to be defined here first.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Config/Defaults.php';
 class CRM_Core_Config_Variables extends CRM_Core_Config_Defaults {
 
   /**
@@ -334,13 +332,6 @@ class CRM_Core_Config_Variables extends CRM_Core_Config_Defaults {
   public $enableComponentIDs = array(1, 6, 2, 3, 4, 8);
 
   /**
-   * Array of enabled civiModules
-   *
-   * @var array
-   */
-  public $civiModules = array();
-
-  /**
    * Should payments be accepted only via SSL?
    *
    * @var boolean
@@ -446,6 +437,11 @@ class CRM_Core_Config_Variables extends CRM_Core_Config_Defaults {
   public $doNotAttachPDFReceipt = FALSE;
 
   /**
+   * Path to wkhtmltopdf if available
+   */
+  public $wkhtmltopdfPath = FALSE;
+
+  /**
    * Provide addressSequence
    *
    * @param
@@ -453,12 +449,10 @@ class CRM_Core_Config_Variables extends CRM_Core_Config_Defaults {
    * @return string
    */
   public function addressSequence() {
-    require_once 'CRM/Core/BAO/Setting.php';
     $addressFormat = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
       'address_format'
     );
 
-    require_once 'CRM/Utils/Address.php';
     return CRM_Utils_Address::sequence($addressFormat);
   }
 
@@ -473,7 +467,6 @@ class CRM_Core_Config_Variables extends CRM_Core_Config_Defaults {
     static $cachedSymbol = NULL;
     if (!$cachedSymbol || $defaultCurrency) {
       if ($this->defaultCurrency || $defaultCurrency) {
-        require_once "CRM/Core/PseudoConstant.php";
         $currencySymbolName = CRM_Core_PseudoConstant::currencySymbols('name');
         $currencySymbol = CRM_Core_PseudoConstant::currencySymbols();
 

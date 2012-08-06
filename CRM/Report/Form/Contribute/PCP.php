@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
-require_once 'CRM/Core/PseudoConstant.php';
-require_once 'CRM/Contribute/PseudoConstant.php';
 class CRM_Report_Form_Contribute_PCP extends CRM_Report_Form {
   function __construct() {
     $this->_columns = array(
@@ -96,7 +94,7 @@ class CRM_Report_Form_Contribute_PCP extends CRM_Report_Form {
         'fields' =>
         array(
           'title' =>
-          array('title' => ts('Pesonal Campaign Title'),
+          array('title' => ts('Personal Campaign Title'),
             'default' => TRUE,
           ),
           'goal_amount' =>
@@ -198,7 +196,7 @@ LEFT JOIN civicrm_contact {$this->_aliases['civicrm_contact']}
              {$this->_aliases['civicrm_contact']}.id 
 
 LEFT JOIN civicrm_contribution_page {$this->_aliases['civicrm_contribution_page']}
-          ON {$this->_aliases['civicrm_pcp']}.contribution_page_id = 
+          ON {$this->_aliases['civicrm_pcp']}.page_id = 
              {$this->_aliases['civicrm_contribution_page']}.id";
   }
 

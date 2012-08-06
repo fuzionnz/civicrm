@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Admin/Form/Setting.php';
 
 /**
  * This class generates form components for Component
@@ -101,7 +99,6 @@ class CRM_Admin_Form_Setting_Component extends CRM_Admin_Form_Setting {
 
   private function _getComponentSelectValues() {
     $ret = array();
-    require_once 'CRM/Core/Component.php';
     $this->_components = CRM_Core_Component::getComponents();
     foreach ($this->_components as $name => $object) {
       $ret[$name] = $object->info['translatedName'];
@@ -126,7 +123,6 @@ class CRM_Admin_Form_Setting_Component extends CRM_Admin_Form_Setting {
       $config = CRM_Core_Config::singleton();
       CRM_Admin_Form_Setting_Component::loadCaseSampleData($config->dsn, $config->sqlDir . 'case_sample.mysql');
       CRM_Admin_Form_Setting_Component::loadCaseSampleData($config->dsn, $config->sqlDir . 'case_sample1.mysql');
-      require_once "CRM/Case/BAO/Case.php";
       if (!CRM_Case_BAO_Case::createCaseViews()) {
         CRM_Core_Error::fatal('Could not create Case views.');
       }
@@ -134,7 +130,6 @@ class CRM_Admin_Form_Setting_Component extends CRM_Admin_Form_Setting {
     parent::commonProcess($params);
 
     // reset navigation when components are enabled / disabled
-    require_once 'CRM/Core/BAO/Navigation.php';
     CRM_Core_BAO_Navigation::resetNavigation();
   }
 

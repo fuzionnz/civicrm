@@ -1,9 +1,10 @@
 <?php
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +29,10 @@
 /**
  *
  * @package CiviCRM_Hook
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id: $
  *
  */
-
-require_once 'CRM/Utils/Hook.php';
 class CRM_Utils_Hook_Joomla extends CRM_Utils_Hook {
   function invoke($numParams,
     &$arg1, &$arg2, &$arg3, &$arg4, &$arg5,
@@ -44,31 +43,28 @@ class CRM_Utils_Hook_Joomla extends CRM_Utils_Hook {
     // not execute hooks if joomla is not loaded
     if (defined('_JEXEC')) {
       //Invoke the Joomla plugin system to observe to civicrm events.
-      jimport('joomla.plugin.helper');
+           jimport( 'joomla.plugin.helper' );
       JPluginHelper::importPlugin('civicrm');
 
-      // get app based on cli or web
-      if (PHP_SAPI != 'cli') {
-        $app = JFactory::getApplication('administrator');
-      }
-      else {
+           // get app based on cli or web
+           if ( PHP_SAPI != 'cli' ) {
+             $app = JFactory::getApplication( 'administrator' );
+           } else {
         $app = JCli::getInstance();
       }
 
       $result = $app->triggerEvent($fnSuffix, array(&$arg1, &$arg2, &$arg3, &$arg4, &$arg5));
 
-      $moduleResult = $this->commonInvoke($numParams,
-        $arg1, $arg2, $arg3, $arg4, $arg5,
-        $fnSuffix, 'joomla'
-      );
-      if (!empty($moduleResult) && is_array($moduleResult)) {
-        if (empty($result)) {
-          $result = $moduleResult;
-        }
-        elseif (is_array($moduleResult)) {
-          $result = array_merge($result, $moduleResult);
-        }
-      }
+           $moduleResult = $this->commonInvoke( $numParams,
+                                                $arg1, $arg2, $arg3, $arg4, $arg5,
+                                                $fnSuffix, 'joomla' );
+           if ( ! empty( $moduleResult ) && is_array( $moduleResult ) ) {
+             if ( empty( $result ) ) {
+               $result = $moduleResult;
+             } else if ( is_array( $moduleResult ) ) {
+               $result = array_merge( $result, $moduleResult );
+             }
+           }
 
       if (!empty($result)) {
         // collapse result returned from hooks

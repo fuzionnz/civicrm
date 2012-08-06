@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +32,7 @@
  *
  * @package CiviCRM_APIv3
  * @subpackage API_Group
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * @version $Id: Group.php 30171 2010-10-14 09:11:27Z mover $
  */
 
@@ -111,7 +113,9 @@ function civicrm_api3_group_get($params) {
   $groups = array();
   foreach ($groupObjects as $group) {
     _civicrm_api3_object_to_array($group, $groups[$group->id]);
+    _civicrm_api3_custom_data_get($groups[$group->id], 'Group', $group->id);
   }
+
 
   return civicrm_api3_create_success($groups, $params, 'group', 'create');
 }

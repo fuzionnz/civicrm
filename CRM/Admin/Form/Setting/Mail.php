@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Admin/Form/Setting.php';
 
 /**
  * This class generates form components for CiviMail
@@ -50,6 +48,7 @@ class CRM_Admin_Form_Setting_Mail extends CRM_Admin_Form_Setting {
     CRM_Utils_System::setTitle(ts('Settings - CiviMail'));
     $this->addElement('text', 'verpSeparator', ts('VERP Separator'));
     $this->addElement('text', 'mailerBatchLimit', ts('Mailer Batch Limit'));
+    $this->addElement('text', 'mailThrottleTime', ts('Mailer Throttle Time'));
     $this->addElement('text', 'mailerJobSize', ts('Mailer Job Size'));
     $this->addElement('advcheckbox', 'replyTo', ts('Enable Custom Reply-To'));
     $this->addElement('text', 'mailerJobsMax', ts('Mailer CRON job limit'));

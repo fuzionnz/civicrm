@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | Copyright (C) 2011 Marty Wright                                    |
  | Licensed to CiviCRM under the Academic Free License version 3.0.   |
@@ -29,12 +29,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Admin/Form.php';
 
 /**
  * This class generates form components for Scheduling Reminders
@@ -59,7 +57,6 @@ class CRM_Admin_Form_ScheduleReminders extends CRM_Admin_Form {
     parent::buildQuickForm();
     $this->_mappingID = $mappingID = NULL;
 
-    require_once 'CRM/Core/BAO/ActionSchedule.php';
     if ($this->_action & (CRM_Core_Action::DELETE)) {
       $reminderName = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_ActionSchedule',
         $this->_id, 'title'
@@ -92,10 +89,13 @@ class CRM_Admin_Form_ScheduleReminders extends CRM_Admin_Form {
       array(
         'size' => 45, 'maxlength' => 128), TRUE
     );
-
+    
     $selectionOptions = CRM_Core_BAO_ActionSchedule::getSelection($mappingID);
     extract($selectionOptions);
 
+    if (empty($sel1)) {
+        CRM_Core_Error::fatal('Could not find mapping for scheduled reminders.');
+    }
     $this->assign('entityMapping', json_encode($entityMapping));
     $this->assign('recipientMapping', json_encode($recipientMapping));
 
@@ -123,15 +123,13 @@ class CRM_Admin_Form_ScheduleReminders extends CRM_Admin_Form {
     }
 
     //get the frequency units.
-    require_once 'CRM/Core/OptionGroup.php';
     $this->_freqUnits = array('hour' => 'hour') + CRM_Core_OptionGroup::values('recur_frequency_units');
 
     //pass the mapping ID in UPDATE mode
     $mappings = CRM_Core_BAO_ActionSchedule::getMapping($mappingID);
 
-    $numericOptions = array(0 => ts('0'), 1 => ts('1'), 2 => ts('2'), 3 => ts('3'), 4 => ts('4'), 5 => ts('5'),
-      6 => ts('6'), 7 => ts('7'), 8 => ts('8'), 9 => ts('9'), 10 => ts('10'),
-    );
+    $numericOptions = CRM_Core_SelectValues::getNumericOptions(0, 30);
+
     //reminder_interval
     $this->add('select', 'start_action_offset', ts('When'), $numericOptions);
 
@@ -152,7 +150,6 @@ class CRM_Admin_Form_ScheduleReminders extends CRM_Admin_Form {
 
     $this->add('select', 'start_action_date', ts('Date Field'), $sel4, TRUE);
 
-    require_once 'CRM/Core/OptionGroup.php';
     $this->addElement('checkbox', 'is_repeat', ts('Repeat'),
       NULL, array('onclick' => "return showHideByValue('is_repeat',true,'repeatFields','table-row','radio',false);")
     );
@@ -207,7 +204,6 @@ class CRM_Admin_Form_ScheduleReminders extends CRM_Admin_Form {
       CRM_Core_PseudoConstant::staticGroup()
     );
 
-    require_once 'CRM/Mailing/BAO/Mailing.php';
     CRM_Mailing_BAO_Mailing::commonCompose($this);
 
     $this->add('text', 'subject', ts('Subject'),
@@ -385,6 +381,11 @@ class CRM_Admin_Form_ScheduleReminders extends CRM_Admin_Form {
     $params['mapping_id'] = $values['entity'][0];
     $entity_value = $values['entity'][1];
     $entity_status = $values['entity'][2];
+    
+    //force recording activity for membership reminder
+    if ($params['mapping_id'] == 4) {
+      $params['record_activity'] = 1;  
+    }
 
     foreach (array(
       'entity_value', 'entity_status') as $key) {
@@ -418,6 +419,7 @@ class CRM_Admin_Form_ScheduleReminders extends CRM_Admin_Form {
     $msgTemplate = NULL;
     //mail template is composed
 
+    $composeParams = array();
     foreach ($composeFields as $key) {
       if (CRM_Utils_Array::value($key, $values)) {
         $composeParams[$key] = $values[$key];

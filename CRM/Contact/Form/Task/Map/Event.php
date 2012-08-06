@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
- * $Id: Event.php 40475 2012-05-17 00:55:16Z allen $
+ * @copyright CiviCRM LLC (c) 2004-2012
+ * $Id: Event.php 41013 2012-06-13 21:15:02Z kurund $
  *
  */
-
-require_once 'CRM/Contact/Form/Task/Map.php';
 
 /**
  * This class provides the functionality to map

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -36,19 +36,6 @@
 /**
  * Files required
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Contact/Form/Search.php';
-
-require_once 'CRM/Core/Session.php';
-require_once 'CRM/Core/PseudoConstant.php';
-
-require_once 'CRM/Utils/PagerAToZ.php';
-
-require_once 'CRM/Contact/Selector/Controller.php';
-require_once 'CRM/Contact/Selector.php';
-require_once 'CRM/Contact/Task.php';
-require_once 'CRM/Contact/BAO/SavedSearch.php';
 
 /**
  * Base Search / View form for *all* listing of multiple
@@ -74,15 +61,15 @@ class CRM_Contact_Form_Search_Basic extends CRM_Contact_Form_Search {
    */
   function buildQuickForm() {
     // text for sort_name or email criteria
-    $this->add('text', 'sort_name', ts('Name or Email'));
+    $config = CRM_Core_Config::singleton();
+    $label = empty($config->includeEmailInName) ? ts('Name') : ts('Name or Email');
+    $this->add('text', 'sort_name', $label);
 
-    require_once 'CRM/Core/BAO/Setting.php';
     $searchOptions = CRM_Core_BAO_Setting::valueOptions(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
       'advanced_search_options'
     );
 
     if (CRM_Utils_Array::value('contactType', $searchOptions)) {
-      require_once 'CRM/Contact/BAO/ContactType.php';
       $contactTypes = array('' => ts('- any contact type -')) + CRM_Contact_BAO_ContactType::getSelectElements();
       $this->add('select', 'contact_type',
         ts('is...'),
@@ -91,7 +78,6 @@ class CRM_Contact_Form_Search_Basic extends CRM_Contact_Form_Search {
     }
 
     if (CRM_Utils_Array::value('groups', $searchOptions)) {
-      $config = CRM_Core_Config::singleton();
       if ($config->groupTree) {
         $this->add('hidden', 'group', NULL, array('id' => 'group'));
 

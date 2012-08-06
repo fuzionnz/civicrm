@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,16 +29,13 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
-require_once 'CRM/Event/Form/ManageEvent.php';
-require_once 'CRM/Core/BAO/ActionSchedule.php';
-
 /**
- * This class generates form components for processing Event
+ * This class generates form components for scheduling reminders for Event
  *
  */
 class CRM_Event_Form_ManageEvent_ScheduleReminders extends CRM_Event_Form_ManageEvent {
@@ -71,7 +68,6 @@ class CRM_Event_Form_ManageEvent_ScheduleReminders extends CRM_Event_Form_Manage
           else {
             $action += CRM_Core_Action::ENABLE;
           }
-          require_once 'CRM/Admin/Page/ScheduleReminders.php';
           $links = CRM_Admin_Page_ScheduleReminders::links();
           $links[CRM_Core_Action::DELETE]['qs'] .= "&context=event&eventId={$this->_id}";
           $links[CRM_Core_Action::UPDATE]['qs'] .= "&context=event&eventId={$this->_id}";
@@ -107,27 +103,28 @@ class CRM_Event_Form_ManageEvent_ScheduleReminders extends CRM_Event_Form_Manage
    * @access public
    */
   public function buildQuickForm() {
-    parent::buildQuickForm();
+    $this->_mappingID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_ActionMapping', 'civicrm_event', 'id', 'entity_value');
+    if (!$this->_mappingID) {
+      CRM_Core_Error::fatal('Could not find mapping for event scheduled reminders.');
+    }
 
+    parent::buildQuickForm();
     $this->add('text', 'title', ts('Reminder Name'),
       array(
         'size' => 45, 'maxlength' => 128), TRUE
     );
 
-    $mappingID = 3;
-    $selectionOptions = CRM_Core_BAO_ActionSchedule::getSelection($mappingID);
+    $selectionOptions = CRM_Core_BAO_ActionSchedule::getSelection($this->_mappingID);
     extract($selectionOptions);
 
-    $entity = $this->add('select', 'entity', ts('Recipient(s)'), $sel3[$mappingID][0], TRUE);
+    $entity = $this->add('select', 'entity', ts('Recipient(s)'), $sel3[$this->_mappingID][0], TRUE);
     $entity->setMultiple(TRUE);
 
     //get the frequency units.
-    require_once 'CRM/Core/OptionGroup.php';
     $this->_freqUnits = array('hour' => 'hour') + CRM_Core_OptionGroup::values('recur_frequency_units');
 
-    $numericOptions = array(0 => ts('0'), 1 => ts('1'), 2 => ts('2'), 3 => ts('3'), 4 => ts('4'), 5 => ts('5'),
-      6 => ts('6'), 7 => ts('7'), 8 => ts('8'), 9 => ts('9'), 10 => ts('10'),
-    );
+    $numericOptions = CRM_Core_SelectValues::getNumericOptions(0, 30);
+
     //reminder_interval
     $this->add('select', 'start_action_offset', ts('When'), $numericOptions);
 
@@ -150,7 +147,6 @@ class CRM_Event_Form_ManageEvent_ScheduleReminders extends CRM_Event_Form_Manage
 
     $this->add('select', 'start_action_date', ts('Date Field'), $sel4, TRUE);
 
-    require_once 'CRM/Core/OptionGroup.php';
     $this->addElement('checkbox', 'is_repeat', ts('Repeat'),
       NULL, array('onclick' => "return showHideByValue('is_repeat',true,'repeatFields','table-row','radio',false);")
     );
@@ -167,7 +163,7 @@ class CRM_Event_Form_ManageEvent_ScheduleReminders extends CRM_Event_Form_Manage
       FALSE, array('onClick' => "showHideByValue('recipient','manual','recipientManual','table-row','select',false); showHideByValue('recipient','group','recipientGroup','table-row','select',false);")
     );
     $recipientListing = $this->add('select', 'recipient_listing', ts('Recipient Listing'),
-      $sel3[$mappingID][0]
+      $sel3[$this->_mappingID][0]
     );
     $recipientListing->setMultiple(TRUE);
 
@@ -190,7 +186,6 @@ class CRM_Event_Form_ManageEvent_ScheduleReminders extends CRM_Event_Form_Manage
       CRM_Core_PseudoConstant::staticGroup()
     );
 
-    require_once 'CRM/Mailing/BAO/Mailing.php';
     CRM_Mailing_BAO_Mailing::commonCompose($this);
 
     $this->add('text', 'subject', ts('Subject'),
@@ -211,20 +206,13 @@ class CRM_Event_Form_ManageEvent_ScheduleReminders extends CRM_Event_Form_Manage
    * @static
    * @access public
    */
-  static
-  function formRule($fields) {
+  static function formRule($fields) {
     $errors = array();
     if (CRM_Utils_Array::value('is_active', $fields) &&
       CRM_Utils_System::isNull($fields['subject'])
     ) {
       $errors['subject'] = ts('Subject is a required field.');
     }
-
-    // if ( ( CRM_Utils_Array::value( 'recipient', $fields ) == 1 ||
-    //        CRM_Utils_Array::value( 'recipient', $fields ) == 2 ) &&
-    //        CRM_Utils_System::isNull( $fields['recipient_listing'] ) ) {
-    //     $errors['recipient_listing'] = ts('Recipient Listing is a required field.');
-    // }
 
     if (!CRM_Utils_System::isNull($fields['absolute_date'])) {
       if (CRM_Utils_Date::format(CRM_Utils_Date::processDate($fields['absolute_date'], NULL)) < CRM_Utils_Date::format(date('YmdHi00'))) {
@@ -311,7 +299,7 @@ class CRM_Event_Form_ManageEvent_ScheduleReminders extends CRM_Event_Form_Manage
       $params['group_id'] = $params['recipient_manual'] = $params['recipient_listing'] = 'null';
     }
 
-    $params['mapping_id'] = 3;
+    $params['mapping_id']   = $this->_mappingID;
     $params['entity_value'] = $this->_id;
     $params['entity_status'] = implode(CRM_Core_DAO::VALUE_SEPARATOR, $values['entity']);
     $params['is_active'] = CRM_Utils_Array::value('is_active', $values, 0);
@@ -325,8 +313,6 @@ class CRM_Event_Form_ManageEvent_ScheduleReminders extends CRM_Event_Form_Manage
       $params['end_action'] = 'null';
       $params['end_date'] = 'null';
     }
-
-
     $params['name'] = CRM_Utils_String::munge($params['title'], '_', 64);
 
     $composeFields = array(
@@ -335,7 +321,7 @@ class CRM_Event_Form_ManageEvent_ScheduleReminders extends CRM_Event_Form_Manage
     );
     $msgTemplate = NULL;
     //mail template is composed
-
+    $composeParams = array();
     foreach ($composeFields as $key) {
       if (CRM_Utils_Array::value($key, $values)) {
         $composeParams[$key] = $values[$key];

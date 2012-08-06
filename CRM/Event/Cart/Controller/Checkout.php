@@ -1,10 +1,8 @@
 <?php
-require_once 'CRM/Core/Controller.php';
 class CRM_Event_Cart_Controller_Checkout extends CRM_Core_Controller {
   function __construct($title = NULL, $action = CRM_Core_Action::NONE, $modal = TRUE) {
     parent::__construct($title, $modal);
 
-    require_once 'CRM/Event/Cart/StateMachine/Checkout.php';
 
     $this->_stateMachine = new CRM_Event_Cart_StateMachine_Checkout($this, $action);
     $this->addPages($this->_stateMachine, $action);

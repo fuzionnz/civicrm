@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 
 /**
  * Create a page for displaying UF Groups.
@@ -91,13 +89,13 @@ class CRM_UF_Page_Group extends CRM_Core_Page {
         ),
         CRM_Core_Action::DISABLE => array(
           'name' => ts('Disable'),
-          'extra' => 'onclick = "enableDisable( %%id%%,\'' . 'CRM_Core_BAO_UFGroup' . '\',\'' . 'enable-disable' . '\' );"',
+          'extra' => 'onclick = "enableDisable( %%id%%,\'' . 'CRM_Core_BAO_UFGroup' . '\',\'' . 'enable-disable\',0,\'UFGroup' . '\' );"',
           'ref' => 'disable-action',
           'title' => ts('Disable CiviCRM Profile Group'),
         ),
         CRM_Core_Action::ENABLE => array(
           'name' => ts('Enable'),
-          'extra' => 'onclick = "enableDisable( %%id%%,\'' . 'CRM_Core_BAO_UFGroup' . '\',\'' . 'disable-enable' . '\' );"',
+          'extra' => 'onclick = "enableDisable( %%id%%,\'' . 'CRM_Core_BAO_UFGroup' . '\',\'' . 'disable-enable\',0,\'UFGroup' . '\' );"',
           'ref' => 'enable-action',
           'title' => ts('Enable CiviCRM Profile Group'),
         ),
@@ -161,11 +159,9 @@ class CRM_UF_Page_Group extends CRM_Core_Page {
     else {
       // if action is enable or disable do the needful.
       if ($action & CRM_Core_Action::ENABLE) {
-        require_once "CRM/Core/BAO/UFGroup.php";
         CRM_Core_BAO_UFGroup::setIsActive($id, 1);
 
         // update cms integration with registration / my account
-        require_once 'CRM/Utils/System.php';
         CRM_Utils_System::updateCategories();
       }
       elseif ($action & CRM_Core_Action::PROFILE) {
@@ -197,7 +193,6 @@ class CRM_UF_Page_Group extends CRM_Core_Page {
       $this, TRUE, 0, 'GET'
     );
 
-    require_once 'CRM/Core/BAO/UFGroup.php';
     CRM_Core_BAO_UFGroup::copy($gid);
     CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/admin/uf/group', 'reset=1'));
   }
@@ -243,6 +238,9 @@ class CRM_UF_Page_Group extends CRM_Core_Page {
     // without administrator login
     if ($config->userFramework == 'Joomla') {
       $profile = str_replace('/administrator/', '/index.php', $profile);
+    }
+    else if ($config->userFramework == 'WordPress') {
+      $profile = str_replace('/wp-admin/admin.php', '/index.php', $profile);
     }
 
     // add jquery files
@@ -294,15 +292,13 @@ class CRM_UF_Page_Group extends CRM_Core_Page {
    * @static
    */
   function browse($action = NULL) {
-    $ufGroup = array();
+    $ufGroup     = array();
     $allUFGroups = array();
-    require_once 'CRM/Core/BAO/UFGroup.php';
     $allUFGroups = CRM_Core_BAO_UFGroup::getModuleUFGroup();
     if (empty($allUFGroups)) {
       return;
     }
 
-    require_once 'CRM/Utils/Hook.php';
     $ufGroups = CRM_Core_PseudoConstant::ufGroup();
     CRM_Utils_Hook::aclGroup(CRM_Core_Permission::ADMIN, NULL, 'civicrm_uf_group', $ufGroups, $allUFGroups);
 
@@ -432,37 +428,31 @@ class CRM_UF_Page_Group extends CRM_Core_Page {
         $typeName        = NULL;
         switch ($valueParts[0]) {
           case 'ContributionType':
-            require_once 'CRM/Contribute/PseudoConstant.php';
             $typeName = 'Contribution';
             $valueLabels = CRM_Contribute_PseudoConstant::contributionType();
             break;
 
           case 'ParticipantRole':
-            require_once 'CRM/Event/PseudoConstant.php';
             $typeName = 'Participant';
             $valueLabels = CRM_Event_PseudoConstant::participantRole();
             break;
 
           case 'ParticipantEventName':
-            require_once 'CRM/Event/PseudoConstant.php';
             $typeName = 'Participant';
             $valueLabels = CRM_Event_PseudoConstant::event();
             break;
 
           case 'ParticipantEventType':
-            require_once 'CRM/Event/PseudoConstant.php';
             $typeName = 'Participant';
             $valueLabels = CRM_Event_PseudoConstant::eventType();
             break;
 
           case 'MembershipType':
-            require_once 'CRM/Member/PseudoConstant.php';
             $typeName = 'Membership';
             $valueLabels = CRM_Member_PseudoConstant::membershipType();
             break;
 
           case 'ActivityType':
-            require_once 'CRM/Core/PseudoConstant.php';
             $typeName = 'Activity';
             $valueLabels = CRM_Core_PseudoConstant::ActivityType(TRUE, TRUE, FALSE, 'label', TRUE);
             break;

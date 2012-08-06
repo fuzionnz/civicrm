@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO.php';
 class CRM_Logging_Schema {
   private $logs = array();
   private $tables = array();
@@ -50,15 +48,14 @@ class CRM_Logging_Schema {
   /**
    * Populate $this->tables and $this->logs with current db state.
    */ function __construct() {
-    require_once 'CRM/Contact/DAO/Contact.php';
     $dao = new CRM_Contact_DAO_Contact();
     $civiDBName = $dao->_database;
 
     $dao = CRM_Core_DAO::executeQuery("
-SELECT TABLE_NAME 
-FROM   INFORMATION_SCHEMA.TABLES 
+SELECT TABLE_NAME
+FROM   INFORMATION_SCHEMA.TABLES
 WHERE  TABLE_SCHEMA = '{$civiDBName}'
-AND    TABLE_TYPE = 'BASE TABLE' 
+AND    TABLE_TYPE = 'BASE TABLE'
 AND    TABLE_NAME LIKE 'civicrm_%'
 ");
     while ($dao->fetch()) {
@@ -71,15 +68,16 @@ AND    TABLE_NAME LIKE 'civicrm_%'
     $this->tables = preg_grep('/_log/', $this->tables, PREG_GREP_INVERT);
     $this->tables = preg_grep('/^civicrm_task_action_temp_/', $this->tables, PREG_GREP_INVERT);
     $this->tables = preg_grep('/^civicrm_export_temp_/', $this->tables, PREG_GREP_INVERT);
+    $this->tables = preg_grep('/^civicrm_queue_/', $this->tables, PREG_GREP_INVERT);
 
     $dsn = defined('CIVICRM_LOGGING_DSN') ? DB::parseDSN(CIVICRM_LOGGING_DSN) : DB::parseDSN(CIVICRM_DSN);
     $this->db = $dsn['database'];
 
     $dao = CRM_Core_DAO::executeQuery("
-SELECT TABLE_NAME 
-FROM   INFORMATION_SCHEMA.TABLES 
+SELECT TABLE_NAME
+FROM   INFORMATION_SCHEMA.TABLES
 WHERE  TABLE_SCHEMA = '{$this->db}'
-AND    TABLE_TYPE = 'BASE TABLE' 
+AND    TABLE_TYPE = 'BASE TABLE'
 AND    TABLE_NAME LIKE 'log_civicrm_%'
 ");
     while ($dao->fetch()) {
@@ -99,26 +97,37 @@ AND    TABLE_NAME LIKE 'log_civicrm_%'
    * Disable logging by dropping the triggers (but keep the log tables intact).
    */
   function disableLogging() {
-    if (!$this->isEnabled()) {
-      return;
-    }
-
     $this->dropTriggers();
+
+    // invoke the meta trigger creation call
+    CRM_Core_DAO::triggerRebuild();
+
     $this->deleteReports();
+  }
+
+  /**
+   * Drop triggers for all logged tables.
+   */
+  private function dropTriggers() {
+    $dao = new CRM_Core_DAO;
+    foreach ($this->tables as $table) {
+      $dao->executeQuery("DROP TRIGGER IF EXISTS {$table}_after_insert");
+      $dao->executeQuery("DROP TRIGGER IF EXISTS {$table}_after_update");
+      $dao->executeQuery("DROP TRIGGER IF EXISTS {$table}_after_delete");
+    }
   }
 
   /**
    * Enable logging by creating the log tables (where needed) and creating the triggers.
    */
   function enableLogging() {
-    if ($this->isEnabled()) {
-      return;
+    foreach ($this->schemaDifferences() as $table => $cols) {
+      $this->fixSchemaDifferencesFor($table, $cols);
     }
 
-    foreach ($this->tables as $table) {
-      $this->createLogTableFor($table);
-    }
-    $this->createTriggers();
+    // invoke the meta trigger creation call
+    CRM_Core_DAO::triggerRebuild();
+
     $this->addReports();
   }
 
@@ -126,7 +135,9 @@ AND    TABLE_NAME LIKE 'log_civicrm_%'
    * Add missing log table columns.
    */
   function fixSchemaDifferences() {
-    if (!$this->isEnabled()) {
+    // this path
+    $config = CRM_Core_Config::singleton();
+    if (!$config->logging) {
       return;
     }
 
@@ -142,12 +153,9 @@ AND    TABLE_NAME LIKE 'log_civicrm_%'
    * param $cols mixed    array of columns to add or null (to check for the missing columns)
    */
   function fixSchemaDifferencesFor($table, $cols = NULL) {
-    if (!$this->isEnabled()) {
-      return;
-    }
-
     if (empty($this->logs[$table])) {
       $this->createLogTableFor($table);
+      return;
     }
 
     if (is_null($cols)) {
@@ -166,8 +174,8 @@ AND    TABLE_NAME LIKE 'log_civicrm_%'
       CRM_Core_DAO::executeQuery("ALTER TABLE `{$this->db}`.log_$table ADD $line");
     }
 
-    // recreate triggers to cater for the new columns
-    $this->createTriggersFor($table);
+    // invoke the meta trigger creation call
+    CRM_Core_DAO::triggerRebuild($table);
   }
 
   /**
@@ -184,7 +192,7 @@ AND    TABLE_NAME LIKE 'log_civicrm_%'
 
   private function addReports() {
     $titles = array(
-      'logging/contact/detail' => ts('Contact Logging Report (Detail)'),
+      'logging/contact/detail' => ts('Logging Details'),
       'logging/contact/summary' => ts('Contact Logging Report (Summary)'),
       'logging/contribute/detail' => ts('Contribution Logging Report (Detail)'),
       'logging/contribute/summary' => ts('Contribution Logging Report (Summary)'),
@@ -197,7 +205,6 @@ AND    TABLE_NAME LIKE 'log_civicrm_%'
         ");
 
     // add report instances
-    require_once 'CRM/Report/DAO/Instance.php';
     $domain_id = CRM_Core_Config::domainID();
     foreach ($this->reports as $report) {
       $dao             = new CRM_Report_DAO_Instance;
@@ -205,6 +212,8 @@ AND    TABLE_NAME LIKE 'log_civicrm_%'
       $dao->report_id  = $report;
       $dao->title      = $titles[$report];
       $dao->permission = 'administer CiviCRM';
+      if ($report == 'logging/contact/summary')
+        $dao->is_reserved = 1;
       $dao->insert();
     }
   }
@@ -218,7 +227,12 @@ AND    TABLE_NAME LIKE 'log_civicrm_%'
     $from = (substr($table, 0, 4) == 'log_') ? "`{$this->db}`.$table" : $table;
 
     if (!isset($columnsOf[$table])) {
+      CRM_Core_Error::ignoreException();
       $dao = CRM_Core_DAO::executeQuery("SHOW COLUMNS FROM $from");
+      CRM_Core_Error::setCallback();
+      if (is_a($dao, 'DB_Error')) {
+        return array();
+      }
       $columnsOf[$table] = array();
       while ($dao->fetch()) {
         $columnsOf[$table][] = $dao->Field;
@@ -232,8 +246,6 @@ AND    TABLE_NAME LIKE 'log_civicrm_%'
    * Create a log table with schema mirroring the given table’s structure and seeding it with the given table’s contents.
    */
   private function createLogTableFor($table) {
-    CRM_Core_DAO::executeQuery("DROP TABLE IF EXISTS `{$this->db}`.log_$table");
-
     $dao = CRM_Core_DAO::executeQuery("SHOW CREATE TABLE $table");
     $dao->fetch();
     $query = $dao->Create_Table;
@@ -265,48 +277,6 @@ COLS;
     $this->logs[$table] = "log_$table";
   }
 
-  /**
-   * Create triggers populating the relevant log table every time the given table changes.
-   */
-  function createTriggersFor($table) {
-    if ($table != 'civicrm_contact' and !$this->isEnabled()) {
-      return;
-    }
-
-    $columns = $this->columnsOf($table);
-
-    $queries = array();
-    foreach (array(
-      'Insert', 'Update', 'Delete') as $action) {
-      $trigger   = "{$table}_after_" . strtolower($action);
-      $queries[] = "DROP TRIGGER IF EXISTS $trigger";
-      $query     = "CREATE TRIGGER $trigger AFTER $action ON $table FOR EACH ROW INSERT INTO `{$this->db}`.log_$table (";
-      foreach ($columns as $column) {
-        $query .= "$column, ";
-      }
-      $query .= "log_conn_id, log_user_id, log_action) VALUES (";
-      foreach ($columns as $column) {
-        $query .= $action == 'Delete' ? "OLD.$column, " : "NEW.$column, ";
-      }
-      $query .= "CONNECTION_ID(), @civicrm_user_id, '$action')";
-      $queries[] = $query;
-    }
-
-    $dao = new CRM_Core_DAO;
-    foreach ($queries as $query) {
-      $dao->executeQuery($query);
-    }
-  }
-
-  /**
-   * Create triggers for all logged tables.
-   */
-  private function createTriggers() {
-    foreach ($this->tables as $table) {
-      $this->createTriggersFor($table);
-    }
-  }
-
   private function deleteReports() {
     // disable logging templates
     CRM_Core_DAO::executeQuery("
@@ -316,7 +286,6 @@ COLS;
         ");
 
     // delete report instances
-    require_once 'CRM/Report/DAO/Instance.php';
     $domain_id = CRM_Core_Config::domainID();
     foreach ($this->reports as $report) {
       $dao            = new CRM_Report_DAO_Instance;
@@ -327,22 +296,15 @@ COLS;
   }
 
   /**
-   * Drop triggers for all logged tables.
-   */
-  private function dropTriggers() {
-    $dao = new CRM_Core_DAO;
-    foreach ($this->tables as $table) {
-      $dao->executeQuery("DROP TRIGGER IF EXISTS {$table}_after_insert");
-      $dao->executeQuery("DROP TRIGGER IF EXISTS {$table}_after_update");
-      $dao->executeQuery("DROP TRIGGER IF EXISTS {$table}_after_delete");
-    }
-  }
-
-  /**
    * Predicate whether logging is enabled.
    */
   public function isEnabled() {
-    return $this->tablesExist() and $this->triggersExist();
+    $config = CRM_Core_Config::singleton();
+
+    if ($config->logging) {
+      return $this->tablesExist() and $this->triggersExist();
+    }
+    return FALSE;
   }
 
   /**
@@ -357,7 +319,101 @@ COLS;
    */
   private function triggersExist() {
     // FIXME: probably should be a bit more thorough…
+    // note that the LIKE parameter is TABLE NAME
     return (bool) CRM_Core_DAO::singleValueQuery("SHOW TRIGGERS LIKE 'civicrm_contact'");
   }
+
+  function triggerInfo(&$info, $tableName = NULL) {
+    // check if we have logging enabled
+    $config = &CRM_Core_Config::singleton();
+    if (!$config->logging) {
+      return;
+    }
+
+    $insert = array('INSERT');
+    $update = array('UPDATE');
+    $delete = array('DELETE');
+
+    if ($tableName) {
+      $tableNames = array($tableName);
+    }
+    else {
+      $tableNames = $this->tables;
+    }
+
+    // logging is enabled, so now lets create the trigger info tables
+    foreach ($tableNames as $table) {
+      $columns = $this->columnsOf($table);
+
+      // only do the change if any data has changed
+      $cond = array( );
+      foreach ($columns as $column) {
+        $cond[] = "IFNULL(OLD.$column,'') <> IFNULL(NEW.$column,'')";
+      }
+      $suppressLoggingCond = "@civicrm_disable_logging IS NULL OR @civicrm_disable_logging = 0";
+      $updateSQL = "IF ( (" . implode( ' OR ', $cond ) . ") AND ( $suppressLoggingCond ) ) THEN ";
+
+      $sqlStmt = "INSERT INTO `{$this->db}`.log_{tableName} (";
+      foreach ($columns as $column) {
+        $sqlStmt .= "$column, ";
+      }
+      $sqlStmt .= "log_conn_id, log_user_id, log_action) VALUES (";
+
+      $insertSQL = $deleteSQL = "IF ( $suppressLoggingCond ) THEN $sqlStmt ";
+      $updateSQL .= $sqlStmt;
+
+      $sqlStmt = '';
+      foreach ($columns as $column) {
+        $sqlStmt   .= "NEW.$column, ";
+        $deleteSQL .= "OLD.$column, ";
+      }
+      $sqlStmt   .= "CONNECTION_ID(), @civicrm_user_id, '{eventName}');";
+      $deleteSQL .= "CONNECTION_ID(), @civicrm_user_id, '{eventName}');";
+
+      $sqlStmt   .= "END IF;";
+      $deleteSQL .= "END IF;";
+
+      $insertSQL .= $sqlStmt;
+      $updateSQL .= $sqlStmt;
+
+      $info[] = array(
+        'table' => array($table),
+        'when' => 'AFTER',
+        'event' => $insert,
+        'sql' => $insertSQL,
+      );
+
+      $info[] = array(
+        'table' => array($table),
+        'when' => 'AFTER',
+        'event' => $update,
+        'sql' => $updateSQL,
+      );
+
+      $info[] = array(
+        'table' => array($table),
+        'when' => 'AFTER',
+        'event' => $delete,
+        'sql' => $deleteSQL,
+      );
+    }
+  }
+
+  /**
+   * This allow logging to be temporarily disabled for certain cases
+   * where we want to do a mass cleanup but dont want to bother with
+   * an audit trail
+   *
+   * @static
+   * @public
+   */
+  static function disableLoggingForThisConnection( ) {
+    // do this only if logging is enabled
+    $config = CRM_Core_Config::singleton( );
+    if ( $config->logging ) {
+      CRM_Core_DAO::executeQuery( 'SET @civicrm_disable_logging = 1' );
+    }
+  }
+
 }
 

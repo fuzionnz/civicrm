@@ -12,26 +12,28 @@
 </style>
 <script>
 resourceBase = '{$config->resourceBase}';
-if (!jQuery) {ldelim}  
+if (!jQuery) {ldelim}
    var head= document.getElementsByTagName('head')[0];
    var script= document.createElement('script');
    script.type= 'text/javascript';
    script.src= resourceBase + '/packages/jquery/jquery.min.js';
    head.appendChild(script);
-{rdelim} 
+{rdelim}
 
-restURL = '{crmURL p="civicrm/ajax/rest"}';
+var restURL = '{crmURL p="civicrm/ajax/rest"}';
+restURL = restURL.replace("&amp;","&"); // needed for J! fix CRM-10270
+
 if (restURL.indexOf('?') == -1 )
   restURL = restURL + '?';
-else 
+else
   restURL = restURL + '&';
 {literal}
 if (typeof $ == "undefined") {
   $ = cj;
-} 
+}
 
 function toggleField (name,label,type) {
-  h = '<div><label>'+label+'</label><input name='+name+ ' id="'+name+ '" /></div>';
+  var h = '<div><label>'+label+'</label><input name='+name+ ' id="'+name+ '" /></div>';
   if ( $('#extra #'+ name).length > 0) {
     $('#extra #'+ name).parent().remove();
   }
@@ -40,8 +42,8 @@ function toggleField (name,label,type) {
 }
 
 function buildForm (entity, action) {
-  id = entity+ '_id';
-  h = '<label>'+id+'</label><input id="'+id+ '" size="3" maxlength="20" />';
+  var id = entity+ '_id';
+  var h = '<label>'+id+'</label><input id="'+id+ '" size="3" maxlength="20" />';
   if (action == 'delete') {
     $('#extra').html(h);
     return;
@@ -50,12 +52,12 @@ function buildForm (entity, action) {
   cj().crmAPI (entity,'getFields',{version : 3}
              ,{ success:function (data){
                   h='<i>Available fields (click on it to add it to the query):</i>';
-                  $.each(data.values, function(key, value) { 
+                  $.each(data.values, function(key, value) {
                     name =value.name;
-                    if (name == 'id') 
+                    if (name == 'id')
                       name = entity+'_id';
                     if (value.title == undefined) {
-                      if (value.name == undefined) 
+                      if (value.name == undefined)
                         value.title = value.label;
                       else
                         value.title = value.name;
@@ -76,7 +78,7 @@ function buildForm (entity, action) {
 
 function generateQuery () {
     var version = 3;
-    
+
     var entity = $('#entity').val();
     var action = $('#action').val();
     var debug = "";
@@ -105,18 +107,18 @@ function generateQuery () {
     query = restURL+json+sequential+debug+'&entity='+entity+'&action='+action+extra;
     $('#query').val (query);
     if (action == 'delete' && $('#selector a').length == 0) {
-      buildForm (entity, action); 
-      return; 
+      buildForm (entity, action);
+      return;
     }
     if ( action =='create' && $('#selector a').length == 0) {
-      buildForm (entity, action); 
-      return; 
+      buildForm (entity, action);
+      return;
     }
     runQuery (query);
 }
 
 function runQuery(query) {
-    var vars = [], hash,smarty = '',php = " array (version=3\',",json = "{  ", link ="";
+    var vars = [], hash,smarty = '',php = " array (version => \'3\',",json = "{  ", link ="";
     window.location.hash = query;
     $('#result').html('<i>Loading...</i>');
     $.get(query,function(data) {
@@ -128,7 +130,7 @@ function runQuery(query) {
 
     var hashes = query.slice(query.indexOf('?') + 1).split('&');
     for(var i = 0; i < hashes.length; i++) {
-       
+
         hash = hashes[i].split('=');
 
         switch (hash[0]) {
@@ -231,7 +233,7 @@ cj(function ($) {
 You can choose an entity and an action (eg Tag Get to retrieve a list of the tags)
 Or your can directly modify the url in the field above and press enter.
 
-When you use the create method, it displays the list of existing fields for this entity. 
+When you use the create method, it displays the list of existing fields for this entity.
 click on the name of the fields you want to populate, fill the value(s) and press enter
 
 The result of the ajax calls are displayed in this grey area.

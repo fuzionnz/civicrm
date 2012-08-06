@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -92,7 +92,6 @@ class CRM_Case_PseudoConstant extends CRM_Core_PseudoConstant {
   public static function caseStatus($column = 'label', $onlyActive = TRUE) {
     $cacheKey = "{$column}_" . (int)$onlyActive;
     if (!isset(self::$caseStatus[$cacheKey])) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$caseStatus[$cacheKey] = CRM_Core_OptionGroup::values('case_status',
         FALSE, FALSE, FALSE, NULL,
         $column, $onlyActive
@@ -125,7 +124,6 @@ class CRM_Case_PseudoConstant extends CRM_Core_PseudoConstant {
       $condition = NULL;
     }
 
-    require_once 'CRM/Core/OptionGroup.php';
     self::$redactionRule = CRM_Core_OptionGroup::values('redaction_rule', TRUE, FALSE, FALSE, $condition);
     // }
     return self::$redactionRule;
@@ -142,7 +140,6 @@ class CRM_Case_PseudoConstant extends CRM_Core_PseudoConstant {
   public static function caseType($column = 'label', $onlyActive = TRUE) {
     $cacheKey = "{$column}_" . (int)$onlyActive;
     if (!isset(self::$caseType[$cacheKey])) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$caseType[$cacheKey] = CRM_Core_OptionGroup::values('case_type',
         FALSE, FALSE, FALSE, NULL,
         $column, $onlyActive
@@ -163,7 +160,6 @@ class CRM_Case_PseudoConstant extends CRM_Core_PseudoConstant {
   public static function encounterMedium($column = 'label', $onlyActive = TRUE) {
     $cacheKey = "{$column}_" . (int)$onlyActive;
     if (!isset(self::$encounterMedium[$cacheKey])) {
-      require_once 'CRM/Core/OptionGroup.php';
       self::$encounterMedium[$cacheKey] = CRM_Core_OptionGroup::values('encounter_medium',
         FALSE, FALSE, FALSE, NULL,
         $column, $onlyActive
@@ -186,7 +182,7 @@ class CRM_Case_PseudoConstant extends CRM_Core_PseudoConstant {
    *
    * @return array - array reference of all activty types.
    */
-  public static function activityType($indexName = TRUE, $all = FALSE) {
+  public static function &caseActivityType($indexName = TRUE, $all = FALSE) {
     $cache = (int) $indexName . '_' . (int) $all;
 
     if (!array_key_exists($cache, self::$activityTypeList)) {
@@ -211,7 +207,7 @@ class CRM_Case_PseudoConstant extends CRM_Core_PseudoConstant {
 
       $query .= "  ORDER BY v.weight";
 
-      $dao = CRM_Core_DAO::executeQuery($query, CRM_Core_DAO::$_nullArray);
+      $dao = CRM_Core_DAO::executeQuery($query);
 
       $activityTypes = array();
       while ($dao->fetch()) {
@@ -245,7 +241,6 @@ class CRM_Case_PseudoConstant extends CRM_Core_PseudoConstant {
       return FALSE;
     }
 
-    require_once ('CRM/Case/BAO/Case.php');
     if (!array_key_exists($caseId, self::$caseTypePair) || empty(self::$caseTypePair[$caseId][$column])) {
       $caseTypes = self::caseType($column);
       $caseTypeIds = CRM_Core_DAO::getFieldValue('CRM_Case_DAO_Case',

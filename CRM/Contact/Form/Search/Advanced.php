@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -36,12 +36,6 @@
 /**
  * Files required
  */
-
-require_once 'CRM/Core/ShowHideBlocks.php';
-require_once 'CRM/Core/BAO/CustomGroup.php';
-require_once 'CRM/Core/BAO/CustomOption.php';
-
-require_once 'CRM/Contact/Form/Search.php';
 
 /**
  * advanced search, extends basic search
@@ -59,6 +53,7 @@ class CRM_Contact_Form_Search_Advanced extends CRM_Contact_Form_Search {
 
     parent::preProcess();
     $openedPanes = CRM_Contact_BAO_Query::openedSearchPanes();
+    $openedPanes = array_merge($openedPanes, $this->_openedPanes);
     $this->assign('openedPanes', $openedPanes);
   }
 
@@ -71,11 +66,9 @@ class CRM_Contact_Form_Search_Advanced extends CRM_Contact_Form_Search {
    */
   function buildQuickForm() {
     $this->set('context', 'advanced');
-    require_once 'CRM/Contact/Form/Search/Criteria.php';
 
     $this->_searchPane = CRM_Utils_Array::value('searchPane', $_GET);
 
-    require_once 'CRM/Core/BAO/Setting.php';
     $this->_searchOptions = CRM_Core_BAO_Setting::valueOptions(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
       'advanced_search_options'
     );
@@ -114,7 +107,6 @@ class CRM_Contact_Form_Search_Advanced extends CRM_Contact_Form_Search {
       }
     }
 
-    require_once 'CRM/Core/Component.php';
     $components = CRM_Core_Component::getEnabledComponents();
 
     $componentPanes = array();
@@ -128,7 +120,6 @@ class CRM_Contact_Form_Search_Advanced extends CRM_Contact_Form_Search {
       }
     }
 
-    require_once 'CRM/Utils/Sort.php';
     usort($componentPanes, array('CRM_Utils_Sort', 'cmpFunc'));
     foreach ($componentPanes as $name => $pane) {
       // FIXME: we should change the use of $name here to keyword
@@ -315,10 +306,8 @@ class CRM_Contact_Form_Search_Advanced extends CRM_Contact_Form_Search {
       }
     }
 
-    require_once 'CRM/Core/BAO/CustomValue.php';
     CRM_Core_BAO_CustomValue::fixFieldValueOfTypeMemo($this->_formValues);
 
-    require_once 'CRM/Contact/BAO/Query.php';
     $this->_params = CRM_Contact_BAO_Query::convertFormValues($this->_formValues);
     $this->_returnProperties = &$this->returnProperties();
     parent::postProcess();

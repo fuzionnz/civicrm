@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
-require_once 'CRM/Contribute/PseudoConstant.php';
 class CRM_Report_Form_Contribute_SoftCredit extends CRM_Report_Form {
 
   protected $_emailField = FALSE;
@@ -409,7 +408,6 @@ class CRM_Report_Form_Contribute_SoftCredit extends CRM_Report_Form {
     $this->buildACLClause(array('constituentname', 'contact_civireport'));
     $sql = $this->buildQuery();
 
-    require_once 'CRM/Utils/OpenFlashChart.php';
     $dao   = CRM_Core_DAO::executeQuery($sql);
     $rows  = $graphRows = array();
     $count = 0;
@@ -546,7 +544,8 @@ class CRM_Report_Form_Contribute_SoftCredit extends CRM_Report_Form {
         $repeatFound = FALSE;
 
         foreach ($row as $colName => $colVal) {
-          if (is_array($checkList[$colName]) &&
+          if (isset($checkList) && CRM_Utils_Array::value($colName, $checkList) && 
+            is_array($checkList[$colName]) &&
             in_array($colVal, $checkList[$colName])
           ) {
             $rows[$rowNum][$colName] = "";

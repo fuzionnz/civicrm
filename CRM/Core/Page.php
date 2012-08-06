@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,16 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/SelectValues.php';
-require_once 'CRM/Core/Action.php';
-require_once 'CRM/Core/Permission.php';
-
-require_once 'CRM/Utils/Request.php';
 
 /**
  * A Page is basically data in a nice pretty format.
@@ -161,7 +155,6 @@ class CRM_Core_Page {
     self::$_template->assign('tplFile', $pageTemplateFile);
 
     // invoke the pagRun hook, CRM-3906
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::pageRun($this);
 
     if ($this->_print) {
@@ -173,14 +166,15 @@ class CRM_Core_Page {
       else {
         $content = self::$_template->fetch('CRM/common/print.tpl');
       }
-      CRM_Utils_System::appendTPLFile($pageTemplateFile, $content);
+      CRM_Utils_System::appendTPLFile($pageTemplateFile,
+        $content,
+        $this->overrideExtraTemplateFileName()
+      );
 
       //its time to call the hook.
-      require_once 'CRM/Utils/Hook.php';
       CRM_Utils_Hook::alterContent($content, 'page', $pageTemplateFile, $this);
 
       if ($this->_print == CRM_Core_Smarty::PRINT_PDF) {
-        require_once 'CRM/Utils/PDF/Utils.php';
         CRM_Utils_PDF_Utils::html2pdf($content, "{$this->_name}.pdf", FALSE,
           array('paper_size' => 'a3', 'orientation' => 'landscape')
         );
@@ -194,10 +188,12 @@ class CRM_Core_Page {
     $config = CRM_Core_Config::singleton();
     $content = self::$_template->fetch('CRM/common/' . strtolower($config->userFramework) . '.tpl');
 
+    if ($region = CRM_Core_Region::instance('html-header', FALSE)) {
+      CRM_Utils_System::addHTMLHead($region->render(''));
+    }
     CRM_Utils_System::appendTPLFile($pageTemplateFile, $content);
 
     //its time to call the hook.
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::alterContent($content, 'page', $pageTemplateFile, $this);
 
     echo CRM_Utils_System::theme('page', $content, TRUE, $this->_print);
@@ -281,6 +277,17 @@ class CRM_Core_Page {
       DIRECTORY_SEPARATOR,
       CRM_Utils_System::getClassName($this)
     ) . '.tpl';
+  }
+
+  /**
+   * Default extra tpl file basically just replaces .tpl with .extra.tpl
+   * i.e. we dont override
+   *
+   * @return string
+   * @access public
+   */
+  function overrideExtraTemplateFileName() {
+    return NULL;
   }
 
   /**

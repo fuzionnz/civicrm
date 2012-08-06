@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Import/DataSource.php';
 class CRM_Import_DataSource_CSV extends CRM_Import_DataSource {
   CONST NUM_ROWS_TO_INSERT = 100;
   function getInfo() {
@@ -74,7 +72,6 @@ class CRM_Import_DataSource_CSV extends CRM_Import_DataSource {
     $this->set('originalColHeader', CRM_Utils_Array::value('original_col_header', $result));
 
     $table = $result['import_table_name'];
-    require_once 'CRM/Import/ImportJob.php';
     $importJob = new CRM_Import_ImportJob($table);
     $this->set('importTableName', $importJob->getTableName());
   }

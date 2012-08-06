@@ -1,11 +1,7 @@
 <?php
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Core/OptionGroup.php';
-require_once 'CRM/Event/Cart/BAO/Cart.php';
-require_once 'CRM/Event/Cart/Form/Cart.php';
-require_once 'CRM/Price/BAO/Set.php';
 class CRM_Event_Cart_Form_Checkout_ParticipantsAndPrices extends CRM_Event_Cart_Form_Cart {
-  public $price_fields_for_event; function preProcess() {
+  public $price_fields_for_event;
+  public $_values = NULL; function preProcess() {
     parent::preProcess();
 
     $this->cid = CRM_Utils_Request::retrieve('cid', 'Positive', $this);
@@ -17,7 +13,6 @@ class CRM_Event_Cart_Form_Checkout_ParticipantsAndPrices extends CRM_Event_Cart_
 
   function buildQuickForm() {
     $this->price_fields_for_event = array();
-    require_once ('CRM/Event/Cart/Form/MerParticipant.php');
     foreach ($this->cart->get_main_event_participants() as $participant) {
       $form = new CRM_Event_Cart_Form_MerParticipant($participant);
       $form->buildQuickForm($this);
@@ -64,21 +59,7 @@ class CRM_Event_Cart_Form_Checkout_ParticipantsAndPrices extends CRM_Event_Cart_
     $price_fields_for_event = array();
     $base_field_name = "event_{$event->id}_amount";
     $price_set_id = CRM_Price_BAO_Set::getFor('civicrm_event', $event->id);
-    if ($price_set_id === FALSE && $event->is_monetary) {
-      require_once 'CRM/Utils/Money.php';
-      //$fee_data = array();
-      CRM_Core_OptionGroup::getAssoc("civicrm_event.amount.{$event->id}", $fee_data, TRUE);
-      $choices = array();
-      foreach ($fee_data as $fee) {
-        if (is_array($fee)) {
-          $choices[] = $this->createElement('radio', NULL, '', CRM_Utils_Money::format($fee['value']) . ' ' . $fee['label'], $fee['amount_id']);
-        }
-      }
-      $this->addGroup($choices, $base_field_name, $event->fee_label);
-      $this->addRule($base_field_name, ts('Select at least one option from Price Levels'), 'required');
-      $price_fields_for_event[] = $base_field_name;
-    }
-    elseif ($price_set_id) {
+    if ($price_set_id) {
       $price_sets = CRM_Price_BAO_Set::getSetDetail($price_set_id, TRUE, TRUE);
       $price_set  = $price_sets[$price_set_id];
       $index      = -1;
@@ -132,18 +113,20 @@ class CRM_Event_Cart_Form_Checkout_ParticipantsAndPrices extends CRM_Event_Cart_
 
       foreach ($event_in_cart->participants as $mer_participant) {
         $participant_fields = $fields['event'][$event_in_cart->event_id]['participant'][$mer_participant->id];
-        $contact_id = self::find_or_create_contact($participant_fields);
+        //TODO what to do when profile responses differ for the same contact?
+        $contact_id = self::find_contact($participant_fields);
 
-        require_once ('CRM/Event/BAO/Participant.php');
-        $participant = new CRM_Event_BAO_Participant();
-        $participant->event_id = $event_in_cart->event_id;
-        $participant->contact_id = $contact_id;
-        $statusTypes = CRM_Event_PseudoConstant::participantStatus(NULL, 'is_counted = 1');
-        $participant->find();
-        while ($participant->fetch()) {
-          if (array_key_exists($participant->status_id, $statusTypes)) {
-            $form = $mer_participant->get_form();
-            $this->_errors[$form->html_field_name('email')] = ts("The participant %1 is already registered for %2 (%3).", array(1 => $participant_fields['email'], 2 => $event_in_cart->event->title, 3 => $event_in_cart->event->start_date));
+        if ($contact_id) {
+          $participant = new CRM_Event_BAO_Participant();
+          $participant->event_id = $event_in_cart->event_id;
+          $participant->contact_id = $contact_id;
+          $statusTypes = CRM_Event_PseudoConstant::participantStatus(NULL, 'is_counted = 1');
+          $participant->find();
+          while ($participant->fetch()) {
+            if (array_key_exists($participant->status_id, $statusTypes)) {
+              $form = $mer_participant->get_form();
+              $this->_errors[$form->html_field_name('email')] = ts("The participant %1 is already registered for %2 (%3).", array(1 => $participant_fields['email'], 2 => $event_in_cart->event->title, 3 => $event_in_cart->event->start_date));
+            }
           }
         }
       }
@@ -155,7 +138,6 @@ class CRM_Event_Cart_Form_Checkout_ParticipantsAndPrices extends CRM_Event_Cart_
     $this->loadCart();
 
     $defaults = array();
-    require_once 'CRM/Event/Cart/Form/MerParticipant.php';
     foreach ($this->cart->get_main_event_participants() as $participant) {
       $form = $participant->get_form();
       if (empty($participant->email)
@@ -163,7 +145,6 @@ class CRM_Event_Cart_Form_Checkout_ParticipantsAndPrices extends CRM_Event_Cart_
         && ($participant->get_participant_index() == 1)
         && ($this->cid != 0)
       ) {
-        require_once 'CRM/Contact/BAO/Contact.php';
         $defaults = array();
         $params = array('id' => $this->cid);
         $contact = CRM_Contact_BAO_Contact::retrieve($params, $defaults);
@@ -175,7 +156,7 @@ class CRM_Event_Cart_Form_Checkout_ParticipantsAndPrices extends CRM_Event_Cart_
         && $participant->contact_id == self::getContactID()
       ) {
         $participant->email = NULL;
-        $participant->contact_id = self::find_or_create_contact(array());
+        $participant->contact_id = self::find_or_create_contact($this->getContactID());
       }
       $defaults += $form->setDefaultValues();
     }
@@ -186,16 +167,37 @@ class CRM_Event_Cart_Form_Checkout_ParticipantsAndPrices extends CRM_Event_Cart_
     if (!array_key_exists('event', $this->_submitValues)) {
       return;
     }
+    // XXX de facto primary key
+    $email_to_contact_id = array();
     foreach ($this->_submitValues['event'] as $event_id => $participants) {
       foreach ($participants['participant'] as $participant_id => $fields) {
-        require_once 'CRM/Contact/BAO/Contact.php';
-        $contact_id = self::find_or_create_contact($fields);
+        if (array_key_exists($fields['email'], $email_to_contact_id)) {
+          $contact_id = $email_to_contact_id[$fields['email']];
+        }
+        else {
+          $contact_id = self::find_or_create_contact($this->getContactID(), $fields);
+          $email_to_contact_id[$fields['email']] = $contact_id;
+        }
 
         $participant = $this->cart->get_event_in_cart_by_event_id($event_id)->get_participant_by_id($participant_id);
         if ($participant->contact_id && $contact_id != $participant->contact_id) {
+          $defaults          = array();
+          $params            = array('id' => $participant->contact_id);
+          $temporary_contact = CRM_Contact_BAO_Contact::retrieve($params, $defaults);
+
           foreach ($this->cart->get_subparticipants($participant) as $subparticipant) {
             $subparticipant->contact_id = $contact_id;
             $subparticipant->save();
+          }
+
+          $participant->contact_id = $contact_id;
+          $participant->save();
+
+          if ($temporary_contact->is_deleted) {
+            #ARGH a permissions check prevents us from using skipUndelete,
+            #so we potentially leave records pointing to this contact for now
+            #CRM_Contact_BAO_Contact::deleteContact($temporary_contact->id);
+            $temporary_contact->delete();
           }
         }
 

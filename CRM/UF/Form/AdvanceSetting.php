@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-
-require_once 'CRM/UF/Form/Group.php';
 class CRM_UF_Form_AdvanceSetting extends CRM_UF_Form_Group {
 
   /**
@@ -51,9 +47,9 @@ class CRM_UF_Form_AdvanceSetting extends CRM_UF_Form_Group {
 
     // should we allow updates on a exisitng contact
     $options   = array();
-    $options[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('Issue warning and do not save'), 0);
-    $options[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('Update the matching contact'), 1);
-    $options[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('Allow duplicate contact to be created'), 2);
+    $options[] = $form->createElement('radio', NULL, NULL, ts('Issue warning and do not save'), 0);
+    $options[] = $form->createElement('radio', NULL, NULL, ts('Update the matching contact'), 1);
+    $options[] = $form->createElement('radio', NULL, NULL, ts('Allow duplicate contact to be created'), 2);
 
     $this->addGroup($options, 'is_update_dupe', ts('What to do upon duplicate match'));
     // we do not have any url checks to allow relative urls
@@ -89,17 +85,17 @@ class CRM_UF_Form_AdvanceSetting extends CRM_UF_Form_Group {
     }
 
     $options   = array();
-    $options[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('No account create option'), 0);
-    $options[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('Give option, but not required'), 1);
-    $options[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('Account creation required'), 2);
+    $options[] = $form->createElement('radio', NULL, NULL, ts('No account create option'), 0);
+    $options[] = $form->createElement('radio', NULL, NULL, ts('Give option, but not required'), 1);
+    $options[] = $form->createElement('radio', NULL, NULL, ts('Account creation required'), 2);
 
     $this->addGroup($options, 'is_cms_user', ts('%1 user account registration option?', array(1 => $config->userFramework)));
 
     // options for including Proximity Search in the profile search form
     $proxOptions   = array();
-    $proxOptions[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('None'), 0);
-    $proxOptions[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('Optional'), 1);
-    $proxOptions[] = HTML_QuickForm::createElement('radio', NULL, NULL, ts('Required'), 2);
+    $proxOptions[] = $form->createElement('radio', NULL, NULL, ts('None'), 0);
+    $proxOptions[] = $form->createElement('radio', NULL, NULL, ts('Optional'), 1);
+    $proxOptions[] = $form->createElement('radio', NULL, NULL, ts('Required'), 2);
 
     $this->addGroup($proxOptions, 'is_proximity_search', ts('Proximity search'));
   }

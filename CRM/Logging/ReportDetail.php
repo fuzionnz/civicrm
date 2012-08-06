@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Logging/Differ.php';
-require_once 'CRM/Logging/Schema.php';
-require_once 'CRM/Report/Form.php';
 class CRM_Logging_ReportDetail extends CRM_Report_Form {
   protected $cid;
   protected $db;
@@ -46,7 +42,9 @@ class CRM_Logging_ReportDetail extends CRM_Report_Form {
 
   // detail/summary report ids
   protected $detail;
-  protected $summary; function __construct() {
+  protected $summary;
+
+  function __construct() {
     // don’t display the ‘Add these Contacts to Group’ button
     $this->_add2groupSupported = FALSE;
 
@@ -60,8 +58,21 @@ class CRM_Logging_ReportDetail extends CRM_Report_Form {
 
     parent::__construct();
 
+    CRM_Utils_System::resetBreadCrumb();
+    $breadcrumb = 
+      array(
+            array('title' => ts('Home'), 
+                  'url' => CRM_Utils_System::url()),
+            array('title' => ts('CiviCRM'), 
+                  'url' => CRM_Utils_System::url('civicrm', 'reset=1')),
+            array('title' => ts('View Contact'), 
+                  'url' => CRM_Utils_System::url('civicrm/contact/view', "reset=1&cid={$this->cid}")),
+            array('title' => ts('Search Results'), 
+                  'url' => CRM_Utils_System::url('civicrm/contact/search', "force=1")),
+            );
+    CRM_Utils_System::appendBreadCrumb($breadcrumb);
+
     if (CRM_Utils_Request::retrieve('revert', 'Boolean', CRM_Core_DAO::$_nullObject)) {
-      require_once 'CRM/Logging/Reverter.php';
       $reverter = new CRM_Logging_Reverter($this->log_conn_id, $this->log_date);
       $reverter->revert($this->tables);
       CRM_Core_Session::setStatus(ts('The changes have been reverted.'));
@@ -112,7 +123,7 @@ class CRM_Logging_ReportDetail extends CRM_Report_Form {
     $rows = array();
 
     $differ = new CRM_Logging_Differ($this->log_conn_id, $this->log_date);
-    $diffs = $differ->diffsInTable($table);
+    $diffs = $differ->diffsInTable($table, $this->cid);
 
     // return early if nothing found
     if (empty($diffs)) {
@@ -148,8 +159,8 @@ class CRM_Logging_ReportDetail extends CRM_Report_Form {
         if ($field == 'preferred_communication_method') {
           $froms = array();
           $tos = array();
-          foreach (explode(CRM_Core_DAO::VALUE_SEPARATOR, $from) as $val) $froms[] = $values[$field][$val];
-          foreach (explode(CRM_Core_DAO::VALUE_SEPARATOR, $to) as $val) $tos[] = $values[$field][$val];
+          foreach (explode(CRM_Core_DAO::VALUE_SEPARATOR, $from) as $val) $froms[] = CRM_Utils_Array::value($val, $values[$field]);
+          foreach (explode(CRM_Core_DAO::VALUE_SEPARATOR, $to) as $val) $tos[] = CRM_Utils_Array::value($val, $values[$field]);
           $from = implode(', ', array_filter($froms));
           $to = implode(', ', array_filter($tos));
         }
@@ -189,11 +200,12 @@ class CRM_Logging_ReportDetail extends CRM_Report_Form {
 
     // let the template know who updated whom when
     $dao = CRM_Core_DAO::executeQuery($this->whoWhomWhenSql(), $params);
-    $dao->fetch();
-    $this->assign('who_url', CRM_Utils_System::url('civicrm/contact/view', "reset=1&cid={$dao->who_id}"));
-    $this->assign('whom_url', CRM_Utils_System::url('civicrm/contact/view', "reset=1&cid={$dao->whom_id}"));
-    $this->assign('who_name', $dao->who_name);
-    $this->assign('whom_name', $dao->whom_name);
+    if ($dao->fetch()) {
+      $this->assign('who_url', CRM_Utils_System::url('civicrm/contact/view', "reset=1&cid={$dao->who_id}"));
+      $this->assign('whom_url', CRM_Utils_System::url('civicrm/contact/view', "reset=1&cid={$dao->whom_id}"));
+      $this->assign('who_name', $dao->who_name);
+      $this->assign('whom_name', $dao->whom_name);
+    }
     $this->assign('log_date', $this->log_date);
 
     $q = "reset=1&log_conn_id={$this->log_conn_id}&log_date={$this->log_date}";

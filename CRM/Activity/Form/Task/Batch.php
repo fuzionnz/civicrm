@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Profile/Form.php';
-require_once 'CRM/Activity/Form/Task.php';
-require_once 'CRM/Activity/BAO/Activity.php';
 
 /**
  * This class provides the functionality for batch profile update for Activities
@@ -74,7 +70,6 @@ class CRM_Activity_Form_Task_Batch extends CRM_Activity_Form_Task {
     parent::preProcess();
 
     //get the contact read only fields to display.
-    require_once 'CRM/Core/BAO/Setting.php';
     $readOnlyFields = array_merge(array('sort_name' => ts('Added By'), 'target_sort_name' => ts('With Contact')),
       CRM_Core_BAO_Setting::valueOptions(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
         'contact_autocomplete_options',
@@ -84,7 +79,6 @@ class CRM_Activity_Form_Task_Batch extends CRM_Activity_Form_Task {
 
     //get the read only field data.
     $returnProperties = array_fill_keys(array_keys($readOnlyFields), 1);
-    require_once 'CRM/Contact/BAO/Contact/Utils.php';
     $contactDetails = CRM_Contact_BAO_Contact_Utils::contactDetails($this->_activityHolderIds,
       'Activity', $returnProperties
     );
@@ -105,8 +99,6 @@ class CRM_Activity_Form_Task_Batch extends CRM_Activity_Form_Task {
     if (!$ufGroupId) {
       CRM_Core_Error::fatal('ufGroupId is missing');
     }
-    require_once "CRM/Core/BAO/UFGroup.php";
-    require_once "CRM/Core/BAO/CustomGroup.php";
     $this->_title = ts('Batch Update for Activities') . ' - ' . CRM_Core_BAO_UFGroup::getTitle($ufGroupId);
     CRM_Utils_System::setTitle($this->_title);
 
@@ -162,7 +154,6 @@ class CRM_Activity_Form_Task_Batch extends CRM_Activity_Form_Task {
       );
     }
 
-    require_once "CRM/Core/BAO/CustomField.php";
     $customFields = CRM_Core_BAO_CustomField::getFields('Activity');
 
     foreach ($this->_activityHolderIds as $activityId) {
@@ -287,7 +278,6 @@ WHERE  id = %1";
         if (CRM_Utils_Array::value('custom', $value) &&
           is_array($value['custom'])
         ) {
-          require_once 'CRM/Core/BAO/CustomValueTable.php';
           CRM_Core_BAO_CustomValueTable::store($value['custom'], 'civicrm_activity', $activityId->id);
         }
       }

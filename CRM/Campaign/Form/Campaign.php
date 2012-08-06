@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,17 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Core/BAO/CustomField.php';
-require_once 'CRM/Campaign/BAO/Campaign.php';
-require_once 'CRM/Custom/Form/CustomData.php';
-require_once 'CRM/Campaign/PseudoConstant.php';
-require_once 'CRM/Campaign/DAO/CampaignGroup.php';
 
 /**
  * This class generates form components for processing a campaign
@@ -76,7 +69,6 @@ class CRM_Campaign_Form_Campaign extends CRM_Core_Form {
   protected $_campaignId;
 
   public function preProcess() {
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     if (!CRM_Campaign_BAO_Campaign::accessCampaign()) {
       CRM_Utils_System::permissionDenied();
     }
@@ -132,9 +124,9 @@ class CRM_Campaign_Form_Campaign extends CRM_Core_Form {
       $this->set('subType', CRM_Utils_Array::value('campaign_type_id', $_POST));
       $this->set('entityId', $this->_campaignId);
 
-      CRM_Custom_Form_Customdata::preProcess($this);
-      CRM_Custom_Form_Customdata::buildQuickForm($this);
-      CRM_Custom_Form_Customdata::setDefaultValues($this);
+      CRM_Custom_Form_CustomData::preProcess($this);
+      CRM_Custom_Form_CustomData::buildQuickForm($this);
+      CRM_Custom_Form_CustomData::setDefaultValues($this);
     }
   }
 
@@ -265,7 +257,6 @@ class CRM_Campaign_Form_Campaign extends CRM_Core_Form {
     );
 
     // add Campaign Parent Id
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     $campaigns = CRM_Campaign_BAO_Campaign::getCampaigns(CRM_Utils_Array::value('parent_id', $this->_values),
       $this->_campaignId
     );
@@ -293,7 +284,6 @@ class CRM_Campaign_Form_Campaign extends CRM_Core_Form {
 
     $this->addWysiwyg('goal_general', ts('Campaign Goals'), array('rows' => 2, 'cols' => 40));
     $this->add('text', 'goal_revenue', ts('Revenue Goal'), array('size' => 8, 'maxlength' => 12));
-    require_once 'CRM/Utils/Money.php';
     $this->addRule('goal_revenue', ts('Please enter a valid money value (e.g. %1).',
         array(1 => CRM_Utils_Money::format('99.99', ' '))
       ), 'money');
@@ -398,7 +388,6 @@ class CRM_Campaign_Form_Campaign extends CRM_Core_Form {
       'Campaign'
     );
 
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     $result = CRM_Campaign_BAO_Campaign::create($params);
 
     if ($result) {

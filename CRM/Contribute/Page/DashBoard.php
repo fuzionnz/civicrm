@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 
 /**
  * Page for displaying list of Payment-Instrument
@@ -57,7 +55,6 @@ class CRM_Contribute_Page_DashBoard extends CRM_Core_Page {
     $startToDate = $monthToDate = $yearToDate = array();
 
     //get contribution dates.
-    require_once 'CRM/Contribute/BAO/Contribution.php';
     $dates = CRM_Contribute_BAO_Contribution::getContributionDates();
     foreach (array(
       'now', 'yearDate', 'monthDate') as $date) {
@@ -91,7 +88,6 @@ class CRM_Contribute_Page_DashBoard extends CRM_Core_Page {
 
     // Check for admin permission to see if we should include the Manage Contribution Pages action link
     $isAdmin = 0;
-    require_once 'CRM/Core/Permission.php';
     if (CRM_Core_Permission::check('administer CiviCRM')) {
       $isAdmin = 1;
     }

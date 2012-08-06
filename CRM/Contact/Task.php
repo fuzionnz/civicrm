@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +30,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -38,8 +40,6 @@
  * used by the search forms
  *
  */
-require_once 'CRM/Contact/BAO/ContactType.php';
-require_once 'CRM/Mailing/Info.php';
 class CRM_Contact_Task {
   CONST GROUP_CONTACTS = 1, REMOVE_CONTACTS = 2, TAG_CONTACTS = 3, REMOVE_TAGS = 4, EXPORT_CONTACTS = 5, EMAIL_CONTACTS = 6, SMS_CONTACTS = 7, DELETE_CONTACTS = 8, HOUSEHOLD_CONTACTS = 9, ORGANIZATION_CONTACTS = 10, RECORD_CONTACTS = 11, MAP_CONTACTS = 12, SAVE_SEARCH = 13, SAVE_SEARCH_UPDATE = 14, PRINT_CONTACTS = 15, LABEL_CONTACTS = 16, BATCH_UPDATE = 17, ADD_EVENT = 18, PRINT_FOR_CONTACTS = 19, EMAIL_UNHOLD = 22, RESTORE = 23, DELETE_PERMANENTLY = 24;
 
@@ -222,7 +222,6 @@ class CRM_Contact_Task {
 
       self::$_tasks += CRM_Core_Component::taskList();
 
-      require_once 'CRM/Utils/Hook.php';
       CRM_Utils_Hook::searchTasks('contact', self::$_tasks);
 
       asort(self::$_tasks);
@@ -252,15 +251,14 @@ class CRM_Contact_Task {
 
     $config = CRM_Core_Config::singleton();
 
-    require_once 'CRM/Utils/Mail.php';
     if (!CRM_Utils_Mail::validOutBoundMail()) {
       unset($titles[6]);
       unset($titles[20]);
     }
 
-    if (!in_array('CiviSMS', $config->enableComponents)) {
-      unset($titles[7]);
-    }
+    // if ( ! in_array( 'CiviSMS', $config->enableComponents ) ) {
+    //     unset( $titles[7] );
+    // }
 
     // CRM-6806
     if (!CRM_Core_Permission::check('access deleted contacts') ||

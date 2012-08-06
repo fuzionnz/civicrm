@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Campaign/BAO/Survey.php';
-require_once 'CRM/Campaign/Form/Survey.php';
 
 /**
  * This class generates form components for adding a petition
@@ -74,7 +71,6 @@ class CRM_Campaign_Form_Petition extends CRM_Campaign_Form_Survey {
   function setDefaultValues() {
     $defaults = parent::setDefaultValues();
 
-    require_once 'CRM/Core/BAO/UFJoin.php';
     $ufJoinParams = array(
       'entity_table' => 'civicrm_survey',
       'entity_id' => $this->_surveyId,
@@ -108,9 +104,6 @@ class CRM_Campaign_Form_Petition extends CRM_Campaign_Form_Survey {
       return;
     }
 
-    require_once 'CRM/Event/PseudoConstant.php';
-    require_once 'CRM/Core/BAO/UFGroup.php';
-    require_once 'CRM/Core/OptionGroup.php';
 
     $this->add('text', 'title', ts('Petition Title'), CRM_Core_DAO::getAttribute('CRM_Campaign_DAO_Survey', 'title'), TRUE);
 
@@ -123,7 +116,6 @@ class CRM_Campaign_Form_Petition extends CRM_Campaign_Form_Survey {
     $this->addWysiwyg('instructions', ts('Introduction'), $attributes['instructions']);
 
     // Campaign id
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     $campaigns = CRM_Campaign_BAO_Campaign::getCampaigns(CRM_Utils_Array::value('campaign_id', $this->_values));
     $this->add('select', 'campaign_id', ts('Campaign'), array('' => ts('- select -')) + $campaigns);
 
@@ -140,6 +132,13 @@ class CRM_Campaign_Form_Petition extends CRM_Campaign_Form_Survey {
       array(
         '' => ts('- select -')) + $customProfiles
     );
+    
+    // thank you title and text (html allowed in text)
+    $this->add('text', 'thankyou_title', ts('Thank-you Page Title'), CRM_Core_DAO::getAttribute('CRM_Campaign_DAO_Survey', 'thankyou_title'));
+    $this->addWysiwyg('thankyou_text', ts('Thank-you Message'), CRM_Core_DAO::getAttribute('CRM_Campaign_DAO_Survey', 'thankyou_text'));
+    
+    // bypass email confirmation?
+    $this->add('checkbox', 'bypass_confirm', ts('Bypass email confirmation'));
 
     // is active ?
     $this->add('checkbox', 'is_active', ts('Is Active?'));
@@ -196,12 +195,12 @@ class CRM_Campaign_Form_Petition extends CRM_Campaign_Form_Survey {
       $params['created_date'] = date('YmdHis');
     }
 
+    $params['bypass_confirm'] = CRM_Utils_Array::value('bypass_confirm', $params, 0);
     $params['is_active'] = CRM_Utils_Array::value('is_active', $params, 0);
     $params['is_default'] = CRM_Utils_Array::value('is_default', $params, 0);
 
     $surveyId = CRM_Campaign_BAO_Survey::create($params);
 
-    require_once 'CRM/Core/BAO/UFJoin.php';
 
     // also update the ProfileModule tables
     $ufJoinParams = array(

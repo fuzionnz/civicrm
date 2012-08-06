@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -42,7 +42,6 @@ class CRM_Member_Page_AJAX {
    * Function to setDefaults according to membership type
    */
   function getMemberTypeDefaults($config) {
-    require_once 'CRM/Utils/Type.php';
     if (!$_POST['mtype']) {
       $details['name'] = '';
       $details['auto_renew'] = '';
@@ -52,8 +51,6 @@ class CRM_Member_Page_AJAX {
       CRM_Utils_System::civiExit();
     }
     $memType = CRM_Utils_Type::escape($_POST['mtype'], 'Integer');
-
-
 
     $query = "SELECT name, minimum_fee AS total_amount, contribution_type_id, auto_renew 
 FROM    civicrm_membership_type
@@ -66,11 +63,9 @@ WHERE   id = %1";
         $details[$property] = $dao->$property;
       }
     }
-
+    $details['total_amount_numeric'] = $details['total_amount'];
     // fix the display of the monetary value, CRM-4038
-    require_once 'CRM/Utils/Money.php';
     $details['total_amount'] = CRM_Utils_Money::format($details['total_amount'], NULL, '%a');
-
     $options = array(ts('No auto-renew option'), ts('Give option, but not required'), ts('Auto-renew required '));
     $details['auto_renew'] = $options[$details['auto_renew']];
     echo json_encode($details);

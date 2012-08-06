@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -70,7 +70,7 @@ function &_initCURL($query, $url) {
   curl_setopt($curl, CURLOPT_SSLVERSION, 3);
 
   if (strtoupper(substr(@php_uname('s'), 0, 3)) === 'WIN') {
-    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'verifySSL'));
     curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
   }
   return $curl;

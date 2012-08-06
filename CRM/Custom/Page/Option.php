@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 
 /**
  * Create a page for displaying Custom Options.
@@ -76,7 +74,8 @@ class CRM_Custom_Page_Option extends CRM_Core_Page {
    *
    * @return array  array of action links that we need to display for the browse screen
    * @access public
-   */ function &actionLinks() {
+   */
+  function &actionLinks() {
     if (!isset(self::$_actionLinks)) {
       self::$_actionLinks = array(
         CRM_Core_Action::UPDATE => array(
@@ -227,7 +226,6 @@ ORDER BY weight, label
       "reset=1&action=browse&gid={$this->_gid}&fid={$this->_fid}"
     );
     $filter = "option_group_id = {$optionGroupID}";
-    require_once 'CRM/Utils/Weight.php';
     CRM_Utils_Weight::addOrder($customOption, 'CRM_Core_DAO_OptionValue',
       'id', $returnURL, $filter
     );
@@ -271,7 +269,6 @@ ORDER BY weight, label
    * @access public
    */
   function run() {
-    require_once 'CRM/Core/BAO/CustomField.php';
 
     // get the field id
     $this->_fid = CRM_Utils_Request::retrieve('fid', 'Positive',
@@ -321,7 +318,6 @@ ORDER BY weight, label
       $this->edit($action);
     }
     else {
-      require_once 'CRM/Core/BAO/OptionValue.php';
       $this->browse();
     }
     // Call the parents run method

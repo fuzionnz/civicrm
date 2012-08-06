@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -26,7 +26,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | eWAY Core Payment Module for CiviCRM version 4.1 & 1.9             |
+ | eWAY Core Payment Module for CiviCRM version 4.2 & 1.9             |
  +--------------------------------------------------------------------+
  | Licensed to CiviCRM under the Academic Free License version 3.0    |
  |                                                                    |
@@ -90,9 +90,6 @@
 
  -----------------------------------------------------------------------------------------------
  **/
-
-
-require_once 'CRM/Core/Payment.php';
 class CRM_Core_Payment_eWAY extends CRM_Core_Payment {
   # (not used, implicit in the API, might need to convert?)
   CONST CHARSET = 'UTF-8';
@@ -175,12 +172,12 @@ class CRM_Core_Payment_eWAY extends CRM_Core_Payment {
     }
 
     /*
-        //-------------------------------------------------------------                                                         
-        // NOTE: eWAY Doesn't use the following at the moment:                                                                  
-        //-------------------------------------------------------------                                                        
-       $creditCardType = $params['credit_card_type'];                                                                          
-       $currentcyID    = $params['currencyID'];                                                                                
-       $country        = $params['country'];                                                                                   
+        //-------------------------------------------------------------
+        // NOTE: eWAY Doesn't use the following at the moment:
+        //-------------------------------------------------------------
+       $creditCardType = $params['credit_card_type'];
+       $currentcyID    = $params['currencyID'];
+       $country        = $params['country'];
        */
 
 
@@ -387,12 +384,12 @@ class CRM_Core_Payment_eWAY extends CRM_Core_Payment {
       );
     }
 
-    /*      
+    /*
         //----------------------------------------------------------------------------------------------------
         // Test mode always returns trxn_id = 0 - so we fix that here
         //
         // NOTE: This code was taken from the AuthorizeNet payment processor, however it now appears
-        //       unecessary for the eWAY gateway - Left here in case it proves useful 
+        //       unecessary for the eWAY gateway - Left here in case it proves useful
         //----------------------------------------------------------------------------------------------------
        if ( $this->_mode == 'test' ) {
            $query             = "SELECT MAX(trxn_id) FROM civicrm_contribution WHERE trxn_id LIKE 'test%'";
@@ -430,7 +427,6 @@ class CRM_Core_Payment_eWAY extends CRM_Core_Payment {
    * @return bool                 True if ID exists, else false
    */
   function _checkDupe($invoiceId) {
-    require_once 'CRM/Contribute/DAO/Contribution.php';
     $contribution = new CRM_Contribute_DAO_Contribution();
     $contribution->invoice_id = $invoiceId;
     return $contribution->find();
@@ -508,8 +504,6 @@ class CRM_Core_Payment_eWAY extends CRM_Core_Payment {
     // Initialization call is required to use CiviCRM APIs.
     civicrm_initialize(TRUE);
 
-    require_once 'CRM/Utils/Mail.php';
-    require_once 'CRM/Core/BAO/Domain.php';
 
     list($fromName, $fromEmail) = CRM_Core_BAO_Domain::getNameAndEmail();
     $from = "$fromName <$fromEmail>";
@@ -526,13 +520,13 @@ TRXN sent back with response = '$p_trxn_back'.
 This is a ['$this->_mode'] transaction.
 
 
-Request XML = 
+Request XML =
 ---------------------------------------------------------------------------
 $p_request
 ---------------------------------------------------------------------------
 
 
-Response XML = 
+Response XML =
 ---------------------------------------------------------------------------
 $p_response
 ---------------------------------------------------------------------------

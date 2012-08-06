@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contact/DAO/GroupContact.php';
-require_once 'CRM/Contact/BAO/SubscriptionHistory.php';
 class CRM_Contact_BAO_GroupContact extends CRM_Contact_DAO_GroupContact {
 
   /**
@@ -141,7 +138,6 @@ class CRM_Contact_BAO_GroupContact extends CRM_Contact_DAO_GroupContact {
     $tracking = NULL
   ) {
 
-    require_once 'CRM/Utils/Hook.php';
 
     CRM_Utils_Hook::pre('create', 'GroupContact', $groupId, $contactIds);
 
@@ -157,13 +153,11 @@ class CRM_Contact_BAO_GroupContact extends CRM_Contact_DAO_GroupContact {
     // also reset the acl cache
     $config = CRM_Core_Config::singleton();
     if (!$config->doNotResetCache) {
-      require_once 'CRM/ACL/BAO/Cache.php';
       CRM_ACL_BAO_Cache::resetCache();
     }
 
     // reset the group contact cache for all group(s)
     // if this group is being used as a smart group
-    require_once 'CRM/Contact/BAO/GroupContactCache.php';
     CRM_Contact_BAO_GroupContactCache::remove();
 
     CRM_Utils_Hook::post('create', 'GroupContact', $groupId, $contactIds);
@@ -192,7 +186,6 @@ class CRM_Contact_BAO_GroupContact extends CRM_Contact_DAO_GroupContact {
       return array(0, 0, 0);
     }
 
-    require_once 'CRM/Utils/Hook.php';
 
     if ($status == 'Removed') {
       $op = 'delete';
@@ -207,7 +200,6 @@ class CRM_Contact_BAO_GroupContact extends CRM_Contact_DAO_GroupContact {
     $numContactsRemoved = 0;
     $numContactsNotRemoved = 0;
 
-    require_once 'CRM/Contact/DAO/Group.php';
     $group = new CRM_Contact_DAO_Group();
     $group->id = $groupId;
     $group->find(TRUE);
@@ -259,13 +251,11 @@ class CRM_Contact_BAO_GroupContact extends CRM_Contact_DAO_GroupContact {
     // also reset the acl cache
     $config = CRM_Core_Config::singleton();
     if (!$config->doNotResetCache) {
-      require_once 'CRM/ACL/BAO/Cache.php';
       CRM_ACL_BAO_Cache::resetCache();
     }
 
     // reset the group contact cache for all group(s)
     // if this group is being used as a smart group
-    require_once 'CRM/Contact/BAO/GroupContactCache.php';
     CRM_Contact_BAO_GroupContactCache::remove();
 
     CRM_Utils_Hook::post($op, 'GroupContact', $groupId, $contactIds);
@@ -285,7 +275,6 @@ class CRM_Contact_BAO_GroupContact extends CRM_Contact_DAO_GroupContact {
    */
   static
   function getGroupList($contactId = 0, $visibility = FALSE) {
-    require_once 'CRM/Contact/DAO/Group.php';
     $group = new CRM_Contact_DAO_Group();
 
     $select = $from = $where = '';
@@ -380,7 +369,6 @@ class CRM_Contact_BAO_GroupContact extends CRM_Contact_DAO_GroupContact {
       $permission = CRM_Core_Permission::whereClause(CRM_Core_Permission::VIEW, $tables, $whereTables);
     }
 
-    require_once 'CRM/Contact/BAO/Query.php';
     $from = CRM_Contact_BAO_Query::fromClause($tables);
 
     $where .= " AND $permission ";
@@ -478,7 +466,6 @@ class CRM_Contact_BAO_GroupContact extends CRM_Contact_DAO_GroupContact {
     }
 
     // make sure user has got permission to view this group
-    require_once 'CRM/Contact/BAO/Group.php';
     if (!CRM_Contact_BAO_Group::checkPermission($groupDAO->id, $groupDAO->title)) {
       return CRM_Core_Error::createError("You do not have permission to access group with id: $id");
     }
@@ -495,7 +482,6 @@ class CRM_Contact_BAO_GroupContact extends CRM_Contact_DAO_GroupContact {
 
     $params = array();
     if ($includeChildGroups) {
-      require_once 'CRM/Contact/BAO/GroupNesting.php';
       $groupIds = CRM_Contact_BAO_GroupNesting::getDescendentGroupIds(array($group->id));
     }
     else {
@@ -505,8 +491,6 @@ class CRM_Contact_BAO_GroupContact extends CRM_Contact_DAO_GroupContact {
       $params[] = array('group', 'IN', array($group->id => TRUE), 0, 0);
     }
 
-    require_once 'CRM/Core/BAO/Email.php';
-    require_once 'CRM/Contact/BAO/Contact.php';
     $tables = array(
       CRM_Core_BAO_Email::getTableName() => TRUE,
       CRM_Contact_BAO_Contact::getTableName() => TRUE,
@@ -691,14 +675,12 @@ AND civicrm_group_contact.group_id = %2";
 
   static
   function isContactInGroup($contactID, $groupID) {
-    require_once 'CRM/Utils/Rule.php';
     if (!CRM_Utils_Rule::positiveInteger($contactID) ||
       !CRM_Utils_Rule::positiveInteger($groupID)
     ) {
       return FALSE;
     }
 
-    require_once 'CRM/Contact/BAO/Query.php';
     $params = array(
       array('group', 'IN', array($groupID => 1), 0, 0),
       array('contact_id', '=', $contactID, 0, 0),

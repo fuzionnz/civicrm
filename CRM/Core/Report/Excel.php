@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -24,10 +24,6 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 */
-
-
-
-require_once 'CRM/Utils/String.php';
 class CRM_Core_Report_Excel {
 
   /**
@@ -76,8 +72,8 @@ class CRM_Core_Report_Excel {
       // doing it the moronic way of assembling a buffer
       $out = trim(substr($schema_insert, 0, -1)) . $add_character;
       if ($print) {
-        echo $out;
-      }
+          echo $out;
+        }
       else {
         $result .= $out;
       }
@@ -134,8 +130,8 @@ class CRM_Core_Report_Excel {
 
       $out = $schema_insert . $add_character;
       if ($print) {
-        echo $out;
-      }
+          echo $out;
+        }
       else {
         $result .= $out;
       }
@@ -153,7 +149,6 @@ class CRM_Core_Report_Excel {
   // end of the 'getTableCsv()' function
   function writeHTMLFile($fileName, &$header, &$rows, $titleHeader = NULL, $outputHeader = TRUE) {
     if ($outputHeader) {
-      require_once 'CRM/Utils/System.php';
       CRM_Utils_System::download(CRM_Utils_String::munge($fileName),
         'application/vnd.ms-excel',
         CRM_Core_DAO::$_nullObject,
@@ -186,7 +181,6 @@ class CRM_Core_Report_Excel {
 
   function writeCSVFile($fileName, &$header, &$rows, $titleHeader = NULL, $outputHeader = TRUE) {
     if ($outputHeader) {
-      require_once 'CRM/Utils/System.php';
       CRM_Utils_System::download(CRM_Utils_String::munge($fileName),
         'text/x-csv',
         CRM_Core_DAO::$_nullObject,

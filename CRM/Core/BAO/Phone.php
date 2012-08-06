@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,17 +28,48 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/Phone.php';
 
 /**
  * Class contains functions for phone
  */
 class CRM_Core_BAO_Phone extends CRM_Core_DAO_Phone {
+
+  /*
+   * Create phone address - note that the create function calls 'add' but
+   * has more business logic & calls the hooks
+   *
+   * @param array $params input parameters
+   */
+
+  static
+  function create($params) {
+    if (!empty($params['contact_id'])) {
+      CRM_Utils_Hook::pre('edit', 'Phone', $params['id'], $params);
+    }
+    else {
+      CRM_Utils_Hook::pre('create', 'Phone', NULL, $params);
+      $isEdit = FALSE;
+    }
+    if (is_numeric(CRM_Utils_Array::value('is_primary', $params)) ||
+      // if id is set & is_primary isn't we can assume no change
+      empty($params['id'])
+    ) {
+      CRM_Core_BAO_Block::handlePrimary($params, get_class());
+    }
+    $phone = self::add($params);
+
+    if (CRM_Utils_Array::value('id', $params)) {
+      CRM_Utils_Hook::post('edit', 'Phone', $phone->id, $phone);
+    }
+    else {
+      CRM_Utils_Hook::post('create', 'phone', $phone->id, $phone);
+    }
+    return $phone;
+  }
 
   /**
    * takes an associative array and adds phone
@@ -84,17 +115,23 @@ class CRM_Core_BAO_Phone extends CRM_Core_DAO_Phone {
    * @static
    */
   static
-  function allPhones($id, $updateBlankLocInfo = FALSE, $type = NULL) {
+  function allPhones($id, $updateBlankLocInfo = FALSE, $type = NULL, $filters = array(
+    )) {
     if (!$id) {
       return NULL;
     }
 
     $cond = NULL;
     if ($type) {
-      require_once 'CRM/Core/PseudoConstant.php';
       $phoneTypeId = array_search($type, CRM_Core_PseudoConstant::phoneType());
       if ($phoneTypeId) {
         $cond = " AND civicrm_phone.phone_type_id = $phoneTypeId";
+      }
+    }
+
+    if (!empty($filters) && is_array($filters)) {
+      foreach ($filters as $key => $value) {
+        $cond .= " AND " . $key . " = " . $value;
       }
     }
 
@@ -108,7 +145,13 @@ LEFT JOIN civicrm_location_type ON ( civicrm_phone.location_type_id = civicrm_lo
 WHERE     civicrm_contact.id = %1 $cond
 ORDER BY civicrm_phone.is_primary DESC,  phone_id ASC ";
 
-    $params = array(1 => array($id, 'Integer'));
+
+    $params = array(
+      1 => array(
+        $id,
+        'Integer',
+      ),
+    );
 
     $numbers = $values = array();
     $dao     = CRM_Core_DAO::executeQuery($query, $params);
@@ -151,7 +194,6 @@ ORDER BY civicrm_phone.is_primary DESC,  phone_id ASC ";
 
     $cond = NULL;
     if ($type) {
-      require_once 'CRM/Core/PseudoConstant.php';
       $phoneTypeId = array_search($type, CRM_Core_PseudoConstant::phoneType());
       if ($phoneTypeId) {
         $cond = " AND civicrm_phone.phone_type_id = $phoneTypeId";
@@ -170,9 +212,14 @@ AND   ph.id IN (loc.phone_id, loc.phone_2_id)
 AND   ltype.id = ph.location_type_id
 ORDER BY ph.is_primary DESC, phone_id ASC ";
 
-    $params  = array(1 => array($entityId, 'Integer'));
+    $params = array(
+      1 => array(
+        $entityId,
+        'Integer',
+      ),
+    );
     $numbers = array();
-    $dao     = CRM_Core_DAO::executeQuery($sql, $params);
+    $dao = CRM_Core_DAO::executeQuery($sql, $params);
     while ($dao->fetch()) {
       $numbers[$dao->phone_id] = array(
         'locationType' => $dao->locationType,
@@ -199,8 +246,17 @@ ORDER BY ph.is_primary DESC, phone_id ASC ";
       return;
     }
 
-    $tables = array('civicrm_phone', 'civicrm_mapping_field', 'civicrm_uf_field');
-    $params = array(1 => array($optionId, 'Integer'));
+    $tables = array(
+      'civicrm_phone',
+      'civicrm_mapping_field',
+      'civicrm_uf_field',
+    );
+    $params = array(
+      1 => array(
+        $optionId,
+        'Integer',
+      ),
+    );
 
     foreach ($tables as $tableName) {
       $query = "UPDATE `{$tableName}` SET `phone_type_id` = NULL WHERE `phone_type_id` = %1";

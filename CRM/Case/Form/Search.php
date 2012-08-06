@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -21,21 +21,17 @@
  | with this program; if not, contact CiviCRM LLC                     |
  | at info[AT]civicrm[DOT]org. If you have questions about the        |
  | GNU Affero General Public License or the licensing of CiviCRM,     |
- | see the CiviCRM license FAQ at http://civicrm.org/licensing   
+ | see the CiviCRM license FAQ at http://civicrm.org/licensing
  +--------------------------------------------------------------------+
 */
 
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Case/BAO/Case.php';
-require_once 'CRM/Case/Selector/Search.php';
-require_once 'CRM/Core/Selector/Controller.php';
 
 /**
  * This file is for Case search
@@ -144,7 +140,6 @@ class CRM_Case_Form_Search extends CRM_Core_Form {
     }
 
     //validate case configuration.
-    require_once 'CRM/Case/BAO/Case.php';
     $configured = CRM_Case_BAO_Case::isCaseConfigured();
     $this->assign('notConfigured', !$configured['configured']);
     if (!$configured['configured']) {
@@ -161,9 +156,9 @@ class CRM_Case_Form_Search extends CRM_Core_Form {
     $this->_done = FALSE;
     $this->defaults = array();
 
-    /* 
-         * we allow the controller to set force/reset externally, useful when we are being 
-         * driven by the wizard framework 
+    /*
+         * we allow the controller to set force/reset externally, useful when we are being
+         * driven by the wizard framework
          */
 
     $this->_reset   = CRM_Utils_Request::retrieve('reset', 'Boolean', CRM_Core_DAO::$_nullObject);
@@ -200,7 +195,6 @@ class CRM_Case_Form_Search extends CRM_Core_Form {
       );
     }
 
-    require_once 'CRM/Contact/BAO/Query.php';
 
     $this->_queryParams = CRM_Contact_BAO_Query::convertFormValues($this->_formValues);
     $selector = new CRM_Case_Selector_Search($this->_queryParams,
@@ -247,12 +241,11 @@ class CRM_Case_Form_Search extends CRM_Core_Form {
       CRM_Core_DAO::getAttribute('CRM_Contact_DAO_Contact', 'sort_name')
     );
 
-    require_once 'CRM/Case/BAO/Query.php';
     CRM_Case_BAO_Query::buildSearchForm($this);
 
-    /* 
-         * add form checkboxes for each row. This is needed out here to conform to QF protocol 
-         * of all elements being declared in builQuickForm 
+    /*
+         * add form checkboxes for each row. This is needed out here to conform to QF protocol
+         * of all elements being declared in builQuickForm
          */
 
     $rows = $this->get('rows');
@@ -276,10 +269,8 @@ class CRM_Case_Form_Search extends CRM_Core_Form {
 
       $total = $cancel = 0;
 
-      require_once 'CRM/Core/Permission.php';
       $permission = CRM_Core_Permission::getPermission();
 
-      require_once 'CRM/Case/Task.php';
       $tasks = array('' => ts('- actions -')) + CRM_Case_Task::permissionedTaskTitles($permission);
 
       if (CRM_Utils_Array::value('case_deleted', $this->_formValues)) {
@@ -369,10 +360,8 @@ class CRM_Case_Form_Search extends CRM_Core_Form {
     if (!CRM_Utils_Array::value('case_deleted', $this->_formValues)) {
       $this->_formValues['case_deleted'] = 0;
     }
-    require_once 'CRM/Core/BAO/CustomValue.php';
     CRM_Core_BAO_CustomValue::fixFieldValueOfTypeMemo($this->_formValues);
 
-    require_once 'CRM/Contact/BAO/Query.php';
     $this->_queryParams = CRM_Contact_BAO_Query::convertFormValues($this->_formValues);
 
     $this->set('formValues', $this->_formValues);
@@ -396,7 +385,6 @@ class CRM_Case_Form_Search extends CRM_Core_Form {
       );
     }
 
-    require_once 'CRM/Contact/BAO/Query.php';
     $this->_queryParams = CRM_Contact_BAO_Query::convertFormValues($this->_formValues);
 
     $selector = new CRM_Case_Selector_Search($this->_queryParams,
@@ -521,7 +509,6 @@ class CRM_Case_Form_Search extends CRM_Core_Form {
     if ($cid) {
       $cid = CRM_Utils_Type::escape($cid, 'Integer');
       if ($cid > 0) {
-        require_once 'CRM/Contact/BAO/Contact.php';
         $this->_formValues['contact_id'] = $cid;
         list($display, $image) = CRM_Contact_BAO_Contact::getDisplayAndImage($cid);
         $this->_defaults['sort_name'] = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $cid,
@@ -532,6 +519,7 @@ class CRM_Case_Form_Search extends CRM_Core_Form {
       }
     }
     else {
+        // First, if "all" is stored in the session, default to all cases, otherwise default to no selection.
       $session = CRM_Core_Session::singleton();
       if (CRM_Utils_Request::retrieve('all', 'Positive', $session)) {
         $this->_formValues['case_owner'] = 1;
@@ -542,12 +530,13 @@ class CRM_Case_Form_Search extends CRM_Core_Form {
         $this->_defaults['case_owner'] = 0;
       }
 
-      $caseOwner = CRM_Utils_Request::retrieve('case_owner', 'Boolean',
+      // Now if case_owner is set in the url/post, use that instead.
+      $caseOwner = CRM_Utils_Request::retrieve('case_owner', 'Positive',
         CRM_Core_DAO::$_nullObject
       );
       if ($caseOwner) {
-        $this->_formValues['case_owner'] = 2;
-        $this->_defaults['case_owner'] = 2;
+        $this->_formValues['case_owner'] = $caseOwner;
+        $this->_defaults['case_owner'] = $caseOwner;
       }
     }
   }

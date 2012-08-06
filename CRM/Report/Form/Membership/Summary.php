@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
-require_once 'CRM/Member/PseudoConstant.php';
 class CRM_Report_Form_Membership_Summary extends CRM_Report_Form {
 
   protected $_summary = NULL;
@@ -330,7 +329,6 @@ LEFT  JOIN civicrm_contribution  {$this->_aliases['civicrm_contribution']}
         $row[$key] = $dao->$key;
       }
 
-      require_once 'CRM/Utils/OpenFlashChart.php';
       if (CRM_Utils_Array::value('charts', $this->_params) &&
         $row['civicrm_contribution_receive_date_subtotal']
       ) {
@@ -348,7 +346,6 @@ LEFT  JOIN civicrm_contribution  {$this->_aliases['civicrm_contribution']}
     $this->assign_by_ref('rows', $rows);
     $this->assign('statistics', $this->statistics($rows));
 
-    require_once 'CRM/Utils/OpenFlashChart.php';
     if (CRM_Utils_Array::value('charts', $this->_params)) {
       foreach (array(
         'receive_date', $this->_interval, 'value') as $ignore) {
@@ -356,7 +353,6 @@ LEFT  JOIN civicrm_contribution  {$this->_aliases['civicrm_contribution']}
       }
 
       // build chart.
-      require_once 'CRM/Utils/OpenFlashChart.php';
       CRM_Utils_OpenFlashChart::chart($graphRows, $this->_params['charts'], $this->_interval);
     }
     parent::endPostProcess();
@@ -416,7 +412,8 @@ LEFT  JOIN civicrm_contribution  {$this->_aliases['civicrm_contribution']}
         array_key_exists('civicrm_contact_id', $row)
       ) {
         $url = CRM_Utils_System::url('civicrm/report/member/detail',
-          'reset=1&force=1&id_op=eq&id_value=' . $row['civicrm_contact_id']
+          'reset=1&force=1&id_op=eq&id_value=' . $row['civicrm_contact_id'],
+          $this->_absoluteUrl
         );
         $rows[$rowNum]['civicrm_contact_sort_name'] = "<a href='$url'>" . $row["civicrm_contact_sort_name"] . '</a>';
         $entryFound = TRUE;

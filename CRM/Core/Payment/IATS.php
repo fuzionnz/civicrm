@@ -1,10 +1,9 @@
 <?php
-
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,12 +29,10 @@
  *
  * @package CRM
  * @author Alan Dixon
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Payment.php';
 class CRM_Core_Payment_IATS extends CRM_Core_Payment {
   # (not used, implicit in the API, might need to convert?)
   CONST CHARSET = 'UFT-8';
@@ -319,11 +316,11 @@ class CRM_Core_Payment_IATS extends CRM_Core_Payment {
     $error = array();
 
     if (empty($this->_paymentProcessor['signature'])) {
-      $error[] = ts('Agent Code is not set in the Administer CiviCRM &raquo; Payment Processor.');
+      $error[] = ts('Agent Code is not set in the Administer CiviCRM &raquo; System Settings &raquo; Payment Processors.');
     }
 
     if (empty($this->_paymentProcessor['password'])) {
-      $error[] = ts('Password is not set in the Administer CiviCRM &raquo; Payment Processor.');
+      $error[] = ts('Password is not set in the Administer CiviCRM &raquo; System Settings &raquo; Payment Processors.');
     }
 
     if (!empty($error)) {

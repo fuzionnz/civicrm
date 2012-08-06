@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page/Basic.php';
 
 /**
  * Page for displaying list of Premiums
@@ -137,7 +135,6 @@ class CRM_Contribute_Page_Premium extends CRM_Core_Page_Basic {
   function browse() {
     // get all custom groups sorted by weight
     $premiums = array();
-    require_once 'CRM/Contribute/DAO/Product.php';
     $pageID = CRM_Utils_Request::retrieve('id', 'Positive',
       $this, FALSE, 0
     );
@@ -152,7 +149,6 @@ class CRM_Contribute_Page_Premium extends CRM_Core_Page_Basic {
       return;
     }
 
-    require_once 'CRM/Contribute/DAO/PremiumsProduct.php';
     $dao = new CRM_Contribute_DAO_PremiumsProduct();
     $dao->premiums_id = $premiumID;
     $dao->orderBy('weight');
@@ -175,7 +171,6 @@ class CRM_Contribute_Page_Premium extends CRM_Core_Page_Basic {
         );
       }
     }
-    require_once 'CRM/Contribute/PseudoConstant.php';
 
     if (count(CRM_Contribute_PseudoConstant::products($pageID)) == 0) {
       $this->assign('products', FALSE);
@@ -187,7 +182,6 @@ class CRM_Contribute_Page_Premium extends CRM_Core_Page_Basic {
     // Add order changing widget to selector
     $returnURL = CRM_Utils_System::url('civicrm/admin/contribute/premium', "reset=1&action=update&id={$pageID}");
     $filter = "premiums_id = {$premiumID}";
-    require_once 'CRM/Utils/Weight.php';
     CRM_Utils_Weight::addOrder($premiums, 'CRM_Contribute_DAO_PremiumsProduct',
       'id', $returnURL, $filter
     );

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,21 +28,12 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
 require_once 'Mail/mime.php';
-require_once 'CRM/Utils/Mail.php';
-
-require_once 'CRM/Mailing/Event/DAO/Unsubscribe.php';
-require_once 'CRM/Mailing/BAO/Job.php';
-require_once 'CRM/Mailing/BAO/Mailing.php';
-require_once 'CRM/Mailing/DAO/Group.php';
-require_once 'CRM/Contact/BAO/Group.php';
-require_once 'CRM/Contact/BAO/GroupContact.php';
-require_once 'CRM/Core/BAO/Domain.php';
 class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscribe {
 
   /**
@@ -68,17 +59,37 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
     if (!$q) {
       return FALSE;
     }
-    require_once 'CRM/Core/Transaction.php';
-    $transaction         = new CRM_Core_Transaction();
-    $contact             = new CRM_Contact_BAO_Contact();
-    $contact->id         = $q->contact_id;
-    $contact->is_opt_out = TRUE;
-    $contact->save();
+
+    $transaction = new CRM_Core_Transaction();
+
+    $now = date('YmdHis');
+    if (CRM_Core_BAO_Email::isMultipleBulkMail()) {
+      $email = new CRM_Core_BAO_Email();
+      $email->id = $q->email_id;
+      if ($email->find(TRUE)) {
+        $sql = "
+UPDATE civicrm_email
+SET    on_hold   = 2,
+       hold_date = %1
+WHERE  email     = %2
+";
+        $sqlParams = array(1 => array($now, 'Timestamp'),
+          2 => array($email->email, 'String'),
+        );
+        CRM_Core_DAO::executeQuery($sql, $sqlParams);
+      }
+    }
+    else {
+      $contact             = new CRM_Contact_BAO_Contact();
+      $contact->id         = $q->contact_id;
+      $contact->is_opt_out = TRUE;
+      $contact->save();
+    }
 
     $ue                  = new CRM_Mailing_Event_BAO_Unsubscribe();
     $ue->event_queue_id  = $queue_id;
     $ue->org_unsubscribe = 1;
-    $ue->time_stamp      = date('YmdHis');
+    $ue->time_stamp      = $now;
     $ue->save();
 
     $shParams = array(
@@ -117,15 +128,19 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
     }
 
     $contact_id = $q->contact_id;
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
-    $do      = new CRM_Core_DAO();
-    $mg      = CRM_Mailing_DAO_Group::getTableName();
-    $job     = CRM_Mailing_BAO_Job::getTableName();
-    $mailing = CRM_Mailing_BAO_Mailing::getTableName();
-    $group   = CRM_Contact_BAO_Group::getTableName();
-    $gc      = CRM_Contact_BAO_GroupContact::getTableName();
+    $do            = new CRM_Core_DAO();
+    $mgObject      = new CRM_Mailing_DAO_Group();
+    $mg            = $mgObject->getTableName();
+    $jobObject     = new CRM_Mailing_BAO_Job();
+    $job           = $jobObject->getTableName();
+    $mailingObject = new CRM_Mailing_BAO_Mailing();
+    $mailing       = $mailingObject->getTableName();
+    $groupObject   = new CRM_Contact_BAO_Group();
+    $group         = $groupObject->getTableName();
+    $gcObject      = new CRM_Contact_BAO_GroupContact();
+    $gc            = $gcObject->getTableName();
 
     //We Need the mailing Id for the hook...
     $do->query("SELECT $job.mailing_id as mailing_id 
@@ -194,7 +209,6 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
     }
 
     //Pass the groups to be unsubscribed from through a hook.
-    require_once 'CRM/Utils/Hook.php';
     $group_ids = array_keys($groups);
     $base_group_ids = array_keys($base_groups);
     CRM_Utils_Hook::unsubscribeGroups('unsubscribe', $mailing_id, $contact_id, $group_ids, $base_group_ids);
@@ -281,11 +295,16 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
     $config = CRM_Core_Config::singleton();
     $domain = CRM_Core_BAO_Domain::getDomain();
 
-    $jobTable     = CRM_Mailing_BAO_Job::getTableName();
-    $mailingTable = CRM_Mailing_DAO_Mailing::getTableName();
-    $contacts     = CRM_Contact_DAO_Contact::getTableName();
-    $email        = CRM_Core_DAO_Email::getTableName();
-    $queue        = CRM_Mailing_Event_BAO_Queue::getTableName();
+    $jobObject      = new CRM_Mailing_BAO_Job();
+    $jobTable       = $jobObject->getTableName();
+    $mailingObject  = new CRM_Mailing_DAO_Mailing();
+    $mailingTable   = $mailingObject->getTableName();
+    $contactsObject = new CRM_Contact_DAO_Contact();
+    $contacts       = $contactsObject->getTableName();
+    $emailObject    = new CRM_Core_DAO_Email();
+    $email          = $emailObject->getTableName();
+    $queueObject    = new CRM_Mailing_Event_BAO_Queue();
+    $queue          = $queueObject->getTableName();
 
     //get the default domain email address.
     list($domainEmailName, $domainEmailAddress) = CRM_Core_BAO_Domain::getNameAndEmail();
@@ -343,7 +362,6 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
     $bao->body_text = $text;
     $bao->body_html = $html;
     $tokens         = $bao->getTokens();
-    require_once 'CRM/Utils/Token.php';
     if ($eq->format == 'HTML' || $eq->format == 'Both') {
       $html = CRM_Utils_Token::replaceDomainTokens($html, $domain, TRUE, $tokens['html']);
       $html = CRM_Utils_Token::replaceUnsubscribeTokens($html, $domain, $groups, TRUE, $eq->contact_id, $eq->hash);
@@ -359,7 +377,6 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
       $message->setTxtBody($text);
     }
 
-    require_once 'CRM/Core/BAO/MailSettings.php';
     $emailDomain = CRM_Core_BAO_MailSettings::defaultDomain();
 
     $headers = array(
@@ -369,6 +386,7 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
       'Reply-To' => "do-not-reply@$emailDomain",
       'Return-Path' => "do-not-reply@$emailDomain",
     );
+    CRM_Mailing_BAO_Mailing::addMessageIdHeader($headers, 'u', $job, $queue_id, $eq->hash);
 
     $b = CRM_Utils_Mail::setMimeParams($message);
     $h = &$message->headers($headers);
@@ -396,14 +414,17 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
    * @static
    */
   public static function getTotalCount($mailing_id, $job_id = NULL,
-    $is_distinct = FALSE
+    $is_distinct = FALSE, $org_unsubscribe = NULL
   ) {
     $dao = new CRM_Core_DAO();
 
-    $unsub   = self::getTableName();
-    $queue   = CRM_Mailing_Event_BAO_Queue::getTableName();
-    $mailing = CRM_Mailing_BAO_Mailing::getTableName();
-    $job     = CRM_Mailing_BAO_Job::getTableName();
+    $unsub         = self::$_tableName;
+    $queueObject   = new CRM_Mailing_Event_BAO_Queue();
+    $queue         = $queueObject->getTableName();
+    $mailingObject = new CRM_Mailing_BAO_Mailing();
+    $mailing       = $mailingObject->getTableName();
+    $jobObject     = new CRM_Mailing_BAO_Job();
+    $job           = $jobObject->getTableName();
 
     $query = "
             SELECT      COUNT($unsub.id) as unsubs
@@ -419,6 +440,10 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
 
     if (!empty($job_id)) {
       $query .= " AND $job.id = " . CRM_Utils_Type::escape($job_id, 'Integer');
+    }
+
+    if ($org_unsubscribe !== NULL) {
+      $query .= " AND $unsub.org_unsubscribe = " . ($org_unsubscribe ? 0 : 1);
     }
 
     if ($is_distinct) {
@@ -455,12 +480,17 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
 
     $dao = new CRM_Core_Dao();
 
-    $unsub   = self::getTableName();
-    $queue   = CRM_Mailing_Event_BAO_Queue::getTableName();
-    $mailing = CRM_Mailing_BAO_Mailing::getTableName();
-    $job     = CRM_Mailing_BAO_Job::getTableName();
-    $contact = CRM_Contact_BAO_Contact::getTableName();
-    $email   = CRM_Core_BAO_Email::getTableName();
+    $unsub         = self::$_tableName;
+    $queueObject   = new CRM_Mailing_Event_BAO_Queue();
+    $queue         = $queueObject->getTableName();
+    $mailingObject = new CRM_Mailing_BAO_Mailing();
+    $mailing       = $mailingObject->getTableName();
+    $jobObject     = new CRM_Mailing_BAO_Job();
+    $job           = $jobObject->getTableName();
+    $contactObject = new CRM_Contact_BAO_Contact();
+    $contact       = $contactObject->getTableName();
+    $emailObject   = new CRM_Core_BAO_Email();
+    $email         = $emailObject->getTableName();
 
     $query = "
             SELECT      $contact.display_name as display_name,

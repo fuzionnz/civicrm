@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 class CRM_Contact_Page_View_GroupContact extends CRM_Core_Page {
 
   /**
@@ -93,7 +91,6 @@ class CRM_Contact_Page_View_GroupContact extends CRM_Core_Page {
     $this->assign('contactId', $this->_contactId);
 
     // check logged in url permission
-    require_once 'CRM/Contact/Page/View.php';
     CRM_Contact_Page_View::checkUserPermission($this);
 
     $this->_action = CRM_Utils_Request::retrieve('action', 'String', $this, FALSE, 'browse');
@@ -111,7 +108,6 @@ class CRM_Contact_Page_View_GroupContact extends CRM_Core_Page {
   function run() {
     $this->preProcess();
 
-    require_once 'CRM/Contact/BAO/Contact.php';
     $displayName = CRM_Contact_BAO_Contact::displayName($this->_contactId);
     $this->assign('displayName', $displayName);
 
@@ -166,7 +162,6 @@ class CRM_Contact_Page_View_GroupContact extends CRM_Core_Page {
     $groupNum = CRM_Contact_BAO_GroupContact::getContactGroup($this->_contactId, 'Added',
       NULL, TRUE, TRUE
     );
-    require_once 'CRM/Core/BAO/Setting.php';
     if ($groupNum == 1 &&
       $groupStatus == 'Removed' &&
       CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::MULTISITE_PREFERENCES_NAME,

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -90,12 +90,12 @@ WHERE     civicrm_contact.id = %1";
 
     $cond = NULL;
     if ($type) {
-      $cond = " AND civicrm_phone.phone_type = '$type'";
+      $cond = " AND civicrm_phone.phone_type_id = '$type'";
     }
 
 
     $sql = "
-   SELECT civicrm_contact.display_name, civicrm_phone.phone
+   SELECT civicrm_contact.display_name, civicrm_phone.phone, civicrm_contact.do_not_sms
      FROM civicrm_contact
 LEFT JOIN civicrm_phone ON ( civicrm_phone.contact_id = civicrm_contact.id )
     WHERE civicrm_phone.is_primary = 1
@@ -105,9 +105,9 @@ LEFT JOIN civicrm_phone ON ( civicrm_phone.contact_id = civicrm_contact.id )
     $params = array(1 => array($id, 'Integer'));
     $dao = CRM_Core_DAO::executeQuery($sql, $params);
     if ($dao->fetch()) {
-      return array($dao->display_name, $dao->phone);
+      return array($dao->display_name, $dao->phone, $dao->do_not_sms);
     }
-    return array(NULL, NULL);
+    return array(NULL, NULL, NULL);
   }
 
   /**
@@ -192,7 +192,6 @@ AND civicrm_contact.id IN $idString ";
       $location['displayAddress'] = str_replace('<br />', ', ', $address);
       $location['url'] = CRM_Utils_System::url('civicrm/contact/view', 'reset=1&cid=' . $dao->contact_id);
       $location['location_type'] = $dao->location_type;
-      require_once 'CRM/Contact/BAO/Contact/Utils.php';
       $location['image'] = CRM_Contact_BAO_Contact_Utils::getImage(isset($dao->contact_sub_type) ?
         $dao->contact_sub_type : $dao->contact_type, $imageUrlOnly, $dao->contact_id
       );

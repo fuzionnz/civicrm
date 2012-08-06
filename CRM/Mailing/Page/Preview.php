@@ -1,10 +1,9 @@
 <?php
-
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 
 /**
  * a page for mailing preview
@@ -47,7 +44,6 @@ class CRM_Mailing_Page_Preview extends CRM_Core_Page {
    * @return void
    */
   function run() {
-    require_once 'CRM/Mailing/BAO/Mailing.php';
 
     $session = CRM_Core_Session::singleton();
 
@@ -75,15 +71,7 @@ class CRM_Mailing_Page_Preview extends CRM_Core_Page {
 
     CRM_Mailing_BAO_Mailing::tokenReplace($mailing);
 
-    if (defined('CIVICRM_MAIL_SMARTY') &&
-      CIVICRM_MAIL_SMARTY
-    ) {
-      require_once 'CRM/Core/Smarty/resources/String.php';
-      civicrm_smarty_register_string_resource();
-    }
-
     // get and format attachments
-    require_once 'CRM/Core/BAO/File.php';
     $attachments = &CRM_Core_BAO_File::getEntityFile('civicrm_mailing',
       $mailing->id
     );
@@ -92,7 +80,6 @@ class CRM_Mailing_Page_Preview extends CRM_Core_Page {
     $returnProperties = $mailing->getReturnProperties();
     $params = array('contact_id' => $session->get('userID'));
 
-    require_once 'CRM/Utils/Token.php';
     $details = CRM_Utils_Token::getTokenDetails($params,
       $returnProperties,
       TRUE, TRUE, NULL,

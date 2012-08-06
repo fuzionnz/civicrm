@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -36,8 +36,6 @@
 /**
  * Files required
  */
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Campaign/BAO/Survey.php';
 class CRM_Campaign_Form_Gotv extends CRM_Core_Form {
 
   /**
@@ -89,7 +87,6 @@ class CRM_Campaign_Form_Gotv extends CRM_Core_Form {
     $this->assign('surveyTitle', $surveyTitle);
 
     //append breadcrumb to survey dashboard.
-    require_once 'CRM/Campaign/BAO/Campaign.php';
     if (CRM_Campaign_BAO_Campaign::accessCampaign()) {
       $url = CRM_Utils_System::url('civicrm/campaign', 'reset=1&subPage=survey');
       CRM_Utils_System::appendBreadCrumb(array(array('title' => ts('Survey(s)'), 'url' => $url)));
@@ -112,7 +109,6 @@ class CRM_Campaign_Form_Gotv extends CRM_Core_Form {
     }
 
     //build common search form.
-    require_once 'CRM/Campaign/BAO/Query.php';
     CRM_Campaign_BAO_Query::buildSearchForm($this);
 
     //build the array of all search params.
@@ -141,7 +137,6 @@ class CRM_Campaign_Form_Gotv extends CRM_Core_Form {
         CRM_Core_DAO::$_nullObject, FALSE, $userId
       );
 
-      require_once 'CRM/Contact/BAO/Contact.php';
       $defaults['survey_interviewer_id'] = $cid;
       $defaults['survey_interviewer_name'] = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
         $cid,
@@ -170,7 +165,6 @@ class CRM_Campaign_Form_Gotv extends CRM_Core_Form {
       $errorMessages[] = ts('You are not authorized to access this page.');
     }
 
-    require_once 'CRM/Campaign/BAO/Survey.php';
     $surveys = CRM_Campaign_BAO_Survey::getSurveys();
     if (empty($surveys)) {
       $errorMessages[] = ts("Oops, It looks like there is no survey created. <a href='%1'>Click here to create new.</a>", array(1 => CRM_Utils_System::url('civicrm/survey/add', 'reset=1&action=add')));

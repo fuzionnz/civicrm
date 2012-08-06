@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/Setting.php';
 
 /**
  * BAO object for civicrm_setting table. This table is used to store civicrm settings that are not used
@@ -60,7 +58,6 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     NAVIGATION_NAME = 'Navigation Menu',
     SYSTEM_PREFERENCES_NAME = 'CiviCRM Preferences',
     URL_PREFERENCES_NAME = 'URL Preferences';
-
   static $_cache = NULL;
 
   /**
@@ -92,7 +89,6 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
       !isset(self::$_cache[$cacheKey])
     ) {
       // check in civi cache if present (typically memcache)
-      require_once 'CRM/Utils/Cache.php';
       $globalCache = CRM_Utils_Cache::singleton();
       $result = $globalCache->get($cacheKey);
       if ($result) {
@@ -117,7 +113,6 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
 
     self::$_cache[$cacheKey] = $values;
 
-    require_once 'CRM/Utils/Cache.php';
     $globalCache = CRM_Utils_Cache::singleton();
     $result = $globalCache->set($cacheKey, $values);
 
@@ -170,12 +165,12 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     $contactID    = NULL
   ) {
 
-    // if both group and name are defined, check if over-ridden by the admin
+    global $civicrm_setting;
     if ($group &&
       $name &&
-      defined("{$group}.{$name}")
+      isset($civicrm_setting[$group][$name])
     ) {
-      return constant("{$group}.{$name}");
+      return $civicrm_setting[$group][$name];
     }
 
     $cacheKey = self::inCache($group, $name, $componentID, $contactID, TRUE);
@@ -225,11 +220,11 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     $dao = self::dao($group, $name, $componentID, $contactID);
     $dao->find(TRUE);
 
-    if ($value) {
-      $dao->value = serialize($value);
+    if (CRM_Utils_System::isNull($value)) {
+      $dao->value = 'null';
     }
     else {
-      $dao->value = 'null';
+      $dao->value = serialize($value);
     }
 
     $dao->created_date = date('Ymdhis');
@@ -306,7 +301,6 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
   ) {
     $optionValue = self::getItem($group, $name);
 
-    require_once 'CRM/Core/OptionGroup.php';
     $groupValues = CRM_Core_OptionGroup::values($name, FALSE, FALSE, $localize, $condition, $returnField);
 
     //enabled name => label require for new contact edit form, CRM-4605
@@ -328,7 +322,6 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     }
 
     if ($optionValue && !empty($groupValues)) {
-      require_once 'CRM/Core/BAO/CustomOption.php';
       $dbValues = explode(CRM_Core_DAO::VALUE_SEPARATOR,
         substr($optionValue, 1, -1)
       );
@@ -360,7 +353,6 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
       $optionValue = NULL;
     }
     elseif (is_array($value)) {
-      require_once 'CRM/Core/OptionGroup.php';
       $groupValues = CRM_Core_OptionGroup::values($name, FALSE, FALSE, FALSE, NULL, $keyField);
 
       $cbValues = array();
@@ -453,7 +445,6 @@ OR       group_name = %2 )
 
   static
   function storeDirectoryOrURLPreferences(&$params, $group) {
-    require_once 'CRM/Utils/File.php';
     foreach ($params as $name => $value) {
       // always try to store relative directory or url from CMS root
       $value = ($group == self::DIRECTORY_PREFERENCES_NAME) ? CRM_Utils_File::relativeDirectory($value) : CRM_Utils_System::relativeURL($value);
@@ -470,7 +461,15 @@ OR       group_name = %2 )
     if ($setInConfig) {
       $config = CRM_Core_Config::singleton();
     }
-
+    
+    $isJoomla = (defined('CIVICRM_UF') && CIVICRM_UF == 'Joomla') ? TRUE : FALSE;
+    
+    if (CRM_Core_Config::isUpgradeMode() && !$isJoomla) {
+      $currentVer = CRM_Core_BAO_Domain::version();
+      if (version_compare($currentVer, '4.1.alpha1') < 0) {
+        return;
+      }
+    }
     $sql = "
 SELECT name, group_name, value
 FROM   civicrm_setting
@@ -494,6 +493,10 @@ OR       group_name = %2 )
     if (is_a($dao, 'DB_Error')) {
       if (CRM_Core_Config::isUpgradeMode()) {
         // seems like this is a 4.0 -> 4.1 upgrade, so we suppress this error and continue
+        // hack to set the resource base url so that js/ css etc is loaded correctly
+        if ($isJoomla) {
+          $params['userFrameworkResourceURL'] = CRM_Utils_File::addTrailingSlash(CIVICRM_UF_BASEURL, '/') . str_replace('administrator', '', CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionValue', 'userFrameworkResourceURL', 'value', 'name'));
+        }
         return;
       }
       else {
@@ -503,7 +506,6 @@ OR       group_name = %2 )
     }
 
 
-    require_once 'CRM/Utils/File.php';
     while ($dao->fetch()) {
       $value = NULL;
       // overwrite value from settings file

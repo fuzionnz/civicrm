@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -45,9 +45,7 @@ class CRM_Utils_Mail_EmailProcessor {
    * @return boolean always returns true (for the api). at a later stage we should
    *                 fix this to return true on success / false on failure etc
    */
-  static
-  function processBounces() {
-    require_once 'CRM/Core/DAO/MailSettings.php';
+  static function processBounces() {
     $dao             = new CRM_Core_DAO_MailSettings;
     $dao->domain_id  = CRM_Core_Config::domainID();
     $dao->is_default = TRUE;
@@ -69,8 +67,7 @@ class CRM_Utils_Mail_EmailProcessor {
    *
    * @return void
    */
-  static
-  function cleanupDir($dir, $age = 5184000) {
+  static function cleanupDir($dir, $age = 5184000) {
     // return early if we can’t read/write the dir
     if (!is_writable($dir) or !is_readable($dir) or !is_dir($dir)) {
       return;
@@ -96,9 +93,7 @@ class CRM_Utils_Mail_EmailProcessor {
    *
    * @return void
    */
-  static
-  function processActivities() {
-    require_once 'CRM/Core/DAO/MailSettings.php';
+  static function processActivities() {
     $dao             = new CRM_Core_DAO_MailSettings;
     $dao->domain_id  = CRM_Core_Config::domainID();
     $dao->is_default = FALSE;
@@ -121,9 +116,7 @@ class CRM_Utils_Mail_EmailProcessor {
    *
    * @return void
    */
-  static
-  function process($civiMail = TRUE) {
-    require_once 'CRM/Core/DAO/MailSettings.php';
+  static function process($civiMail = TRUE) {
     $dao = new CRM_Core_DAO_MailSettings;
     $dao->domain_id = CRM_Core_Config::domainID();
     $dao->find();
@@ -133,16 +126,19 @@ class CRM_Utils_Mail_EmailProcessor {
     }
   }
 
-  static
-  function _process($civiMail, $dao) {
+  static function _process($civiMail, $dao) {
     // 0 = activities; 1 = bounce;
     $usedfor = $dao->is_default;
 
-    require_once 'CRM/Core/OptionGroup.php';
-    $emailActivityTypeId = (defined('EMAIL_ACTIVITY_TYPE_ID') && EMAIL_ACTIVITY_TYPE_ID) ? EMAIL_ACTIVITY_TYPE_ID : CRM_Core_OptionGroup::getValue('activity_type',
-      'Inbound Email',
-      'name'
-    );
+    $emailActivityTypeId =
+      (defined('EMAIL_ACTIVITY_TYPE_ID') && EMAIL_ACTIVITY_TYPE_ID) ?
+      EMAIL_ACTIVITY_TYPE_ID :
+      CRM_Core_OptionGroup::getValue(
+        'activity_type',
+        'Inbound Email',
+        'name'
+      );
+
     if (!$emailActivityTypeId) {
       CRM_Core_Error::fatal(ts('Could not find a valid Activity Type ID for Inbound Email'));
     }
@@ -164,7 +160,6 @@ class CRM_Utils_Mail_EmailProcessor {
     $rpRegex = '/Return-Path: ' . preg_quote($dao->localpart) . '(b)' . $twoDigitString . '([0-9a-f]{16})@' . preg_quote($dao->domain) . '/';
 
     // retrieve the emails
-    require_once 'CRM/Mailing/MailStore.php';
     try {
       $store = CRM_Mailing_MailStore::getStore($dao->name);
     }
@@ -175,7 +170,6 @@ class CRM_Utils_Mail_EmailProcessor {
       CRM_Core_Error::fatal($message);
     }
 
-    require_once 'CRM/Utils/Hook.php';
 
     // process fifty at a time, CRM-4002
     while ($mails = $store->fetchNext(MAIL_BATCH_SIZE)) {
@@ -217,13 +211,12 @@ class CRM_Utils_Mail_EmailProcessor {
         // preseve backward compatibility
         if ($usedfor == 0 || !$civiMail) {
           // if its the activities that needs to be processed ..
-          require_once 'CRM/Utils/Mail/Incoming.php';
           $mailParams = CRM_Utils_Mail_Incoming::parseMailingObject($mail);
 
-          civicrm_api_include('activity', FALSE, 2);
+          require_once 'api/v2/Activity.php';
           $params            = _civicrm_activity_buildmailparams($mailParams, $emailActivityTypeId);
           $params['version'] = 2;
-          $result            = civicrm_api('activity', 'create', $params);
+          $result            = civicrm_activity_create($params);
 
           if ($result['is_error']) {
             $matches = FALSE;
@@ -277,6 +270,23 @@ class CRM_Utils_Mail_EmailProcessor {
                   }
                 }
               }
+
+              if ($text == NULL &&
+                $mail->subject == "Delivery Status Notification (Failure)"
+              ) {
+                // Exchange error - CRM-9361
+                foreach ($mail->body->getParts() as $part) {
+                  if ($part instanceof ezcMailDeliveryStatus) {
+                    foreach ($part->recipients as $rec) {
+                      if ($rec["Status"] == "5.1.1") {
+                        $text = "Delivery to the following recipients failed";
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+
               $params = array(
                 'job_id' => $job,
                 'event_queue_id' => $queue,
@@ -296,7 +306,7 @@ class CRM_Utils_Mail_EmailProcessor {
                 'hash' => $hash,
                 'version' => 3,
               );
-              civicrm_api('Mailing', 'event_confirm', $params);
+              $result = civicrm_api('Mailing', 'event_confirm', $params);
               break;
 
             case 'o':
@@ -360,7 +370,12 @@ class CRM_Utils_Mail_EmailProcessor {
               break;
           }
 
-          CRM_Utils_Hook::emailProcessor('mailing', $params, $mail, $result, $action);
+          if ($result['is_error']) {
+            echo "Failed Processing: {$mail->subject}, Action: $action, Job ID: $job, Queue ID: $queue, Hash: $hash. Reason: {$result['error_message']}\n";
+          }
+          else {
+            CRM_Utils_Hook::emailProcessor('mailing', $params, $mail, $result, $action);
+          }
         }
 
         $store->markProcessed($key);

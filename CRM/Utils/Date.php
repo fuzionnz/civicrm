@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -745,14 +745,40 @@ class CRM_Utils_Date {
   }
 
   /**
+   * Function to get start date and end from
+   * the given relative term and unit
+   *
+   * @param  date  $relative  eg: term.unit
+   *
+   * @return array start date, end date
+   * @static
+   */
+  static
+  function getFromTo($relative, $from, $to) {
+    if ($relative) {
+      list($term, $unit) = explode('.', $relative);
+      $dateRange = self::relativeToAbsolute($term, $unit);
+      $from = $dateRange['from'];
+      //Take only Date Part, Sometime Time part is also present in 'to'
+      $to = substr($dateRange['to'], 0, 8);
+    }
+
+    $from = self::processDate($from);
+    $to = self::processDate($to, '235959');
+
+    return array($from, $to);
+  }
+
+  /**
    * Function to calculate Age in Years if greater than one year else in months
    *
    * @param date $birthDate Birth Date
    *
    * @return int array $results contains years or months
    * @access public
+   * @static
    */
-  public function calculateAge($birthDate) {
+  static public function calculateAge($birthDate) {
     $results = array();
     $formatedBirthDate = CRM_Utils_Date::customFormat($birthDate, '%Y-%m-%d');
 
@@ -811,7 +837,7 @@ class CRM_Utils_Date {
    * @return array $result contains new date with added interval
    * @access public
    */
-  function intervalAdd($unit, $interval, $date, $dontCareTime = FALSE) {
+  static function intervalAdd($unit, $interval, $date, $dontCareTime = FALSE) {
     if (is_array($date)) {
       $hour   = CRM_Utils_Array::value('H', $date);
       $minute = CRM_Utils_Array::value('i', $date);
@@ -868,7 +894,8 @@ class CRM_Utils_Date {
    * @param $format given format ( eg 'M Y', 'Y M' )
    * return array of qfMapping and date parts for date format.
    */
-  function checkBirthDateFormat($format = NULL) {
+  static
+  function &checkBirthDateFormat($format = NULL) {
     $birthDateFormat = NULL;
     if (!$format) {
       $birthDateFormat = self::getDateFormat('birth');
@@ -998,7 +1025,7 @@ class CRM_Utils_Date {
             $from['M'] = (3 * $quarter) - 2;
             $to['M']   = 3 * $quarter;
             $to['Y']   = $from['Y'] = $now['year'];
-            $to['d']   = cal_days_in_month(CAL_GREGORIAN, $to['M'], $now['year']);
+            $to['d']   = date('t', mktime(0, 0, 0, $to['M'], 1, $now['year']));
             break;
 
           case 'previous':
@@ -1014,7 +1041,7 @@ class CRM_Utils_Date {
               $from['M'] = (3 * $quarter) - 2;
               $to['M']   = 3 * $quarter;
               $to['Y']   = $from['Y'] = $now['year'] - $subtractYear;
-              $to['d']   = cal_days_in_month(CAL_GREGORIAN, $to['M'], $to['Y']);
+              $to['d']   = date('t', mktime(0, 0, 0, $to['M'], 1, $to['Y'])); 
               break;
 
             case 'previous_before':
@@ -1024,13 +1051,12 @@ class CRM_Utils_Date {
               if ($quarter <= 0) {
                   $subtractYear = 1;
                   $quarter += 4;
-                  srst;
                 }
                 $from['d'] = 1;
                 $from['M'] = (3 * $quarter) - 2;
                 $to['M']   = 3 * $quarter;
                 $to['Y']   = $from['Y'] = $now['year'] - $subtractYear;
-                $to['d']   = cal_days_in_month(CAL_GREGORIAN, $to['M'], $to['Y']);
+                $to['d']   = date('t', mktime(0, 0, 0, $to['M'], 1, $to['Y'])); 
                 break;
 
               case 'previous_2':
@@ -1067,7 +1093,7 @@ class CRM_Utils_Date {
                         $to['M'] = 3 * ($quarter - 3);
                         $to['Y'] = $now['year'];
                       }
-                      $to['d'] = cal_days_in_month(CAL_GREGORIAN, $to['M'], $to['Y']);
+                      $to['d'] = date('t', mktime(0, 0, 0, $to['M'], 1, $to['Y']));
                       break;
 
                     case 'earlier':
@@ -1078,7 +1104,7 @@ class CRM_Utils_Date {
                         }
                         $to['M'] = 3 * $quarter;
                         $to['Y'] = $from['Y'] = $now['year'] - $subtractYear;
-                        $to['d'] = cal_days_in_month(CAL_GREGORIAN, $to['M'], $to['Y']);
+                        $to['d'] = date('t', mktime(0, 0, 0, $to['M'], 1, $to['Y']));
                         unset($from);
                         break;
 
@@ -1106,7 +1132,7 @@ class CRM_Utils_Date {
                     switch ($relativeTerm) {
                       case 'this':
                         $from['d'] = 1;
-                        $to['d']   = cal_days_in_month(CAL_GREGORIAN, $now['mon'], $now['year']);
+                        $to['d']   = date('t', mktime(0, 0, 0, $now['mon'], 1, $now['year']));
                         $from['M'] = $to['M'] = $now['mon'];
                         $from['Y'] = $to['Y'] = $now['year'];
                         break;
@@ -1121,8 +1147,7 @@ class CRM_Utils_Date {
                               $from['M'] = $to['M'] = $now['mon'] - 1;
                               $from['Y'] = $to['Y'] = $now['year'];
                             }
-
-                            $to['d'] = cal_days_in_month(CAL_GREGORIAN, $to['M'], $to['Y']);
+                            $to['d'] = date('t', mktime(0, 0, 0, $to['M'], 1, $to['Y']));
                             break;
 
                           case 'previous_before':
@@ -1135,8 +1160,7 @@ class CRM_Utils_Date {
                                   $from['M'] = $to['M'] = $now['mon'] - 2;
                                   $from['Y'] = $to['Y'] = $now['year'];
                                 }
-
-                                $to['d'] = cal_days_in_month(CAL_GREGORIAN, $to['M'], $to['Y']);
+                                $to['d'] = date('t', mktime(0, 0, 0, $to['M'], 1, $to['Y']));
                                 break;
 
                               case 'previous_2':
@@ -1159,7 +1183,7 @@ class CRM_Utils_Date {
                                           $to['Y'] = $now['year'];
                                         }
 
-                                        $to['d'] = cal_days_in_month(CAL_GREGORIAN, $to['M'], $to['Y']);
+                                        $to['d'] = date('t', mktime(0, 0, 0, $to['M'], 1, $to['Y']));
                                         break;
 
                                       case 'earlier':
@@ -1173,7 +1197,7 @@ class CRM_Utils_Date {
                                               $to['Y'] = $now['year'];
                                             }
 
-                                            $to['d'] = cal_days_in_month(CAL_GREGORIAN, $to['M'], $to['Y']);
+                                            $to['d'] = date('t', mktime(0, 0, 0, $to['M'], 1, $to['Y']));
                                             unset($from);
                                             break;
 
@@ -1423,7 +1447,6 @@ class CRM_Utils_Date {
            $format = $config->dateInputFormat; 
         }     
 
-        require_once 'CRM/Core/SelectValues.php';
         // get actual format
         $actualPHPFormats = CRM_Core_SelectValues::datePluginToPHPFormats( );
         $dateFormat       = CRM_Utils_Array::value( $format, $actualPHPFormats );

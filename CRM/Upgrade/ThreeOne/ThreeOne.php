@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Upgrade/Form.php';
-require_once 'CRM/Core/OptionGroup.php';
-require_once 'CRM/Core/OptionValue.php';
 class CRM_Upgrade_ThreeOne_ThreeOne extends CRM_Upgrade_Form {
   function verifyPreDBState(&$errorMessage) {
     $latestVer = CRM_Utils_System::version();
@@ -114,23 +110,25 @@ class CRM_Upgrade_ThreeOne_ThreeOne extends CRM_Upgrade_Form {
 
     // fix for CRM-5162
     // we need to encrypt all smtpPasswords if present
-    require_once "CRM/Core/DAO/Preferences.php";
-    $mailingDomain = new CRM_Core_DAO_Preferences();
-    $mailingDomain->find();
+    $sql = 'SELECT id, mailing_backend FROM civicrm_preferences';
+    $mailingDomain = CRM_Core_DAO::executeQuery($sql);
     while ($mailingDomain->fetch()) {
       if ($mailingDomain->mailing_backend) {
         $values = unserialize($mailingDomain->mailing_backend);
 
         if (isset($values['smtpPassword'])) {
-          require_once 'CRM/Utils/Crypt.php';
           $values['smtpPassword'] = CRM_Utils_Crypt::encrypt($values['smtpPassword']);
-          $mailingDomain->mailing_backend = serialize($values);
-          $mailingDomain->save();
+
+          $updateSql = 'UPDATE civicrm_preferences SET mailing_backend = %1 WHERE id = %2';
+          $updateParams = array(
+            1 => array(serialize($values), 'String'),
+            2 => array($mailingDomain->id, 'Integer'),
+          );
+          CRM_Core_DAO::executeQuery($updateSql, $updateParams);
         }
       }
     }
 
-    require_once "CRM/Core/DAO/Domain.php";
     $domain = new CRM_Core_DAO_Domain();
     $domain->selectAdd();
     $domain->selectAdd('config_backend');
@@ -174,7 +172,6 @@ class CRM_Upgrade_ThreeOne_ThreeOne extends CRM_Upgrade_Form {
 
       unset($defaults['dateformatQfDate']);
       unset($defaults['dateformatTime']);
-      require_once "CRM/Core/BAO/ConfigSetting.php";
       CRM_Core_BAO_ConfigSetting::add($defaults);
     }
 
@@ -261,7 +258,7 @@ class CRM_Upgrade_ThreeOne_ThreeOne extends CRM_Upgrade_Form {
     if ($afterUpgradeMessage = $template->get_template_vars('afterUpgradeMessage')) {
       $afterUpgradeMessage .= "<br/><br/>";
     }
-    $afterUpgradeMessage .= ts("Date Input Format has been set to %1 format. If you want to use a different format please check Administer CiviCRM &raquo; Global Settings &raquo; Date Formats.", array(1 => $defaults['dateInputFormat']));
+    $afterUpgradeMessage .= ts("Date Input Format has been set to %1 format. If you want to use a different format please check Administer CiviCRM &raquo; Localization &raquo; Date Formats.", array(1 => $defaults['dateInputFormat']));
     $template->assign('afterUpgradeMessage', $afterUpgradeMessage);
   }
 
@@ -343,7 +340,7 @@ INNER JOIN ( SELECT id, contact_id FROM civicrm_openid WHERE is_primary = 1 GROU
       $template            = CRM_Core_Smarty::singleton();
       $afterUpgradeMessage = $template->get_template_vars('afterUpgradeMessage');
       $docURL              = CRM_Utils_System::docURL2('Moneris Configuration Guide', FALSE, 'download and install',
-        NULL, 'color: white; text-decoration: underline;'
+        NULL, 'color: white; text-decoration: underline;', "wiki"
       );
 
       $afterUpgradeMessage .= "<br/>" . ts("Please %1 mpgClasses.php in packages/Services in order to continue using Moneris payment processor. That file is no longer included in the CiviCRM distribution.", array(1 => $docURL));

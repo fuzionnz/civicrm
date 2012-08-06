@@ -15,8 +15,6 @@
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Payment.php';
 class CRM_Core_Payment_PayJunction extends CRM_Core_Payment {
   # (not used, implicit in the API, might need to convert?)
   CONST CHARSET = 'UFT-8';
@@ -64,7 +62,7 @@ class CRM_Core_Payment_PayJunction extends CRM_Core_Payment {
   }
 
   /*
-    * This function sends request and receives response from 
+    * This function sends request and receives response from
     * PayJunction payment process
     */
   function doDirectPayment(&$params) {

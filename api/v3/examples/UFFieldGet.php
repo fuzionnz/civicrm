@@ -25,10 +25,10 @@ function uf_field_get_expectedresult(){
   'is_error' => 0,
   'version' => 3,
   'count' => 1,
-  'id' => 45,
+  'id' => 1,
   'values' => array( 
-      '45' => array( 
-          'id' => '45',
+      '1' => array( 
+          'id' => '1',
           'uf_group_id' => '11',
           'field_name' => 'country',
           'is_active' => '1',
@@ -38,6 +38,7 @@ function uf_field_get_expectedresult(){
           'visibility' => 'Public Pages and Listings',
           'in_selector' => 0,
           'is_searchable' => '1',
+          'location_type_id' => '1',
           'label' => 'Test Country',
           'field_type' => 'Contact',
         ),

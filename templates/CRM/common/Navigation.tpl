@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -41,6 +41,9 @@
 <script type="text/javascript">
 //CRM-6776, enter-to-submit functionality is broken for IE due to hidden field
 cj( document ).ready( function( ) {
+   cj("#civicrm-menu >li").each(function(i){ 
+      cj(this).attr("tabIndex",i+2); 
+   });
    var htmlContent = '';
       if ( cj.browser.msie ) {
           if( cj.browser.version.substr( 0,1 ) == '7' ) {

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 
 /**
  * Event Info Page - Summmary about the event
@@ -55,7 +53,6 @@ class CRM_Event_Page_EventInfo extends CRM_Core_Page {
     //get the event id.
     $this->_id = CRM_Utils_Request::retrieve('id', 'Positive', $this, TRUE);
     $config = CRM_Core_Config::singleton();
-    require_once 'CRM/Event/BAO/Event.php';
     // ensure that the user has permission to see this page
     if (!CRM_Core_Permission::event(CRM_Core_Permission::VIEW,
         $this->_id
@@ -94,7 +91,6 @@ class CRM_Event_Page_EventInfo extends CRM_Core_Page {
     $this->assign('isShowLocation', CRM_Utils_Array::value('is_show_location', $values['event']));
 
     // show event fees.
-    require_once 'CRM/Price/BAO/Set.php';
     if ($this->_id && CRM_Utils_Array::value('is_monetary', $values['event'])) {
       //CRM-6907
       $config = CRM_Core_Config::singleton();
@@ -102,14 +98,21 @@ class CRM_Event_Page_EventInfo extends CRM_Core_Page {
         $values['event'],
         $config->defaultCurrency
       );
-
+      
+      //CRM-10434
+      $discountId= CRM_Core_BAO_Discount::findSet($this->_id, 'civicrm_event');
+      if ($discountId) {
+        $priceSetId = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Discount', $discountId, 'option_group_id');
+      } else {
+        $priceSetId = CRM_Price_BAO_Set::getFor('civicrm_event', $this->_id);
+      }
+      
       // get price set options, - CRM-5209
-      if ($priceSetId = CRM_Price_BAO_Set::getFor('civicrm_event', $this->_id)) {
+      if ($priceSetId) {
         $setDetails = CRM_Price_BAO_Set::getSetDetail($priceSetId, TRUE, TRUE);
         $priceSetFields = $setDetails[$priceSetId]['fields'];
         if (is_array($priceSetFields)) {
           $fieldCnt = 1;
-          require_once 'CRM/Core/PseudoConstant.php';
           $visibility = CRM_Core_PseudoConstant::visibility('name');
 
           foreach ($priceSetFields as $fid => $fieldValues) {
@@ -144,31 +147,12 @@ class CRM_Event_Page_EventInfo extends CRM_Core_Page {
         // Tell tpl we have price set fee data
         $this->assign('isPriceSet', 1);
       }
-      else {
-        //retrieve event fee block.
-        require_once 'CRM/Core/OptionGroup.php';
-        require_once 'CRM/Core/BAO/Discount.php';
-        $discountId = CRM_Core_BAO_Discount::findSet($this->_id, 'civicrm_event');
-        if ($discountId) {
-          CRM_Core_OptionGroup::getAssoc(CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Discount',
-              $discountId,
-              'option_group_id'
-            ),
-            $values['feeBlock'], FALSE, 'id'
-          );
-        }
-        else {
-          CRM_Core_OptionGroup::getAssoc("civicrm_event.amount.{$this->_id}", $values['feeBlock']);
-        }
-      }
     }
 
     $params = array('entity_id' => $this->_id, 'entity_table' => 'civicrm_event');
-    require_once 'CRM/Core/BAO/Location.php';
     $values['location'] = CRM_Core_BAO_Location::getValues($params, TRUE);
 
     //retrieve custom field information
-    require_once 'CRM/Core/BAO/CustomGroup.php';
     $groupTree = CRM_Core_BAO_CustomGroup::getTree('Event', $this, $this->_id, 0, $values['event']['event_type_id']);
     CRM_Core_BAO_CustomGroup::buildCustomDataView($this, $groupTree);
     $this->assign('action', CRM_Core_Action::VIEW);
@@ -230,7 +214,6 @@ class CRM_Event_Page_EventInfo extends CRM_Core_Page {
     if (CRM_Core_Permission::check('view event participants') &&
       CRM_Core_Permission::check('view all contacts')
     ) {
-      require_once 'CRM/Event/PseudoConstant.php';
       $statusTypes = CRM_Event_PseudoConstant::participantStatus(NULL, 'is_counted = 1');
       $statusTypesPending = CRM_Event_PseudoConstant::participantStatus(NULL, 'is_counted = 0');
       $findParticipants['statusCounted'] = implode(', ', array_values($statusTypes));
@@ -247,7 +230,6 @@ class CRM_Event_Page_EventInfo extends CRM_Core_Page {
       $this->assign('participantListingURL', $participantListingURL);
     }
 
-    require_once 'CRM/Event/BAO/Participant.php';
     $hasWaitingList = CRM_Utils_Array::value('has_waitlist', $values['event']);
     $eventFullMessage = CRM_Event_BAO_Participant::eventFull($this->_id,
       FALSE,
@@ -271,13 +253,11 @@ class CRM_Event_Page_EventInfo extends CRM_Core_Page {
           }
 
           // check if we're in shopping cart mode for events
-          require_once 'CRM/Core/BAO/Setting.php';
           $enable_cart = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::EVENT_PREFERENCES_NAME,
             'enable_cart'
           );
 
           if ($enable_cart) {
-            require_once ('CRM/Event/Cart/BAO/EventInCart.php');
             $link = CRM_Event_Cart_BAO_EventInCart::get_registration_link($this->_id);
             $registerText = $link['label'];
 
@@ -309,10 +289,15 @@ class CRM_Event_Page_EventInfo extends CRM_Core_Page {
       $statusMessage = $eventFullMessage;
       if (CRM_Event_BAO_Event::checkRegistration($params)) {
         if ($noFullMsg == 'false') {
-          $registerUrl = CRM_Utils_System::url('civicrm/event/register',
-            "reset=1&id={$values['event']['id']}&cid=0"
-          );
-          $statusMessage = ts("It looks like you are already registered for this event. If you want to change your registration, or you feel that you've gotten this message in error, please contact the site administrator.") . ' ' . ts('You can also <a href="%1">register another participant</a>.', array(1 => $registerUrl));
+          if ($values['event']['allow_same_participant_emails']) {
+            $statusMessage = ts('It looks like you are already registered for this event.  You may proceed if you want to create an additional registration.');
+          }
+          else {
+            $registerUrl = CRM_Utils_System::url('civicrm/event/register',
+              "reset=1&id={$values['event']['id']}&cid=0"
+            );
+            $statusMessage = ts("It looks like you are already registered for this event. If you want to change your registration, or you feel that you've gotten this message in error, please contact the site administrator.") . ' ' . ts('You can also <a href="%1">register another participant</a>.', array(1 => $registerUrl));
+          }
         }
       }
       elseif ($hasWaitingList) {

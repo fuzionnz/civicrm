@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -65,7 +65,7 @@ class CRM_Member_PseudoConstant extends CRM_Core_PseudoConstant {
     if (!self::$membershipType || $force) {
       CRM_Core_PseudoConstant::populate(self::$membershipType,
         'CRM_Member_DAO_MembershipType',
-        FALSE, 'name', 'is_active', NULL, 'weight'
+        FALSE, 'name', 'is_active', NULL, 'weight', 'id', TRUE
       );
     }
     if ($id) {

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Upgrade/Form.php';
-require_once 'CRM/Core/OptionGroup.php';
-require_once 'CRM/Core/OptionValue.php';
 class CRM_Upgrade_ThreeZero_ThreeZero extends CRM_Upgrade_Form {
   function verifyPreDBState(&$errorMessage) {
     $latestVer = CRM_Utils_System::version();
@@ -94,7 +90,6 @@ class CRM_Upgrade_ThreeZero_ThreeZero extends CRM_Upgrade_Form {
     // recreate it based on the first locale’s description_xx_YY contents
     // and drop all the description_xx_YY columns
     if (!CRM_Core_DAO::checkFieldExists('civicrm_report_instance', 'description')) {
-      require_once 'CRM/Core/DAO/Domain.php';
       $domain = new CRM_Core_DAO_Domain;
       $domain->find(TRUE);
       $locales = explode(CRM_Core_DAO::VALUE_SEPARATOR, $domain->locales);
@@ -200,8 +195,7 @@ class CRM_Upgrade_ThreeZero_ThreeZero extends CRM_Upgrade_Form {
 
     //CRM-4575
     //check whether {contact.name} is set in mailing labels
-    require_once 'CRM/Core/BAO/Preferences.php';
-    $mailingFormat = CRM_Core_BAO_Preferences::value('mailing_format');
+    $mailingFormat = self::getPreference('mailing_format');
     $addNewAddressee = TRUE;
 
     if (strpos($mailingFormat, '{contact.contact_name}') === FALSE) {
@@ -209,7 +203,7 @@ class CRM_Upgrade_ThreeZero_ThreeZero extends CRM_Upgrade_Form {
     }
     else {
       //else compare individual name format with default individual addressee.
-      $individualNameFormat = CRM_Core_BAO_Preferences::value('individual_name_format');
+      $individualNameFormat = self::getPreference('individual_name_format');
 
       $defaultAddressee = CRM_Core_OptionGroup::values('addressee', FALSE, FALSE, FALSE,
         " AND v.filter = 1 AND v.is_default =  1", 'label'
@@ -220,8 +214,7 @@ class CRM_Upgrade_ThreeZero_ThreeZero extends CRM_Upgrade_Form {
       }
     }
 
-    require_once 'CRM/Utils/System.php';
-    $docURL = CRM_Utils_System::docURL2('Update Greetings and Address Data for Contacts', FALSE, NULL, NULL, 'color: white; text-decoration: underline;');
+    $docURL = CRM_Utils_System::docURL2('Update Greetings and Address Data for Contacts', FALSE, NULL, NULL, 'color: white; text-decoration: underline;', "wiki");
 
     if ($addNewAddressee) {
       //otherwise insert new token in addressee and set as a default
@@ -274,6 +267,20 @@ class CRM_Upgrade_ThreeZero_ThreeZero extends CRM_Upgrade_Form {
     //set status message for default greetings
     $template = CRM_Core_Smarty::singleton();
     $template->assign('afterUpgradeMessage', $afterUpgradeMessage);
+  }
+
+  /**
+   * Load a preference
+   *
+   * This is replaces the defunct CRM_Core_BAO_Preferences::value()
+   */
+  static
+  function getPreference($name) {
+    $sql = "SELECT $name FROM civicrm_preferences WHERE domain_id = %1 AND is_domain = 1 AND contact_id IS NULL";
+    $params = array(
+      1 => array(CRM_Core_Config::domainID(), 'Integer'),
+    );
+    return CRM_Core_DAO::singleValueQuery($sql, $params);
   }
 }
 

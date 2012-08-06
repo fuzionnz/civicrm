@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once "CRM/Core/Form.php";
 
 /**
  * This class generates form components for case report
@@ -129,7 +127,6 @@ class CRM_Case_Form_Report extends CRM_Core_Form {
     // store the submitted values in an array
     $params = $this->controller->exportValues($this->_name);
 
-    require_once 'CRM/Case/XMLProcessor/Report.php';
     $xmlProcessor = new CRM_Case_XMLProcessor_Report();
     $contents = $xmlProcessor->run($this->_clientID,
       $this->_caseID,

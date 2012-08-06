@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -51,9 +51,9 @@ class CRM_Contact_Form_Edit_Demographics {
   function buildQuickForm(&$form) {
     // radio button for gender
     $genderOptions = array();
-    $gender = CRM_Core_PseudoConstant::gender();
+    $gender = CRM_Core_PseudoConstant::gender(TRUE);
     foreach ($gender as $key => $var) {
-      $genderOptions[$key] = HTML_QuickForm::createElement('radio', NULL,
+      $genderOptions[$key] = $form->createElement('radio', NULL,
         ts('Gender'), $var, $key,
         array('id' => "civicrm_gender_{$var}_{$key}")
       );

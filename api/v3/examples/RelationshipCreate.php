@@ -9,7 +9,7 @@ function relationship_create_example(){
 $params = array( 
   'contact_id_a' => 1,
   'contact_id_b' => 2,
-  'relationship_type_id' => 16,
+  'relationship_type_id' => 17,
   'start_date' => '2010-10-30',
   'end_date' => '2010-12-30',
   'is_active' => 1,
@@ -32,11 +32,11 @@ function relationship_create_expectedresult(){
   'is_error' => 0,
   'version' => 3,
   'count' => 1,
-  'id' => 2,
+  'id' => 1,
   'values' => array( 
-      '2' => array( 
-          'id' => 2,
-          'moreIDs' => '2',
+      '1' => array( 
+          'id' => 1,
+          'moreIDs' => '1',
         ),
     ),
 );

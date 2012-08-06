@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,16 +28,12 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 class CRM_Core_Page_File extends CRM_Core_Page {
   function run() {
-    require_once 'CRM/Utils/Request.php';
-    require_once 'CRM/Core/DAO.php';
 
     $eid    = CRM_Utils_Request::retrieve('eid', 'Positive', $this, TRUE);
     $fid    = CRM_Utils_Request::retrieve('fid', 'Positive', $this, FALSE);
@@ -45,7 +41,6 @@ class CRM_Core_Page_File extends CRM_Core_Page {
     $quest  = CRM_Utils_Request::retrieve('quest', 'String', $this);
     $action = CRM_Utils_Request::retrieve('action', 'String', $this);
 
-    require_once 'CRM/Core/BAO/File.php';
     list($path, $mimeType) = CRM_Core_BAO_File::path($id, $eid, NULL, $quest);
     if (!$path) {
       CRM_Core_Error::statusBounce('Could not retrieve the file');
@@ -71,7 +66,6 @@ class CRM_Core_Page_File extends CRM_Core_Page {
       }
     }
     else {
-      require_once 'CRM/Utils/File.php';
       CRM_Utils_System::download(CRM_Utils_File::cleanFileName(basename($path)),
         $mimeType,
         $buffer

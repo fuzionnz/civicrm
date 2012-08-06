@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Core/SelectValues.php';
 
 /**
  * This class generates form components generic to all the contact types.
@@ -85,7 +82,6 @@ class CRM_Contact_Form_RelatedContact extends CRM_Core_Form {
     $session->pushUserContext(CRM_Utils_System::url('civicrm/user', "reset=1{$rcid}"));
 
     if ($this->_contactId) {
-      require_once 'CRM/Contact/BAO/Contact.php';
       $contact = new CRM_Contact_DAO_Contact();
       $contact->id = $this->_contactId;
       if (!$contact->find(TRUE)) {
@@ -94,7 +90,6 @@ class CRM_Contact_Form_RelatedContact extends CRM_Core_Form {
       $this->_contactType = $contact->contact_type;
 
       // check for permissions
-      require_once 'CRM/Contact/BAO/Contact/Permission.php';
       if (!CRM_Contact_BAO_Contact_Permission::allow($this->_contactId, CRM_Core_Permission::EDIT)) {
         CRM_Core_Error::statusBounce(ts('You do not have the necessary permission to edit this contact.'));
       }
@@ -168,7 +163,6 @@ class CRM_Contact_Form_RelatedContact extends CRM_Core_Form {
     // store the submitted values in an array
     $params = $this->controller->exportValues($this->_name);
 
-    require_once 'CRM/Core/BAO/LocationType.php';
     $locType = CRM_Core_BAO_LocationType::getDefault();
     foreach (array(
       'phone', 'email', 'address') as $locFld) {
@@ -185,7 +179,6 @@ class CRM_Contact_Form_RelatedContact extends CRM_Core_Form {
     $params['contact_type'] = $this->_contactType;
     $params['contact_id'] = $this->_contactId;
 
-    require_once 'CRM/Contact/BAO/Contact.php';
     $contact = CRM_Contact_BAO_Contact::create($params, TRUE);
 
     // set status message.

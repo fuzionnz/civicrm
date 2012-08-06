@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,11 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
-require_once 'CRM/Core/Page.php';
 
 
 
@@ -141,7 +140,14 @@ abstract class CRM_Core_Page_Basic extends CRM_Core_Page {
    *
    * @return void
    */
-  function run($args = NULL, $pageArgs = NULL, $sort = NULL) {
+  function run() {
+    // CRM-9034
+    // dont see args or pageArgs being used, so we should
+    // consider eliminating them in a future version
+    $n        = func_num_args();
+    $args     = ($n > 0) ? func_get_arg(0) : NULL;
+    $pageArgs = ($n > 1) ? func_get_arg(1) : NULL;
+    $sort     = ($n > 2) ? func_get_arg(2) : NULL;
     // what action do we want to perform ? (store it for smarty too.. :)
 
     $this->_action = CRM_Utils_Request::retrieve('action', 'String',
@@ -167,6 +173,8 @@ abstract class CRM_Core_Page_Basic extends CRM_Core_Page {
         CRM_Core_Action::ADD |
         CRM_Core_Action::UPDATE |
         CRM_Core_Action::COPY |
+        CRM_Core_Action::ENABLE |
+        CRM_Core_Action::DISABLE |
         CRM_Core_Action::DELETE
       )
     ) {
@@ -193,8 +201,11 @@ abstract class CRM_Core_Page_Basic extends CRM_Core_Page {
    * @return void
    * @access public
    */
-  function browse($action = NULL, $sort) {
-    $links = &$this->links();
+  function browse() {
+    $n      = func_num_args();
+    $action = ($n > 0) ? func_get_arg(0) : NULL;
+    $sort   = ($n > 0) ? func_get_arg(1) : NULL;
+    $links  = &$this->links();
     if ($action == NULL) {
       if (!empty($links)) {
         $action = array_sum(array_keys($links));
@@ -250,14 +261,12 @@ abstract class CRM_Core_Page_Basic extends CRM_Core_Page {
           $values[$object->id] = array();
           CRM_Core_DAO::storeValues($object, $values[$object->id]);
 
-          require_once 'CRM/Contact/DAO/RelationshipType.php';
           CRM_Contact_DAO_RelationshipType::addDisplayEnums($values[$object->id]);
 
           // populate action links
           $this->action($object, $action, $values[$object->id], $links, $permission);
 
           if (isset($object->mapping_type_id)) {
-            require_once 'CRM/Core/PseudoConstant.php';
             $mappintTypes = CRM_Core_PseudoConstant::mappingTypes();
             $values[$object->id]['mapping_type'] = $mappintTypes[$object->mapping_type_id];
           }
@@ -289,7 +298,6 @@ abstract class CRM_Core_Page_Basic extends CRM_Core_Page {
     if (CRM_Utils_Array::value('name', $values) && in_array($values['name'], array(
       'encounter_medium', 'case_type', 'case_status'))) {
       static $caseCount = NULL;
-      require_once 'CRM/Case/BAO/Case.php';
       if (!isset($caseCount)) {
         $caseCount = CRM_Case_BAO_Case::caseCount(NULL, FALSE);
       }
@@ -349,7 +357,11 @@ abstract class CRM_Core_Page_Basic extends CRM_Core_Page {
    * @return void
    */
   function edit($mode, $id = NULL, $imageUpload = FALSE, $pushUserContext = TRUE) {
-    $controller = new CRM_Core_Controller_Simple($this->editForm(), $this->editName(), $mode, $imageUpload);
+    $controller = new CRM_Core_Controller_Simple($this->editForm(),
+      $this->editName(),
+      $mode,
+      $imageUpload
+    );
 
     // set the userContext stack
     if ($pushUserContext) {

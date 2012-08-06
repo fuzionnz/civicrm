@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 class CRM_Group_Form_Search extends CRM_Core_Form {
 
   public function preProcess() {
@@ -42,7 +40,7 @@ class CRM_Group_Form_Search extends CRM_Core_Form {
 
   function setDefaultValues() {
     $defaults = array();
-    $defaults['active_status'] = 1;
+    $defaults['group_status[1]'] = 1;
     return $defaults;
   }
 
@@ -51,7 +49,6 @@ class CRM_Group_Form_Search extends CRM_Core_Form {
       CRM_Core_DAO::getAttribute('CRM_Contact_DAO_Group', 'title')
     );
 
-    require_once 'CRM/Core/OptionGroup.php';
     $groupTypes = CRM_Core_OptionGroup::values('group_type', TRUE);
     $config = CRM_Core_Config::singleton();
     if ($config->userFramework == 'Joomla') {
@@ -67,8 +64,14 @@ class CRM_Group_Form_Search extends CRM_Core_Form {
     $this->add('select', 'visibility', ts('Visibility'),
       array('' => ts('- any visibility -')) + CRM_Core_SelectValues::ufVisibility(TRUE)
     );
-    $this->addElement('checkbox', 'active_status', ts('Enabled'));
-    $this->addElement('checkbox', 'inactive_status', ts('Disabled'));
+
+    $groupStatuses = array(ts('Enabled') => 1, ts('Disabled') => 2);
+    $this->addCheckBox('group_status',
+      ts('Status'),
+      $groupStatuses,
+      NULL, NULL, NULL, NULL, '&nbsp;&nbsp;&nbsp;'
+    );
+
     $this->addButtons(array(
         array(
           'type' => 'refresh',
@@ -78,6 +81,7 @@ class CRM_Group_Form_Search extends CRM_Core_Form {
       ));
 
     parent::buildQuickForm();
+    $this->assign('suppressForm', TRUE);
   }
 
   function postProcess() {

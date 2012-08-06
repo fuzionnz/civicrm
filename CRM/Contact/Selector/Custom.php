@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,20 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id: Selector.php 11510 2007-09-18 09:21:34Z lobo $
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Core/Selector/Base.php';
-require_once 'CRM/Core/Selector/API.php';
-
-require_once 'CRM/Utils/Pager.php';
-require_once 'CRM/Utils/Sort.php';
-
-require_once 'CRM/Contact/BAO/Contact.php';
-require_once 'CRM/Contact/BAO/Query.php';
 
 /**
  * This class is used to retrieve and display a range of
@@ -138,7 +128,6 @@ class CRM_Contact_Selector_Custom extends CRM_Core_Selector_Base implements CRM_
     $this->_formValues = $formValues;
     $this->_includeContactIds = $includeContactIds;
 
-    require_once ('CRM/Core/Extensions.php');
     $ext = new CRM_Core_Extensions();
 
     if (!$ext->isExtensionKey($customSearchClass)) {
@@ -338,7 +327,6 @@ class CRM_Contact_Selector_Custom extends CRM_Core_Selector_Base implements CRM_
         }
 
         if ($image) {
-          require_once ('CRM/Contact/BAO/Contact/Utils.php');
           $row['contact_type'] = CRM_Contact_BAO_Contact_Utils::getImage($dao->contact_sub_type ?
             $dao->contact_sub_type : $dao->contact_type, FALSE, $contactID
           );

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,12 +29,10 @@
  * Redefine the cancel action
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/QuickForm/Action.php';
 class CRM_Core_QuickForm_Action_Cancel extends CRM_Core_QuickForm_Action {
 
   /**
@@ -60,6 +58,9 @@ class CRM_Core_QuickForm_Action_Cancel extends CRM_Core_QuickForm_Action {
    */
   function perform(&$page, $actionName) {
     // $this->_stateMachine->reset( );
+
+    // conditional actions if cancelAction is defined
+    $this->_stateMachine->cancelAction();
 
     $this->popUserContext();
   }

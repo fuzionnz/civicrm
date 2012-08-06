@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
-require_once 'CRM/Event/BAO/Event.php';
-require_once 'CRM/Campaign/BAO/Campaign.php';
 
 /**
  * Page for displaying list of events
@@ -223,7 +219,6 @@ ORDER BY start_date desc
     // get the list of active event pcps
     $eventPCPS = array();
 
-    require_once "CRM/PCP/DAO/PCPBlock.php";
     $pcpDao = new CRM_PCP_DAO_PCPBlock;
     $pcpDao->entity_table = 'civicrm_event';
     $pcpDao->find();
@@ -267,10 +262,8 @@ ORDER BY start_date desc
           'is_active' => 1,
         );
 
-        require_once 'CRM/Core/BAO/Location.php';
         $defaults['location'] = CRM_Core_BAO_Location::getValues($params, TRUE);
 
-        require_once 'CRM/Friend/BAO/Friend.php';
         $manageEvent[$dao->id]['friend'] = CRM_Friend_BAO_Friend::getValues($params);
 
         if (isset($defaults['location']['address'][1]['city'])) {
@@ -282,7 +275,6 @@ ORDER BY start_date desc
 
         //show campaigns on selector.
         $manageEvent[$dao->id]['campaign'] = CRM_Utils_Array::value($dao->campaign_id, $allCampaigns);
-        require_once 'CRM/Core/BAO/ActionSchedule.php';
         $manageEvent[$dao->id]['reminder'] = CRM_Core_BAO_ActionSchedule::isConfigured($dao->id, 3);
 
         $manageEvent[$dao->id]['is_pcp_enabled'] = CRM_Utils_Array::value($dao->id, $eventPCPS);
@@ -290,7 +282,6 @@ ORDER BY start_date desc
     }
     $this->assign('rows', $manageEvent);
 
-    require_once 'CRM/Event/PseudoConstant.php';
     $statusTypes = CRM_Event_PseudoConstant::participantStatus(NULL, 'is_counted = 1');
     $statusTypesPending = CRM_Event_PseudoConstant::participantStatus(NULL, 'is_counted = 0');
     $findParticipants['statusCounted'] = implode(', ', array_values($statusTypes));
@@ -298,7 +289,6 @@ ORDER BY start_date desc
     $this->assign('findParticipants', $findParticipants);
 
     // check if we're in shopping cart mode for events
-    require_once 'CRM/Core/BAO/Setting.php';
     $enableCart = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::EVENT_PREFERENCES_NAME,
       'enable_cart'
     );
@@ -316,12 +306,11 @@ ORDER BY start_date desc
     $id = CRM_Utils_Request::retrieve('id', 'Positive', $this, TRUE, 0, 'GET');
 
     $urlString = 'civicrm/event/manage';
-    require_once 'CRM/Event/BAO/Event.php';
     $copyEvent = CRM_Event_BAO_Event::copy($id);
     $urlParams = 'reset=1';
     // Redirect to Copied Event Configuration
     if ($copyEvent->id) {
-      $urlString = 'civicrm/event/manage/eventInfo';
+      $urlString = 'civicrm/event/manage/settings';
       $urlParams .= '&action=update&id=' . $copyEvent->id;
     }
 
@@ -382,7 +371,6 @@ ORDER BY start_date desc
     $eventsByDates = $this->get('eventsByDates');
     if ($this->_searchResult) {
       if ($eventsByDates) {
-        require_once 'CRM/Utils/Date.php';
 
         $from = $this->get('start_date');
         if (!CRM_Utils_System::isNull($from)) {
@@ -435,7 +423,6 @@ ORDER BY start_date desc
   }
 
   function pager($whereClause, $whereParams) {
-    require_once 'CRM/Utils/Pager.php';
 
     $params['status'] = ts('Event %%StatusMessage%%');
     $params['csvString'] = NULL;
@@ -458,7 +445,6 @@ SELECT count(id)
   }
 
   function pagerAtoZ($whereClause, $whereParams) {
-    require_once 'CRM/Utils/PagerAToZ.php';
 
     $query = "
    SELECT DISTINCT UPPER(LEFT(title, 1)) as sort_name

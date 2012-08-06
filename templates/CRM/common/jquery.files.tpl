@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -57,8 +57,8 @@ packages/jquery/plugins/jquery.mousewheel.pack.js
 
 packages/jquery/plugins/jquery.toolTip.js
 
-packages/jquery/plugins/DataTables-1.7.6/media/css/demo_table_jui.css
-packages/jquery/plugins/DataTables-1.7.6/media/js/jquery.dataTables.min.js
+packages/jquery/plugins/DataTables/media/css/demo_table_jui.css
+packages/jquery/plugins/DataTables/media/js/jquery.dataTables.min.js
 
 packages/jquery/plugins/jquery.dashboard.js
 packages/jquery/css/dashboard.css
@@ -71,9 +71,17 @@ packages/jquery/plugins/jquery.ui.datepicker.validation.pack.js
 
 packages/jquery/plugins/jquery-fieldselection.js
 
-js/rest.js
+packages/jquery/plugins/jquery.jeditable.mini.js
+packages/jquery/plugins/jquery.mustache.js
 
+packages/jquery/plugins/jquery.blockUI.js
+
+js/rest.js
+js/Common.js
+
+js/jquery/jquery.crmeditable.js
 js/jquery/jquery.crmaccordions.js
 js/jquery/jquery.crmasmselect.js
 js/jquery/jquery.crmtooltip.js
 js/jquery/jquery.crmrowhighlighter.js
+

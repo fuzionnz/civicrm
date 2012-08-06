@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Admin/Form/Setting.php';
 
 /**
  * This class generates form components for Localization
@@ -58,7 +56,6 @@ class CRM_Admin_Form_Setting_Localization extends CRM_Admin_Form_Setting {
 
     $locales = CRM_Core_I18n::languages();
 
-    require_once 'CRM/Core/DAO/Domain.php';
     $domain = new CRM_Core_DAO_Domain();
     $domain->find(TRUE);
     if ($domain->locales) {
@@ -179,6 +176,10 @@ class CRM_Admin_Form_Setting_Localization extends CRM_Admin_Form_Setting {
       $errors['monetaryThousandSeparator'] = ts('Thousands Separator and Decimal Delimiter can not be the same.');
     }
 
+    if (strlen($fields['monetaryThousandSeparator']) == 0) {
+      $errors['monetaryThousandSeparator'] = ts('Thousands Separator can not be empty. You can use a space character instead.');
+    }
+
     if (strlen($fields['monetaryThousandSeparator']) > 1) {
       $errors['monetaryThousandSeparator'] = ts('Thousands Separator can not have more than 1 character.');
     }
@@ -228,7 +229,6 @@ class CRM_Admin_Form_Setting_Localization extends CRM_Admin_Form_Setting {
 
     //cache contact fields retaining localized titles
     //though we changed localization, so reseting cache.
-    require_once 'CRM/Core/BAO/Cache.php';
     CRM_Core_BAO_Cache::deleteGroup('contact fields');
 
     //CRM-8559, cache navigation do not respect locale if it is changed, so reseting cache.
@@ -243,19 +243,20 @@ class CRM_Admin_Form_Setting_Localization extends CRM_Admin_Form_Setting {
     // save enabled currencies and defaul currency in option group 'currencies_enabled'
     // CRM-1496
     if (empty($values['currencyLimit'])) {
-      $values['currencyLimit'] = $values['defaultCurrency'];
+      $values['currencyLimit'] = array($values['defaultCurrency']);
     }
     elseif (!in_array($values['defaultCurrency'],
         $values['currencyLimit']
       )) {
       $values['currencyLimit'][] = $values['defaultCurrency'];
-      // sort so that when we display drop down, weights have right value
-      sort($values['currencyLimit']);
     }
 
+    // sort so that when we display drop down, weights have right value
+    sort($values['currencyLimit']);
 
     // get labels for all the currencies
     $options = array();
+
     for ($i = 0; $i < count($values['currencyLimit']); $i++) {
       $options[] = array(
         'label' => $this->_currencySymbols[$values['currencyLimit'][$i]],
@@ -277,24 +278,20 @@ class CRM_Admin_Form_Setting_Localization extends CRM_Admin_Form_Setting {
 
     // make the site multi-lang if requested
     if (CRM_Utils_Array::value('makeMultilingual', $values)) {
-      require_once 'CRM/Core/I18n/Schema.php';
       CRM_Core_I18n_Schema::makeMultilingual($values['lcMessages']);
       $values['languageLimit'][$values['lcMessages']] = 1;
       // make the site single-lang if requested
     }
     elseif (CRM_Utils_Array::value('makeSinglelingual', $values)) {
-      require_once 'CRM/Core/I18n/Schema.php';
       CRM_Core_I18n_Schema::makeSinglelingual($values['lcMessages']);
       $values['languageLimit'] = '';
     }
 
     // add a new db locale if the requested language is not yet supported by the db
     if (!CRM_Utils_Array::value('makeSinglelingual', $values) and CRM_Utils_Array::value('addLanguage', $values)) {
-      require_once 'CRM/Core/DAO/Domain.php';
       $domain = new CRM_Core_DAO_Domain();
       $domain->find(TRUE);
       if (!substr_count($domain->locales, $values['addLanguage'])) {
-        require_once 'CRM/Core/I18n/Schema.php';
         CRM_Core_I18n_Schema::addLocale($values['addLanguage'], $values['lcMessages']);
       }
       $values['languageLimit'][$values['addLanguage']] = 1;

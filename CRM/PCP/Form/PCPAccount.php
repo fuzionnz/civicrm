@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,11 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-require_once 'CRM/Core/Form.php';
 
 /**
  * This class generates form components for processing a ontribution
@@ -116,11 +115,9 @@ class CRM_PCP_Form_PCPAccount extends CRM_Core_Form {
       $fields[$name] = 1;
     }
 
-    require_once "CRM/Core/BAO/UFGroup.php";
     CRM_Core_BAO_UFGroup::setProfileDefaults($this->_contactID, $fields, $this->_defaults);
 
     //set custom field defaults
-    require_once "CRM/Core/BAO/CustomField.php";
     foreach ($this->_fields as $name => $field) {
       if ($customFieldID = CRM_Core_BAO_CustomField::getKeyID($name)) {
         if (!isset($this->_defaults[$name])) {
@@ -141,13 +138,11 @@ class CRM_PCP_Form_PCPAccount extends CRM_Core_Form {
    * @access public
    */
   public function buildQuickForm() {
-    require_once 'CRM/PCP/BAO/PCP.php';
     $id = CRM_PCP_BAO_PCP::getSupporterProfileId($this->_pageId, $this->_component);
     if (CRM_PCP_BAO_PCP::checkEmailProfile($id)) {
       $this->assign('profileDisplay', TRUE);
     }
     $fields = NULL;
-    require_once "CRM/Core/BAO/UFGroup.php";
     if ($this->_contactID) {
       if (CRM_Core_BAO_UFGroup::filterUFGroups($id, $this->_contactID)) {
         $fields = CRM_Core_BAO_UFGroup::getFields($id, FALSE, CRM_Core_Action::ADD);
@@ -155,7 +150,6 @@ class CRM_PCP_Form_PCPAccount extends CRM_Core_Form {
       $this->addFormRule(array('CRM_PCP_Form_PCPAccount', 'formRule'), $this);
     }
     else {
-      require_once 'CRM/Core/BAO/CMSUser.php';
       CRM_Core_BAO_CMSUser::buildForm($this, $id, TRUE);
 
       $fields = CRM_Core_BAO_UFGroup::getFields($id, FALSE, CRM_Core_Action::ADD);
@@ -169,8 +163,6 @@ class CRM_PCP_Form_PCPAccount extends CRM_Core_Form {
           // ignore file upload fields
           continue;
         }
-        require_once "CRM/Core/BAO/UFGroup.php";
-        require_once "CRM/Profile/Form.php";
         CRM_Core_BAO_UFGroup::buildProfile($this, $field, CRM_Profile_Form::MODE_CREATE);
         $this->_fields[$key] = $field;
         if ($field['add_captcha']) {
@@ -179,7 +171,6 @@ class CRM_PCP_Form_PCPAccount extends CRM_Core_Form {
       }
 
       if ($addCaptcha) {
-        require_once 'CRM/Utils/ReCAPTCHA.php';
         $captcha = &CRM_Utils_ReCAPTCHA::singleton();
         $captcha->add($this);
         $this->assign("isCaptcha", TRUE);
@@ -188,11 +179,9 @@ class CRM_PCP_Form_PCPAccount extends CRM_Core_Form {
 
 
     if ($this->_component == 'contribute') {
-      require_once "CRM/Contribute/PseudoConstant.php";
       $this->assign('campaignName', CRM_Contribute_PseudoConstant::contributionPage($this->_pageId));
     }
     elseif ($this->_component == 'event') {
-      require_once "CRM/Event/PseudoConstant.php";
       $this->assign('campaignName', CRM_Event_PseudoConstant::event($this->_pageId));
     }
 
@@ -235,7 +224,6 @@ class CRM_PCP_Form_PCPAccount extends CRM_Core_Form {
   static
   function formRule($fields, $files, $self) {
     $errors = array();
-    require_once "CRM/Utils/Rule.php";
     foreach ($fields as $key => $value) {
       if (strpos($key, 'email-') !== FALSE && !empty($value)) {
         $ufContactId = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_UFMatch', $value, 'contact_id', 'uf_name');
@@ -263,7 +251,6 @@ class CRM_PCP_Form_PCPAccount extends CRM_Core_Form {
           list($fieldName, $locTypeId) = CRM_Utils_System::explode('-', $key, 2);
           $isPrimary = 0;
           if ($locTypeId == 'Primary') {
-            require_once "CRM/Core/BAO/LocationType.php";
             $locTypeDefault = CRM_Core_BAO_LocationType::getDefault();
             $locTypeId = NULL;
             if ($locTypeDefault) {
@@ -280,7 +267,6 @@ class CRM_PCP_Form_PCPAccount extends CRM_Core_Form {
       }
     }
 
-    require_once 'CRM/Dedupe/Finder.php';
     $dedupeParams = CRM_Dedupe_Finder::formatParams($params, 'Individual');
     $ids = CRM_Dedupe_Finder::dupesByParams($dedupeParams, 'Individual', 'Strict');
     if ($ids) {
@@ -293,7 +279,6 @@ class CRM_PCP_Form_PCPAccount extends CRM_Core_Form {
       $params['email'] = $params['email'][1]['email'];
     }
 
-    require_once "CRM/Contribute/BAO/Contribution/Utils.php";
     CRM_Contribute_BAO_Contribution_Utils::createCMSUser($params, $contactID, 'email');
   }
 }

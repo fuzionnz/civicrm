@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/Cache.php';
 
 /**
  * BAO object for civicrm_cache table. This is a database cache and is persisted across sessions. Typically we use
@@ -111,26 +109,34 @@ class CRM_Core_BAO_Cache extends CRM_Core_DAO_Cache {
    * delete the entire cache if group is not specified
    *
    * @param string $group The group name of the entries to be deleted
+   * @param string $path  path of the item that needs to be deleted
+   * @param booleab $clearAll clear all caches
    *
    * @return void
    * @static
    * @access public
    */
   static
-  function deleteGroup($group = NULL) {
+  function deleteGroup($group = NULL, $path = NULL, $clearAll = TRUE) {
     $dao = new CRM_Core_DAO_Cache();
 
     if (!empty($group)) {
       $dao->group_name = $group;
     }
+
+    if (!empty($path)) {
+      $dao->path = $path;
+    }
+
     $dao->delete();
 
-    // also reset ACL Cache
-    require_once 'CRM/ACL/BAO/Cache.php';
-    CRM_ACL_BAO_Cache::resetCache();
+    if ($clearAll) {
+      // also reset ACL Cache
+      CRM_ACL_BAO_Cache::resetCache();
 
-    // also reset memory cache if any
-    CRM_Utils_System::flushCache();
+      // also reset memory cache if any
+      CRM_Utils_System::flushCache();
+    }
   }
 
   /**
@@ -282,9 +288,9 @@ AND    CREATE_TIME < date_sub( NOW( ), INTERVAL $timeIntervalDays day )
       // first delete all sessions which are related to any potential transaction
       // page
       $transactionPages = array(
-        'CRM_Contribute_Controller_Contribution',
-        'CRM_Event_Controller_Registration',
-      );
+          'CRM_Contribute_Controller_Contribution',
+          'CRM_Event_Controller_Registration',
+        );
 
       $params = array(
         1 => array(date('Y-m-d H:i:s', time() - $timeIntervalMins * 60), 'String'),
@@ -307,7 +313,7 @@ WHERE       group_name = 'CiviCRM Session'
 AND         created_date < date_sub( NOW( ), INTERVAL $timeIntervalDays DAY )
 ";
       CRM_Core_DAO::executeQuery($sql);
-    }
   }
+}
 }
 

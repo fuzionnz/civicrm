@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -37,7 +37,6 @@ class CRM_Grant_BAO_Query {
   static
   function &getFields() {
     $fields = array();
-    require_once 'CRM/Grant/BAO/Grant.php';
     $fields = CRM_Grant_BAO_Grant::exportableFields();
     return $fields;
   }
@@ -180,7 +179,6 @@ class CRM_Grant_BAO_Query {
 
         $query->_where[$grouping][] = "civicrm_grant.grant_type_id $op '{$value}'";
 
-        require_once 'CRM/Core/OptionGroup.php';
         $grantTypes = CRM_Core_OptionGroup::values('grant_type');
         $value = $grantTypes[$value];
         $query->_qill[$grouping][] = ts('Grant Type %2 %1', array(1 => $value, 2 => $op));
@@ -194,7 +192,6 @@ class CRM_Grant_BAO_Query {
 
         $query->_where[$grouping][] = "civicrm_grant.status_id $op '{$value}'";
 
-        require_once 'CRM/Core/OptionGroup.php';
 
         $grantStatus = CRM_Core_OptionGroup::values('grant_status');
         $value = $grantStatus[$value];
@@ -304,9 +301,7 @@ class CRM_Grant_BAO_Query {
    */
   static
   function buildSearchForm(&$form) {
-    require_once 'CRM/Utils/Money.php';
 
-    require_once 'CRM/Core/OptionGroup.php';
     $grantType = CRM_Core_OptionGroup::values('grant_type');
     $form->add('select', 'grant_type_id', ts('Grant Type'),
       array(
@@ -348,11 +343,9 @@ class CRM_Grant_BAO_Query {
     $form->addRule('grant_amount_high', ts('Please enter a valid money value (e.g. %1).', array(1 => CRM_Utils_Money::format('99.99', ' '))), 'money');
 
     // add all the custom  searchable fields
-    require_once 'CRM/Core/BAO/CustomGroup.php';
     $grant = array('Grant');
     $groupDetails = CRM_Core_BAO_CustomGroup::getGroupDetail(NULL, TRUE, $grant);
     if ($groupDetails) {
-      require_once 'CRM/Core/BAO/CustomField.php';
       $form->assign('grantGroupTree', $groupDetails);
       foreach ($groupDetails as $group) {
         foreach ($group['fields'] as $field) {

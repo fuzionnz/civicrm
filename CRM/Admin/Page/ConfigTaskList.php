@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page.php';
 
 /**
  * Page for displaying list of site configuration tasks with links to each setting form
@@ -52,7 +50,6 @@ class CRM_Admin_Page_ConfigTaskList extends CRM_Core_Page {
     $destination = urlencode($destination);
     $this->assign('destination', $destination);
 
-    require_once 'CRM/Core/OptionValue.php';
     CRM_Core_OptionValue::getValues(array('name' => 'from_email_address'), $optionValue);
     if (!empty($optionValue)) {
       list($id) = array_keys($optionValue);

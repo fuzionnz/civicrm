@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page/Basic.php';
 
 /**
  * Page for displaying list of Gender
@@ -132,7 +130,6 @@ class CRM_Admin_Page_Options extends CRM_Core_Page_Basic {
     if (self::$_gName == 'participant_role') {
       $this->assign('showCounted', TRUE);
     }
-    require_once 'CRM/Core/Config.php';
     $config = CRM_Core_Config::singleton();
     if (self::$_gName == 'activity_type') {
       $this->assign('showComponent', TRUE);
@@ -215,7 +212,6 @@ class CRM_Admin_Page_Options extends CRM_Core_Page_Basic {
    * @static
    */
   function browse() {
-    require_once 'CRM/Core/OptionValue.php';
 
     $groupParams = array('name' => self::$_gName);
     $optionValue = CRM_Core_OptionValue::getRows($groupParams, $this->links(), 'component_id,weight');
@@ -224,7 +220,6 @@ class CRM_Admin_Page_Options extends CRM_Core_Page_Basic {
       "reset=1&group=$gName"
     );
     $filter = "option_group_id = " . self::$_gId;
-    require_once 'CRM/Utils/Weight.php';
     CRM_Utils_Weight::addOrder($optionValue, 'CRM_Core_DAO_OptionValue',
       'id', $returnURL, $filter
     );

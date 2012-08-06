@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Pledge/DAO/PledgePayment.php';
 class CRM_Pledge_BAO_PledgePayment extends CRM_Pledge_DAO_PledgePayment {
 
   /**
@@ -61,6 +59,7 @@ SELECT    civicrm_pledge_payment.id id,
           reminder_count,
           actual_amount, 
           receive_date,
+	      civicrm_pledge_payment.currency,
           civicrm_option_value.name as status,
           civicrm_option_value.label as label,
           civicrm_contribution.id as contribution_id
@@ -88,6 +87,7 @@ WHERE     pledge_id = %1
       $paymentDetails[$payment->id]['label'] = $payment->label;
       $paymentDetails[$payment->id]['id'] = $payment->id;
       $paymentDetails[$payment->id]['contribution_id'] = $payment->contribution_id;
+      $paymentDetails[$payment->id]['currency'] = $payment->currency;
     }
 
     return $paymentDetails;
@@ -95,8 +95,6 @@ WHERE     pledge_id = %1
 
   static
   function create($params) {
-    require_once 'CRM/Contribute/PseudoConstant.php';
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
 
@@ -171,7 +169,6 @@ WHERE     pledge_id = %1
    */
   static
   function add($params) {
-    require_once 'CRM/Utils/Hook.php';
     if (CRM_Utils_Array::value('id', $params)) {
       CRM_Utils_Hook::pre('edit', 'PledgePayment', $params['id'], $params);
     }
@@ -179,7 +176,6 @@ WHERE     pledge_id = %1
       CRM_Utils_Hook::pre('create', 'PledgePayment', NULL, $params);
     }
 
-    require_once 'CRM/Pledge/DAO/PledgePayment.php';
     $payment = new CRM_Pledge_DAO_PledgePayment();
     $payment->copyValues($params);
 
@@ -237,13 +233,11 @@ WHERE     pledge_id = %1
    */
   static
   function del($id) {
-    require_once 'CRM/Pledge/DAO/PledgePayment.php';
     $payment = new CRM_Pledge_DAO_PledgePayment();
     $payment->id = $id;
     if ($payment->find()) {
       $payment->fetch();
 
-      require_once 'CRM/Utils/Hook.php';
       CRM_Utils_Hook::pre('delete', 'PledgePayment', $id, $payment);
 
       $result = $payment->delete();
@@ -268,12 +262,10 @@ WHERE     pledge_id = %1
    */
   static
   function deletePayments($id) {
-    require_once 'CRM/Utils/Rule.php';
     if (!CRM_Utils_Rule::positiveInteger($id)) {
       return FALSE;
     }
 
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
     $payment = new CRM_Pledge_DAO_PledgePayment();
@@ -283,7 +275,6 @@ WHERE     pledge_id = %1
       while ($payment->fetch()) {
         //also delete associated contribution.
         if ($payment->contribution_id) {
-          require_once 'CRM/Contribute/BAO/Contribution.php';
           CRM_Contribute_BAO_Contribution::deleteContribution($payment->contribution_id);
         }
         $payment->delete();
@@ -306,10 +297,8 @@ WHERE     pledge_id = %1
   static
   function resetPledgePayment($contributionID) {
     //get all status
-    require_once 'CRM/Contribute/PseudoConstant.php';
     $allStatus = CRM_Contribute_PseudoConstant::contributionStatus(NULL, 'name');
 
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
     $payment = new CRM_Pledge_DAO_PledgePayment();
@@ -359,7 +348,6 @@ WHERE     pledge_id = %1
     $editScheduled = FALSE;
 
     //get all statuses
-    require_once 'CRM/Contribute/PseudoConstant.php';
     $allStatus = CRM_Contribute_PseudoConstant::contributionStatus(NULL, 'name');
 
     // if we get do not get contribution id means we are editing the scheduled payment.
@@ -591,11 +579,10 @@ WHERE  civicrm_pledge.id = %2
    */
   static
   function calculatePledgeStatus($pledgeId) {
-    require_once 'CRM/Contribute/PseudoConstant.php';
     $paymentStatusTypes = CRM_Contribute_PseudoConstant::contributionStatus(NULL, 'name');
 
     //retrieve all pledge payments for this particular pledge
-    $allPledgePayments = array();
+    $allPledgePayments = $allStatus = array();
     $returnProperties = array('status_id');
     CRM_Core_DAO::commonRetrieveAll('CRM_Pledge_DAO_PledgePayment', 'pledge_id', $pledgeId, $allPledgePayments, $returnProperties);
 
@@ -663,7 +650,6 @@ WHERE  civicrm_pledge_payment.pledge_id = %1
 ";
 
     //get all status
-    require_once 'CRM/Contribute/PseudoConstant.php';
     $params = array(1 => array($pledgeId, 'Integer'));
 
     $dao = CRM_Core_DAO::executeQuery($query, $params);
@@ -698,7 +684,6 @@ WHERE  civicrm_pledge_payment.id = {$paymentId}
   static
   function getOldestPledgePayment($pledgeID, $limit = 1) {
     //get pending / overdue statuses
-    require_once ('CRM/Contribute/PseudoConstant.php');
     $pledgeStatuses = CRM_Contribute_PseudoConstant::contributionStatus(NULL, 'name');
 
     //get pending and overdue payments
@@ -708,7 +693,7 @@ WHERE  civicrm_pledge_payment.id = {$paymentId}
     $statusClause = " IN (" . implode(',', $status) . ")";
 
     $query = "
-SELECT civicrm_pledge_payment.id id, civicrm_pledge_payment.scheduled_amount amount
+SELECT civicrm_pledge_payment.id id, civicrm_pledge_payment.scheduled_amount amount, civicrm_pledge_payment.currency
 FROM civicrm_pledge, civicrm_pledge_payment
 WHERE civicrm_pledge.id = civicrm_pledge_payment.pledge_id
   AND civicrm_pledge_payment.status_id {$statusClause}        
@@ -726,6 +711,7 @@ LIMIT 0, %2
       $paymentDetails[] = array(
         'id' => $payment->id,
         'amount' => $payment->amount,
+        'currency' => $payment->currency,
         'count' => $count,
       );
       $count++;

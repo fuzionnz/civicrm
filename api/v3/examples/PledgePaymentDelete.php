@@ -7,7 +7,7 @@
  */
 function pledge_payment_delete_example(){
 $params = array( 
-  'id' => 38,
+  'id' => 1,
   'version' => 3,
 );
 

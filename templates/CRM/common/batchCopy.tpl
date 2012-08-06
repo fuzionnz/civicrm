@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -66,17 +66,23 @@ function copyFieldValues( fname ) {
     // wysiwyg editor, advanced multi-select ( to do )
     if ( elementType == 'radio' ) {
         firstElementValue = elementId.filter(':checked').eq(0).val();
-        elementId.filter("[value=" + firstElementValue + "]").prop("checked",true);
+        elementId.filter("[value=" + firstElementValue + "]").prop("checked",true).change();
     } else if ( elementType == 'checkbox' ) {
         // handle checkbox
         // get the entity id of first element
-        var firstEntityId = firstElement.parent().parent().attr('entity_id');
-    
+        var firstEntityId = cj('.crm-copy-fields > tbody > tr');
+        
+        if ( firstEntityId.length == 0 ) {
+          firstEntityId = firstElement.closest('div.crm-grid-row');
+        }
+
+        firstEntityId = firstEntityId.attr('entity_id');
+        
         var firstCheckElement = cj('.crm-copy-fields [type=checkbox][name^="field['+ firstEntityId +']['+ fname +']"][type!=hidden]');
         
         if ( firstCheckElement.length > 1 ) {
             // lets uncheck all the checkbox except first one
-            cj('.crm-copy-fields [type=checkbox][name^="field["][name*="[' + fname +']"][type=checkbox]:not([name^="field['+ firstEntityId +']['+ fname +']["])').removeProp('checked');
+            cj('.crm-copy-fields [type=checkbox][name^="field["][name*="[' + fname +']"][type=checkbox]:not([name^="field['+ firstEntityId +']['+ fname +']["])').removeAttr('checked');
         
             //here for each checkbox for first row, check if it is checked and set remaining checkboxes
             firstCheckElement.each(function() {
@@ -84,14 +90,14 @@ function copyFieldValues( fname ) {
                  var elementName = cj(this).attr('name');
                  var correctIndex = elementName.split('field['+ firstEntityId +']['+ fname +'][');
                  correctIndexValue = correctIndex[1].replace(']', '');
-                 cj('.crm-copy-fields [type=checkbox][name^="field["][name*="['+ fname +']['+ correctIndexValue+']"][type!=hidden]').prop('checked',true);
+                 cj('.crm-copy-fields [type=checkbox][name^="field["][name*="['+ fname +']['+ correctIndexValue+']"][type!=hidden]').attr('checked',true).change();
                }
             });
         } else {
             if ( firstCheckElement.prop('checked') ) {
-                cj('.crm-copy-fields [type=checkbox][name^="field["][name*="['+ fname +']"][type!=hidden]').prop('checked',true);
+                cj('.crm-copy-fields [type=checkbox][name^="field["][name*="['+ fname +']"][type!=hidden]').attr('checked',true).change();
             } else {
-                cj('.crm-copy-fields [type=checkbox][name^="field["][name*="['+ fname +']"][type!=hidden]').prop('checked',false);
+                cj('.crm-copy-fields [type=checkbox][name^="field["][name*="['+ fname +']"][type!=hidden]').removeAttr('checked').change();
             }
         }
     } else if ( editor ) {
@@ -124,11 +130,11 @@ function copyFieldValues( fname ) {
             case 'drupalwysiwyg':
                  // TO DO
             default:
-                elementId.val( firstElementValue );
+                elementId.val( firstElementValue ).change();
 
         }
     } else {
-        elementId.val( firstElementValue );
+        elementId.val( firstElementValue ).change();
     }
 
     // since we use different display field for date we also need to set it.

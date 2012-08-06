@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Page/Basic.php';
 
 /**
  * Page for displaying list of message templates
@@ -134,7 +132,7 @@ class CRM_Admin_Page_MessageTemplates extends CRM_Core_Page_Basic {
     return self::$_links;
   }
 
-  function action(&$object, $action, &$values, &$links, $permission) {
+  function action(&$object, $action, &$values, &$links, $permission, $forceAction = FALSE) {
     if ($object->workflow_id) {
       // do not expose action link for reverting to default if the template did not diverge or we just reverted it now
       if (!in_array($object->id, array_keys($this->_revertible)) or
@@ -175,7 +173,6 @@ class CRM_Admin_Page_MessageTemplates extends CRM_Core_Page_Basic {
 
       $this->_revertedId = $id;
 
-      require_once 'CRM/Core/BAO/MessageTemplates.php';
       CRM_Core_BAO_MessageTemplates::revert($id);
     }
 
@@ -219,7 +216,8 @@ class CRM_Admin_Page_MessageTemplates extends CRM_Core_Page_Basic {
    * @return void
    * @access public
    */
-  function browse($action = NULL, $sort) {
+  function browse() {
+    $action = func_num_args() ? func_get_arg(0) : NULL;
     if ($this->_action & CRM_Core_Action::ADD) {
       return;
     }

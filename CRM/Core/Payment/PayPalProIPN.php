@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Payment/BaseIPN.php';
 class CRM_Core_Payment_PayPalProIPN extends CRM_Core_Payment_BaseIPN {
 
   static $_paymentProcessor = NULL;
@@ -137,7 +135,6 @@ class CRM_Core_Payment_PayPalProIPN extends CRM_Core_Payment_BaseIPN {
 
     //set transaction type
     $txnType = $_POST['txn_type'];
-    require_once 'CRM/Core/Payment.php';
     //Changes for paypal pro recurring payment
 
     switch ($txnType) {
@@ -184,8 +181,7 @@ class CRM_Core_Payment_PayPalProIPN extends CRM_Core_Payment_BaseIPN {
         $autoRenewMembership = TRUE;
       }
       //send recurring Notification email for user
-      require_once 'CRM/Contribute/BAO/ContributionPage.php';
-      CRM_Contribute_BAO_ContributionPage::recurringNofify($subscriptionPaymentStatus,
+      CRM_Contribute_BAO_ContributionPage::recurringNotify($subscriptionPaymentStatus,
         $ids['contact'],
         $ids['contributionPage'],
         $recur,
@@ -199,7 +195,7 @@ class CRM_Core_Payment_PayPalProIPN extends CRM_Core_Payment_BaseIPN {
 
     if (!$first) {
       // create a contribution and then get it processed
-      $contribution = new CRM_Contribute_DAO_Contribution();
+      $contribution = new CRM_Contribute_BAO_Contribution();
       $contribution->contact_id = $ids['contact'];
       $contribution->contribution_type_id = $objects['contributionType']->id;
       $contribution->contribution_page_id = $ids['contributionPage'];
@@ -243,7 +239,6 @@ class CRM_Core_Payment_PayPalProIPN extends CRM_Core_Payment_BaseIPN {
       $contribution->total_amount = $input['amount'];
     }
 
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
     // fix for CRM-2842
@@ -283,7 +278,6 @@ class CRM_Core_Payment_PayPalProIPN extends CRM_Core_Payment_BaseIPN {
     CRM_Core_Error::debug_var('GET', $_GET, TRUE, TRUE);
     CRM_Core_Error::debug_var('POST', $_POST, TRUE, TRUE);
 
-    require_once 'CRM/Utils/Request.php';
 
     $objects = $ids = $input = array();
     $input['component'] = $component;
@@ -310,7 +304,7 @@ class CRM_Core_Payment_PayPalProIPN extends CRM_Core_Payment_BaseIPN {
 
     if (!$ids['membership'] && $ids['contributionRecur']) {
       $sql = "
-    SELECT m.id 
+    SELECT m.id
       FROM civicrm_membership m
 INNER JOIN civicrm_membership_payment mp ON m.id = mp.membership_id AND mp.contribution_id = %1
      WHERE m.contribution_recur_id = %2
@@ -323,7 +317,11 @@ INNER JOIN civicrm_membership_payment mp ON m.id = mp.membership_id AND mp.contr
       }
     }
 
-    if (!$this->validateData($input, $ids, $objects)) {
+    $paymentProcessorID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_PaymentProcessorType',
+      'PayPal', 'id', 'name'
+    );
+
+    if (!$this->validateData($input, $ids, $objects, TRUE, $paymentProcessorID)) {
       return FALSE;
     }
 

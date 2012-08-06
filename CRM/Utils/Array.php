@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -48,7 +48,7 @@ class CRM_Utils_Array {
    *
    */
   static
-  function value($key, &$list, $default = NULL) {
+  function value($key, $list, $default = NULL) {
     if (is_array($list)) {
       return array_key_exists($key, $list) ? $list[$key] : $default;
     }
@@ -432,6 +432,51 @@ class CRM_Utils_Array {
   function crmArraySortByField($array, $field) {
     $code = "return strnatcmp(\$a['$field'], \$b['$field']);";
     uasort($array, create_function('$a,$b', $code));
+    return $array;
+  }
+
+  /**
+   * Recursively removes duplicate values from an multi-dimensional array.
+   *
+   * @param array $array The input array possibly containing duplicate values.
+   *
+   * @return array $array The array with duplicate values removed.
+   * @static
+   */
+  static
+  function crmArrayUnique($array) {
+    $result = array_map("unserialize", array_unique(array_map("serialize", $array)));
+    foreach ($result as $key => $value) {
+      if (is_array($value)) {
+        $result[$key] = self::crmArrayUnique($value);
+      }
+    }
+    return $result;
+  }
+
+  /**
+   *  Sort an array and maintain index association, use Collate from the
+   *  PECL "intl" package, if available, for UTF-8 sorting (ex: list of countries).
+   *  On Debian/Ubuntu: apt-get install php5-intl
+   *
+   *  @param array $array array of values
+   *
+   *  @return  array  Sorted array
+   *  @static
+   */
+  static
+  function asort($array = array(
+    )) {
+    $lcMessages = CRM_Utils_System::getUFLocale();
+
+    if ($lcMessages && $lcMessages != 'en_US' && class_exists('Collator')) {
+      $collator = new Collator($lcMessages . '.utf8');
+      $collator->asort($array);
+    }
+    else {
+      asort($array);
+    }
+
     return $array;
   }
 }

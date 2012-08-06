@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -35,6 +35,11 @@ var isMailing    = false;
     {literal}
     text_message = "msg_text";
     html_message = "msg_html";
+    {/literal}
+{elseif $form.formName eq 'Address'}
+    {literal}
+    text_message = "mailing_format";
+    isMailing = false;
     {/literal}
 {else}
     {literal}
@@ -249,9 +254,7 @@ function selectValue( val ) {
         var token     = cj("#"+element.id).val( )[0];
         if ( element.id == 'token3' ) {
            ( isMailing ) ? text_message = "subject" : text_message = "msg_subject"; 
-        }else {
-           ( isMailing ) ? text_message = "text_message" : text_message = "msg_text";
-        }          
+        }         
         
         cj( "#"+ text_message ).replaceSelection( token ); 
 

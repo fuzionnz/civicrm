@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,35 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/Note.php';
-require_once 'CRM/Core/Form.php';
-
-require_once 'CRM/Contact/DAO/Contact.php';
-require_once 'CRM/Contact/BAO/ContactType.php';
-
-require_once 'CRM/Core/DAO/Address.php';
-require_once 'CRM/Core/DAO/Phone.php';
-require_once 'CRM/Core/DAO/Email.php';
-require_once 'CRM/Core/DAO/IM.php';
-require_once 'CRM/Core/DAO/Website.php';
-require_once 'CRM/Core/DAO/OptionValue.php';
-require_once 'CRM/Core/BAO/CustomField.php';
-require_once 'CRM/Core/BAO/CustomValue.php';
-require_once 'CRM/Core/BAO/Location.php';
-require_once 'CRM/Core/BAO/Note.php';
-
-require_once 'CRM/Contact/BAO/Query.php';
-require_once 'CRM/Contact/BAO/Relationship.php';
-require_once 'CRM/Contact/BAO/GroupContact.php';
-require_once 'CRM/Core/Permission.php';
-require_once 'CRM/Mailing/Event/BAO/Subscribe.php';
-
-require_once 'CRM/Core/BAO/OptionValue.php';
 class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
 
   /**
@@ -114,26 +89,29 @@ class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
     }
 
     //fix for validate contact sub type CRM-5143
-    if (isset($params['contact_sub_type'])) {
-      if (empty($params['contact_sub_type'])) {
+    if ( isset( $params['contact_sub_type'] ) ) {
+      if ( empty($params['contact_sub_type']) ) {
         $params['contact_sub_type'] = 'null';
+      } else {
+      if (!CRM_Contact_BAO_ContactType::isExtendsContactType($params['contact_sub_type'],
+          $params['contact_type'], TRUE
+        )) {
+        // we'll need to fix tests to handle this
+        // CRM-7925
+        CRM_Core_Error::fatal(ts('The Contact Sub Type does not match the Contact type for this record'));
+      }
+      if (is_array($params['contact_sub_type'])) {
+        $params['contact_sub_type'] = CRM_Core_DAO::VALUE_SEPARATOR . implode(CRM_Core_DAO::VALUE_SEPARATOR, $params['contact_sub_type']) . CRM_Core_DAO::VALUE_SEPARATOR;
       }
       else {
-        if (!CRM_Contact_BAO_ContactType::isExtendsContactType($params['contact_sub_type'],
-            $params['contact_type'], TRUE
-          )) {
-          // we'll need to fix tests to handle this
-          // CRM-7925
-          require_once 'CRM/Core/Error.php';
-          CRM_Core_Error::fatal(ts('The Contact Sub Type does not match the Contact type for this record'));
-        }
-        if (is_array($params['contact_sub_type'])) {
-          $params['contact_sub_type'] = CRM_Core_DAO::VALUE_SEPARATOR . implode(CRM_Core_DAO::VALUE_SEPARATOR, $params['contact_sub_type']) . CRM_Core_DAO::VALUE_SEPARATOR;
-        }
-        else {
-          $params['contact_sub_type'] = CRM_Core_DAO::VALUE_SEPARATOR . trim($params['contact_sub_type'], CRM_Core_DAO::VALUE_SEPARATOR) . CRM_Core_DAO::VALUE_SEPARATOR;
-        }
+        $params['contact_sub_type'] = CRM_Core_DAO::VALUE_SEPARATOR . trim($params['contact_sub_type'], CRM_Core_DAO::VALUE_SEPARATOR) . CRM_Core_DAO::VALUE_SEPARATOR;
       }
+    }
+    }
+    else {
+      // reset the value
+      // CRM-101XX
+      $params['contact_sub_type'] = 'null';
     }
 
     //fixed contact source
@@ -171,7 +149,6 @@ class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
       $allNull = FALSE;
 
       //format individual fields
-      require_once 'CRM/Contact/BAO/Individual.php';
       CRM_Contact_BAO_Individual::format($params, $contact);
     }
     elseif ($contact->contact_type == 'Household') {
@@ -210,7 +187,6 @@ class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
     if (!$allNull) {
       $contact->save();
 
-      require_once 'CRM/Core/BAO/Log.php';
       CRM_Core_BAO_Log::register($contact->id,
         'civicrm_contact',
         $contact->id
@@ -223,7 +199,6 @@ class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
       )
     ) {
       // create current employer
-      require_once 'CRM/Contact/BAO/Contact/Utils.php';
       if (isset($params['employer_id'])) {
         CRM_Contact_BAO_Contact_Utils::createCurrentEmployerRelationship($contact->id,
           $params['employer_id']
@@ -244,7 +219,6 @@ class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
 
     //update cached employee name
     if ($contact->contact_type == 'Organization') {
-      require_once 'CRM/Contact/BAO/Contact/Utils.php';
       CRM_Contact_BAO_Contact_Utils::updateCurrentEmployer($contact->id);
     }
 
@@ -277,7 +251,6 @@ class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
 
     $isEdit = TRUE;
     if ($invokeHooks) {
-      require_once 'CRM/Utils/Hook.php';
       if (!empty($params['contact_id'])) {
         CRM_Utils_Hook::pre('edit', $params['contact_type'], $params['contact_id'], $params);
       }
@@ -298,7 +271,6 @@ class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
     if (empty($params['contact_id'])) {
       foreach (self::$_greetingTypes as $greeting) {
         if (empty($params[$greeting . '_id'])) {
-          require_once 'CRM/Contact/BAO/Contact/Utils.php';
           if ($defaultGreetingTypeId =
             CRM_Contact_BAO_Contact_Utils::defaultGreeting($params['contact_type'], $greeting)
           ) {
@@ -308,7 +280,6 @@ class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
       }
     }
 
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
     $contact = self::add($params);
@@ -321,12 +292,10 @@ class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
 
     $params['contact_id'] = $contact->id;
 
-    require_once 'CRM/Core/BAO/Setting.php';
     if (CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::MULTISITE_PREFERENCES_NAME,
         'is_enabled'
       )) {
       // in order to make sure that every contact must be added to a group (CRM-4613) -
-      require_once 'CRM/Core/BAO/Domain.php';
       $domainGroupID = CRM_Core_BAO_Domain::getGroupId();
       if (CRM_Utils_Array::value('group', $params) && is_array($params['group'])) {
         $grpFlp = array_flip($params['group']);
@@ -340,7 +309,6 @@ class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
     }
 
     if (array_key_exists('group', $params)) {
-      require_once 'CRM/Contact/BAO/GroupContact.php';
       $contactIds = array($params['contact_id']);
       foreach ($params['group'] as $groupId => $flag) {
         if ($flag == 1) {
@@ -359,7 +327,6 @@ class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
     }
 
     //add website
-    require_once 'CRM/Core/BAO/Website.php';
     CRM_Core_BAO_Website::create($params['website'], $contact->id, $skipDelete);
 
     //get userID from session
@@ -411,13 +378,11 @@ class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
 
 
     // update the UF user_unique_id if that has changed
-    require_once 'CRM/Core/BAO/UFMatch.php';
     CRM_Core_BAO_UFMatch::updateUFName($contact->id);
 
     if (CRM_Utils_Array::value('custom', $params) &&
       is_array($params['custom'])
     ) {
-      require_once 'CRM/Core/BAO/CustomValueTable.php';
       CRM_Core_BAO_CustomValueTable::store($params['custom'], 'civicrm_contact', $contact->id);
     }
 
@@ -445,7 +410,6 @@ class CRM_Contact_BAO_Contact extends CRM_Contact_DAO_Contact {
       // since resetting and
       // rebuilding cache could be expensive (for many contacts). We might come out with better
       // approach in future.
-      require_once 'CRM/Contact/BAO/Contact/Utils.php';
       CRM_Contact_BAO_Contact_Utils::clearContactCaches();
     }
 
@@ -487,7 +451,6 @@ WHERE     civicrm_contact.id = " . CRM_Utils_Type::escape($id, 'Integer');
     $dao = new CRM_Core_DAO();
     $dao->query($sql);
     if ($dao->fetch()) {
-      require_once 'CRM/Contact/BAO/Contact/Utils.php';
       $image = CRM_Contact_BAO_Contact_Utils::getImage($dao->contact_sub_type ?
         $dao->contact_sub_type : $dao->contact_type, FALSE, $id
       );
@@ -663,7 +626,7 @@ WHERE     civicrm_contact.id = " . CRM_Utils_Type::escape($id, 'Integer');
       $params['contact_id'] = $params['id'];
     }
 
-    $contact = self::_getValues($params, $defaults);
+    $contact = self::getValues($params, $defaults);
 
     unset($params['id']);
 
@@ -686,7 +649,6 @@ WHERE     civicrm_contact.id = " . CRM_Utils_Type::escape($id, 'Integer');
     }
 
     if (!isset($params['noWebsite'])) {
-      require_once 'CRM/Core/BAO/Website.php';
       $contact->website = CRM_Core_BAO_Website::getValues($params, $defaults);
     }
 
@@ -723,8 +685,8 @@ WHERE     civicrm_contact.id = " . CRM_Utils_Type::escape($id, 'Integer');
    * @access public
    * @static
    */
+  static
   function deleteContact($id, $restore = FALSE, $skipUndelete = FALSE) {
-    require_once 'CRM/Activity/BAO/Activity.php';
 
     if (!$id) {
       return FALSE;
@@ -732,7 +694,6 @@ WHERE     civicrm_contact.id = " . CRM_Utils_Type::escape($id, 'Integer');
 
     // make sure we have edit permission for this contact
     // before we delete
-    require_once 'CRM/Contact/BAO/Contact/Permission.php';
     if (($skipUndelete && !CRM_Core_Permission::check('delete contacts')) ||
       ($restore && !CRM_Core_Permission::check('access deleted contacts'))
     ) {
@@ -755,47 +716,43 @@ WHERE     civicrm_contact.id = " . CRM_Utils_Type::escape($id, 'Integer');
       return FALSE;
     }
 
+    $contactType = $contact->contact_type;
+    $action = ($restore) ? 'restore' : 'delete';
+
+    CRM_Utils_Hook::pre($action, $contactType, $id, CRM_Core_DAO::$_nullArray);
+
     if ($restore) {
       self::contactTrashRestore($contact, TRUE);
+      CRM_Utils_Hook::post($action, $contactType, $contact->id, $contact);
       return TRUE;
     }
 
-    $contactType = $contact->contact_type;
 
     // currently we only clear employer cache.
     // we are not deleting inherited membership if any.
     if ($contact->contact_type == 'Organization') {
-      require_once 'CRM/Contact/BAO/Contact/Utils.php';
       CRM_Contact_BAO_Contact_Utils::clearAllEmployee($id);
     }
 
-    require_once 'CRM/Utils/Hook.php';
-    CRM_Utils_Hook::pre('delete', $contactType, $id, CRM_Core_DAO::$_nullArray);
-
     // start a new transaction
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
     $config = CRM_Core_Config::singleton();
     if ($skipUndelete or !$config->contactUndelete) {
 
       //delete billing address if exists.
-      require_once 'CRM/Contribute/BAO/Contribution.php';
       CRM_Contribute_BAO_Contribution::deleteAddress(NULL, $id);
 
       // delete the log entries since we dont have triggers enabled as yet
-      require_once 'CRM/Core/DAO/Log.php';
       $logDAO = new CRM_Core_DAO_Log();
       $logDAO->entity_table = 'civicrm_contact';
       $logDAO->entity_id = $id;
       $logDAO->delete();
 
       // do activity cleanup, CRM-5604
-      require_once 'CRM/Activity/BAO/Activity.php';
-      CRM_Activity_BAO_activity::cleanupActivity($id);
+      CRM_Activity_BAO_Activity::cleanupActivity($id);
 
       // delete all notes related to contact
-      require_once 'CRM/Core/BAO/Note.php';
       CRM_Core_BAO_Note::cleanContactNotes($id);
 
       $contact->delete();
@@ -805,15 +762,12 @@ WHERE     civicrm_contact.id = " . CRM_Utils_Type::escape($id, 'Integer');
     }
 
     //delete the contact id from recently view
-    require_once 'CRM/Utils/Recent.php';
     CRM_Utils_Recent::delContact($id);
 
     // reset the group contact cache for this group
-    require_once 'CRM/Contact/BAO/GroupContactCache.php';
     CRM_Contact_BAO_GroupContactCache::remove();
 
     // delete any dupe cache entry
-    require_once 'CRM/Core/BAO/PrevNextCache.php';
     CRM_Core_BAO_PrevNextCache::deleteItem($id);
 
     $transaction->commit();
@@ -874,11 +828,10 @@ WHERE id={$id}; ";
         $baseUrl,
         str_replace('\\', '/', $absolutePath)
       );
-    }
-    elseif ($config->userFramework == 'WordPress') {
-      $userFrameworkBaseURL = trim(str_replace('/wp-admin/', '', $config->userFrameworkBaseURL));
-      $customFileUploadDirectory = strstr(str_replace('\\', '/', $absolutePath), '/wp-content/');
-      $relativePath = $userFrameworkBaseURL . $customFileUploadDirectory;
+        } else if ( $config->userFramework == 'WordPress' ) {
+            $userFrameworkBaseURL = trim( str_replace( '/wp-admin/', '', $config->userFrameworkBaseURL ) );
+            $customFileUploadDirectory = strstr( str_replace('\\', '/', $absolutePath), '/wp-content/' );
+            $relativePath = $userFrameworkBaseURL . $customFileUploadDirectory;
     }
 
     return $relativePath;
@@ -962,8 +915,6 @@ WHERE id={$id}; ";
    * function to extract contact id from url for deleting contact image
    */
   public static function processImage() {
-    require_once 'CRM/Utils/Request.php';
-    require_once 'CRM/Core/DAO.php';
 
     $action = CRM_Utils_Request::retrieve('action', 'String', $this);
     $cid = CRM_Utils_Request::retrieve('cid', 'Positive', $this);
@@ -989,7 +940,9 @@ WHERE id={$id}; ";
    *                                i.e. is_delete = 0
    *
    *  @return void
+   * @static
    */
+  static
   function contactTrashRestore($contact, $restore = FALSE) {
     $op = ($restore ? 'restore' : 'trash');
 
@@ -1073,6 +1026,7 @@ WHERE id={$id}; ";
       $details,
       array('contact_type', 'contact_sub_type')
     );
+
     if ($contact) {
       $contactTypes = array();
       if ($contact->contact_sub_type) 
@@ -1101,7 +1055,9 @@ WHERE id={$id}; ";
    *
    * @return array array of importable Fields
    * @access public
+   * @static
    */
+  static
   function &importableFields($contactType = 'Individual',
     $status          = FALSE,
     $showAll         = FALSE,
@@ -1124,13 +1080,11 @@ WHERE id={$id}; ";
       }
 
       // check if we can retrieve from database cache
-      require_once 'CRM/Core/BAO/Cache.php';
       $fields = CRM_Core_BAO_Cache::getItem('contact fields', $cacheKeyString);
 
       if (!$fields) {
         $fields = CRM_Contact_DAO_Contact::import();
 
-        require_once 'CRM/Core/OptionValue.php';
         // get the fields thar are meant for contact types
         if (in_array($contactType, array(
           'Individual', 'Household', 'Organization', 'All'))) {
@@ -1264,7 +1218,9 @@ WHERE id={$id}; ";
    *
    * @return array array of exportable Fields
    * @access public
+   * @static
    */
+  static
   function &exportableFields($contactType = 'Individual', $status = FALSE, $export = FALSE, $search = FALSE) {
     if (empty($contactType)) {
       $contactType = 'All';
@@ -1281,7 +1237,6 @@ WHERE id={$id}; ";
       }
 
       // check if we can retrieve from database cache
-      require_once 'CRM/Core/BAO/Cache.php';
       $fields = CRM_Core_BAO_Cache::getItem('contact fields', $cacheKeyString);
 
       if (!$fields) {
@@ -1291,7 +1246,6 @@ WHERE id={$id}; ";
         // the fields are meant for contact types
         if (in_array($contactType, array(
           'Individual', 'Household', 'Organization', 'All'))) {
-          require_once 'CRM/Core/OptionValue.php';
           $fields = array_merge($fields, CRM_Core_OptionValue::getFields('', $contactType));
         }
         // add current employer for individuals
@@ -1335,7 +1289,6 @@ WHERE id={$id}; ";
         $fields = array_merge($fields, $locationFields);
 
         //add world region
-        require_once 'CRM/Core/DAO/Worldregion.php';
         $fields = array_merge($fields,
           CRM_Core_DAO_Worldregion::export()
         );
@@ -1459,7 +1412,7 @@ WHERE id={$id}; ";
 
     // we dont know the contents of return properties, but we need the lower level ids of the contact
     // so add a few fields
-    $returnProperties['first_name'] = $returnProperties['organization_name'] = $returnProperties['household_name'] = $returnProperties['contact_type'] = 1;
+    $returnProperties['first_name'] = $returnProperties['organization_name'] = $returnProperties['household_name'] = $returnProperties['contact_type'] = $returnProperties['contact_sub_type'] = 1;
     return list($query, $options) = CRM_Contact_BAO_Query::apiQuery($params, $returnProperties, $options);
   }
 
@@ -1476,7 +1429,6 @@ WHERE id={$id}; ";
    */
   static
   function &makeHierReturnProperties($fields, $contactId = NULL) {
-    require_once 'CRM/Core/PseudoConstant.php';
     $locationTypes = CRM_Core_PseudoConstant::locationType();
 
     $returnProperties = array();
@@ -1583,7 +1535,6 @@ WHERE  civicrm_contact.id = %1 ";
     else {
       // if there is no primart contact location, then return default
       // location type of the system
-      require_once 'CRM/Core/BAO/LocationType.php';
       $defaultLocationType = CRM_Core_BAO_LocationType::getDefault();
       return $defaultLocationType->id;
     }
@@ -1661,7 +1612,6 @@ ORDER BY civicrm_email.is_primary DESC";
       $params['uf_group_id'] = $ufGroupId;
     }
 
-    require_once 'CRM/Utils/Hook.php';
     if ($contactID) {
       $editHook = TRUE;
       CRM_Utils_Hook::pre('edit', 'Profile', $contactID, $params);
@@ -1693,7 +1643,6 @@ ORDER BY civicrm_email.is_primary DESC";
       }
     }
 
-    require_once 'CRM/Contact/BAO/Contact.php';
     if ($data['contact_type'] != 'Student') {
       $contact = self::create($data);
     }
@@ -1719,7 +1668,6 @@ ORDER BY civicrm_email.is_primary DESC";
     }
 
     if (CRM_Utils_Array::value('tag', $fields)) {
-      require_once 'CRM/Core/BAO/EntityTag.php';
       CRM_Core_BAO_EntityTag::create($params['tag'], 'civicrm_contact', $contactID);
     }
 
@@ -1769,7 +1717,6 @@ ORDER BY civicrm_email.is_primary DESC";
     }
 
     // reset the group contact cache for this group
-    require_once 'CRM/Contact/BAO/GroupContactCache.php';
     CRM_Contact_BAO_GroupContactCache::remove();
 
     if ($editHook) {
@@ -1791,13 +1738,14 @@ ORDER BY civicrm_email.is_primary DESC";
     // get the contact details (hier)
     if ($contactID) {
       list($details, $options) = self::getHierContactDetails($contactID, $fields);
+
       $contactDetails = $details[$contactID];
       $data['contact_type'] = CRM_Utils_Array::value('contact_type', $contactDetails);
+      $data['contact_sub_type'] = CRM_Utils_Array::value('contact_sub_type', $contactDetails);
     }
     else {
       //we should get contact type only if contact
       if ($ufGroupId) {
-        require_once 'CRM/Core/BAO/UFField.php';
         $data['contact_type'] = CRM_Core_BAO_UFField::getProfileType($ufGroupId);
 
         //special case to handle profile with only contact fields
@@ -1845,7 +1793,6 @@ ORDER BY civicrm_email.is_primary DESC";
       $primaryLocationType = self::getPrimaryLocationType($contactID);
     }
     else {
-      require_once 'CRM/Core/BAO/LocationType.php';
       $defaultLocation = CRM_Core_BAO_LocationType::getDefault();
       $defaultLocationId = $defaultLocation->id;
     }
@@ -1898,7 +1845,6 @@ ORDER BY civicrm_email.is_primary DESC";
           $count++;
         }
 
-        require_once 'CRM/Utils/Array.php';
         $loc = CRM_Utils_Array::key($index, $locationType);
 
         $blockName = 'address';
@@ -2068,7 +2014,6 @@ ORDER BY civicrm_email.is_primary DESC";
       $studentFieldPresent = 0;
       foreach ($fields as $name => $field) {
         // check if student fields present
-        require_once 'CRM/Quest/BAO/Student.php';
         if ((!$studentFieldPresent) && array_key_exists($name, CRM_Quest_BAO_Student::exportableFields())) {
           $studentFieldPresent = 1;
         }
@@ -2116,12 +2061,10 @@ FROM       civicrm_contact
 INNER JOIN civicrm_email    ON ( civicrm_contact.id = civicrm_email.contact_id )";
 
 
-    require_once 'CRM/Core/BAO/Setting.php';
     if (CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::MULTISITE_PREFERENCES_NAME,
         'uniq_email_per_site'
       )) {
       // try to find a match within a site (multisite).
-      require_once 'CRM/Core/BAO/Domain.php';
       $groups = CRM_Core_BAO_Domain::getChildGroupIds();
       if (!empty($groups)) {
         $query .= "
@@ -2254,7 +2197,7 @@ AND       civicrm_openid.is_primary = 1";
    * @access public
    * @static
    */
-  private static function _getValues(&$params, &$values) {
+  public static function getValues(&$params, &$values) {
     $contact = new CRM_Contact_BAO_Contact();
 
     $contact->copyValues($params);
@@ -2289,7 +2232,6 @@ AND       civicrm_openid.is_primary = 1";
           'groupName' => 'preferred_communication_method',
         ));
 
-      require_once 'CRM/Core/OptionGroup.php';
       CRM_Core_OptionGroup::lookupValues($temp, $names, FALSE);
 
       $values['preferred_communication_method'] = $preffComm;
@@ -2346,57 +2288,45 @@ AND       civicrm_openid.is_primary = 1";
     $object = NULL;
     switch ($component) {
       case 'tag':
-        require_once 'CRM/Core/BAO/EntityTag.php';
         return CRM_Core_BAO_EntityTag::getContactTags($contactId, TRUE);
 
       case 'rel':
-        require_once 'CRM/Contact/BAO/Relationship.php';
         return CRM_Contact_BAO_Relationship::getRelationship($contactId,
           CRM_Contact_BAO_Relationship::CURRENT,
           0, 1
         );
 
       case 'group':
-        require_once 'CRM/Contact/BAO/GroupContact.php';
         return CRM_Contact_BAO_GroupContact::getContactGroup($contactId, "Added", NULL, TRUE);
 
       case 'log':
-        require_once 'CRM/Core/BAO/Log.php';
         if (CRM_Core_BAO_Log::useLoggingReport()) {
           return FALSE;
         }
         return CRM_Core_BAO_Log::getContactLogCount($contactId);
 
       case 'note':
-        require_once 'CRM/Core/BAO/Note.php';
         return CRM_Core_BAO_Note::getContactNoteCount($contactId);
 
       case 'contribution':
-        require_once 'CRM/Contribute/BAO/Contribution.php';
         return CRM_Contribute_BAO_Contribution::contributionCount($contactId);
 
       case 'membership':
-        require_once 'CRM/Member/BAO/Membership.php';
         return CRM_Member_BAO_Membership::getContactMembershipCount($contactId, TRUE);
 
       case 'participant':
-        require_once 'CRM/Event/BAO/Participant.php';
         return CRM_Event_BAO_Participant::getContactParticipantCount($contactId);
 
       case 'pledge':
-        require_once 'CRM/Pledge/BAO/Pledge.php';
         return CRM_Pledge_BAO_Pledge::getContactPledgeCount($contactId);
 
       case 'case':
-        require_once 'CRM/Case/BAO/Case.php';
         return CRM_Case_BAO_Case::caseCount($contactId);
 
       case 'grant':
-        require_once 'CRM/Grant/BAO/Grant.php';
         return CRM_Grant_BAO_Grant::getContactGrantCount($contactId);
 
       case 'activity':
-        require_once 'CRM/Activity/BAO/Activity.php';
         $input = array(
           'contact_id' => $contactId,
           'admin' => FALSE,
@@ -2408,7 +2338,6 @@ AND       civicrm_openid.is_primary = 1";
       default:
         $custom = explode('_', $component);
         if ($custom['0'] = 'custom') {
-          require_once 'CRM/Core/DAO/CustomGroup.php';
           if (!$tableName) {
             $tableName = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_CustomGroup', $custom['1'], 'table_name');
           }
@@ -2437,7 +2366,6 @@ AND       civicrm_openid.is_primary = 1";
 
     $emailGreetingString = $postalGreetingString = $addresseeString = NULL;
     $updateQueryString = array();
-    require_once 'CRM/Activity/BAO/Activity.php';
 
     //cache email and postal greeting to greeting display
     if ($contact->email_greeting_custom != 'null' && $contact->email_greeting_custom) {
@@ -2468,7 +2396,6 @@ AND       civicrm_openid.is_primary = 1";
     }
 
     if ($emailGreetingString) {
-      require_once 'CRM/Utils/Token.php';
       CRM_Utils_Token::replaceGreetingTokens($emailGreetingString,
         $contactDetails,
         $contact->id,
@@ -2505,7 +2432,6 @@ AND       civicrm_openid.is_primary = 1";
     }
 
     if ($postalGreetingString) {
-      require_once 'CRM/Utils/Token.php';
       CRM_Utils_Token::replaceGreetingTokens($postalGreetingString,
         $contactDetails,
         $contact->id,
@@ -2543,7 +2469,6 @@ AND       civicrm_openid.is_primary = 1";
     }
 
     if ($addresseeString) {
-      require_once 'CRM/Utils/Token.php';
       CRM_Utils_Token::replaceGreetingTokens($addresseeString,
         $contactDetails,
         $contact->id,
@@ -2582,12 +2507,12 @@ AND       civicrm_openid.is_primary = 1";
     foreach (array(
       'Email', 'OpenID', 'Phone', 'Address', 'IM') as $block) {
       $name = strtolower($block);
-      require_once "CRM/Core/DAO/{$block}.php";
       eval("\$blockDAO = new CRM_Core_DAO_$block();");
 
       // build the condition.
       if (is_array($criteria)) {
-        eval('$fields = CRM_Core_DAO_' . $block . '::fields( );');
+        eval('$object = new CRM_Core_DAO_' . $block . '( );');
+        $fields = $object->fields();
         $conditions = array();
         foreach ($criteria as $field => $value) {
           if (array_key_exists($field, $fields)) {
@@ -2762,7 +2687,6 @@ AND       civicrm_openid.is_primary = 1";
     //3. check for acls.
     //3. edit and view contact are directly accessible to user.
 
-    require_once 'CRM/Core/Permission.php';
     $aclPermissionedTasks = array(
       'view-contact', 'edit-contact', 'new-activity',
       'new-email', 'group-add-contact', 'tag-contact', 'delete-contact',
@@ -2882,4 +2806,3 @@ LEFT JOIN civicrm_address add2 ON ( add1.master_id = add2.id )
     return $masterDisplayName;
   }
 }
-

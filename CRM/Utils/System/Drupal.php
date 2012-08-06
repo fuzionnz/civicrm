@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Utils/System/Base.php';
 
 /**
  * Drupal specific stuff goes here
@@ -65,7 +63,7 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
 
     $admin = user_access('administer users');
     if (!variable_get('user_email_verification', TRUE) || $admin) {
-      $form_state['input']['pass'] = array('pass1' => $params['cms_pass'], 'pass2' => $params['cms_pass']);
+            $form_state['input']['pass'] = array('pass1'=>$params['cms_pass'],'pass2'=>$params['cms_pass']);
     }
 
     $form_state['rebuild'] = FALSE;
@@ -79,12 +77,6 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
     $config->inCiviCRM = TRUE;
 
     $form = drupal_retrieve_form('user_register_form', $form_state);
-
-    drupal_prepare_form('user_register_form', $form, $form_state);
-
-    // remove the captcha element from the form prior to processing
-    unset($form['captcha']);
-
     $form_state['process_input'] = 1;
     $form_state['submitted'] = 1;
 
@@ -95,19 +87,14 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
     if (form_get_errors()) {
       return FALSE;
     }
-
-    //Fetch id of newly added user
-    $uid = db_query(
-      "SELECT uid FROM {users} WHERE name = :name",
-      array(':name' => $params['cms_name'])
-    )->fetchField();
-
-    return $uid;
+    else {
+      return $form_state['user']->uid;
+    }
   }
 
   /*
      *  Change user name in host CMS
-     *  
+     *
      *  @param integer $ufID User ID in CMS
      *  @param string $ufName User name
      */
@@ -131,7 +118,7 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
    *
    * @return void
    */
-  function checkUserNameEmailExists(&$params, &$errors, $emailName = 'email') {
+  static function checkUserNameEmailExists(&$params, &$errors, $emailName = 'email') {
     $config = CRM_Core_Config::singleton();
 
     $dao    = new CRM_Core_DAO();
@@ -185,7 +172,6 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
      *
      */
   function getLoginDestination(&$form) {
-    require_once 'CRM/Utils/System.php';
     $args = NULL;
 
     $id = $form->get('id');
@@ -287,8 +273,14 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
    * @todo Not Drupal 7 compatible
    */
   function addHTMLHead($header) {
+    static $count = 0;
     if (!empty($header)) {
-      drupal_add_html_head($header);
+      $key = 'civi_' . ++$count;
+      $data = array(
+        '#type' => 'markup',
+        '#markup' => $header,
+      );
+      drupal_add_html_head($data, $key);
     }
   }
 
@@ -344,7 +336,6 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
     $config = CRM_Core_Config::singleton();
     $script = 'index.php';
 
-    require_once 'CRM/Utils/String.php';
     $path = CRM_Utils_String::stripPathChars($path);
 
     if (isset($fragment)) {
@@ -409,7 +400,7 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
       contactID, ufID, unique string ) if success
    * @access public
    */
-  function authenticate($name, $password, $loadCMSBootstrap = FALSE, $realPath = NULL) {
+   static function authenticate($name, $password, $loadCMSBootstrap = FALSE, $realPath = NULL) {
     require_once 'DB.php';
 
     $config = CRM_Core_Config::singleton();
@@ -422,7 +413,6 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
     }
 
     $account = $userUid = $userMail = NULL;
-    require_once 'CRM/Core/BAO/UFMatch.php';
 
 
 
@@ -446,7 +436,7 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
       // CRM-8638
       // SOAP cannot load drupal bootstrap and hence we do it the old way
       // Contact CiviSMTP folks if we run into issues with this :)
-      $cmsPath = self::cmsRootPath($realPath);
+      $cmsPath = $this->cmsRootPath($realPath);
 
       require_once ("$cmsPath/includes/bootstrap.inc");
       require_once ("$cmsPath/includes/password.inc");
@@ -454,7 +444,7 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
       $strtolower = function_exists('mb_strtolower') ? 'mb_strtolower' : 'strtolower';
       $name       = $dbDrupal->escapeSimple($strtolower($name));
       $sql        = "
-SELECT u.* 
+SELECT u.*
 FROM   {$config->userFrameworkUsersTableName} u
 WHERE  LOWER(u.name) = '$name'
 AND    u.status = 1
@@ -499,7 +489,6 @@ AND    u.status = 1
 
     }
 
-    require_once ('CRM/Core/BAO/UFMatch.php');
     $contact_id = CRM_Core_BAO_UFMatch::getContactId($uid);
 
     // lets store contact id and user id in session
@@ -565,7 +554,6 @@ AND    u.status = 1
         return $language->language;
 
       default:
-        require_once 'CRM/Core/I18n/PseudoConstant.php';
         return CRM_Core_I18n_PseudoConstant::longForShort(substr($language->language, 0, 2));
     }
   }
@@ -625,7 +613,6 @@ AND    u.status = 1
     // all the modules that are listening on it, does not apply
     // to J! and WP as yet
     // CRM-8655
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::config($config);
 
     if (!$loadUser) {
@@ -670,7 +657,6 @@ AND    u.status = 1
     $config->cleanURL = (int)variable_get('clean_url', '0');
 
     // CRM-8655: Drupal wasn't available during bootstrap, so hook_civicrm_config never executes
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::config($config);
 
     return FALSE;
@@ -821,6 +807,25 @@ AND    u.status = 1
     }
 
     return $url;
+  }
+
+  /**
+   * Find any users/roles/security-principals with the given permission
+   * and replace it with one or more permissions.
+   *
+   * @param $oldPerm string
+   * @param $newPerms array, strings
+   *
+   * @return void
+   */
+  function replacePermission($oldPerm, $newPerms) {
+    $roles = user_roles(FALSE, $oldPerm);
+    if (!empty($roles)) {
+      foreach (array_keys($roles) as $rid) {
+        user_role_revoke_permissions($rid, array($oldPerm));
+        user_role_grant_permissions($rid, $newPerms);
+      }
+    }
   }
 }
 

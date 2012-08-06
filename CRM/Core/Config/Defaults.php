@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -98,8 +98,9 @@ class CRM_Core_Config_Defaults {
    *                           mode (eg: Global setting >> Components)
    *
    * @access public
+   * @static
    */
-  public function setValues(&$defaults, $formMode = FALSE) {
+  public static function setValues(&$defaults, $formMode = FALSE) {
     $config = CRM_Core_Config::singleton();
 
     $baseURL = $config->userFrameworkBaseURL;
@@ -124,11 +125,8 @@ class CRM_Core_Config_Defaults {
     }
     //set defaults if not set in db
     if (!isset($defaults['userFrameworkResourceURL'])) {
-      $testIMG = "i/tracker.gif";
       if ($config->userFramework == 'Joomla') {
-        if (CRM_Utils_System::checkURL("{$baseURL}components/com_civicrm/civicrm/{$testIMG}")) {
-          $defaults['userFrameworkResourceURL'] = $baseURL . "components/com_civicrm/civicrm/";
-        }
+        $defaults['userFrameworkResourceURL'] = $baseURL . "components/com_civicrm/civicrm/";
       }
       elseif ($config->userFramework == 'WordPress') {
         $defaults['userFrameworkResourceURL'] = $baseURL . "wp-content/plugins/civicrm/civicrm/";

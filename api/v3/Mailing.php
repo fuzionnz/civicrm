@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +33,7 @@
  *
  * @package CiviCRM_APIv3
  * @subpackage API_Mailing
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -42,17 +44,6 @@
 
 
 require_once 'api/v3/utils.php';
-
-require_once 'CRM/Contact/BAO/Group.php';
-
-require_once 'CRM/Mailing/BAO/BouncePattern.php';
-require_once 'CRM/Mailing/Event/BAO/Bounce.php';
-require_once 'CRM/Mailing/Event/BAO/Confirm.php';
-require_once 'CRM/Mailing/Event/BAO/Opened.php';
-require_once 'CRM/Mailing/Event/BAO/Queue.php';
-require_once 'CRM/Mailing/Event/BAO/Reply.php';
-require_once 'CRM/Mailing/Event/BAO/Forward.php';
-require_once 'CRM/Mailing/Event/BAO/TrackableURLOpen.php';
 
 /**
  * Process a bounce event by passing through to the BAOs.
@@ -84,29 +75,14 @@ function civicrm_api3_mailing_event_bounce($params) {
 
 /**
  * Handle a confirm event
+ * @deprecated
  *
  * @param array $params
  *
  * @return array
  */
 function civicrm_api3_mailing_event_confirm($params) {
-
-  civicrm_api3_verify_mandatory($params,
-    'CRM_Mailing_Event_DAO_Confirm',
-    array('contact_id', 'subscribe_id', 'hash'),
-    FALSE
-  );
-
-  $contact_id   = $params['contact_id'];
-  $subscribe_id = $params['subscribe_id'];
-  $hash         = $params['hash'];
-
-  $confirm = CRM_Mailing_Event_BAO_Confirm::confirm($contact_id, $subscribe_id, $hash) !== FALSE;
-
-  if (!$confirm) {
-    return civicrm_api3_create_error('Confirmation failed');
-  }
-  return civicrm_api3_create_success($params);
+  return civicrm_api('mailing_event_confirm', 'create', $params);
 }
 
 /**

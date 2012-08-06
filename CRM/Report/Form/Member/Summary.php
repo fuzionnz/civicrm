@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,16 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
-require_once 'CRM/Member/PseudoConstant.php';
-require_once "CRM/Member/BAO/MembershipType.php";
-require_once "CRM/Member/BAO/Membership.php";
-require_once 'CRM/Contribute/PseudoConstant.php';
 class CRM_Report_Form_Member_Summary extends CRM_Report_Form {
 
   protected $_summary = NULL;
@@ -486,7 +482,6 @@ class CRM_Report_Form_Member_Summary extends CRM_Report_Form {
       }
 
       // build chart.
-      require_once 'CRM/Utils/OpenFlashChart.php';
       if ($isMembershipType) {
         $graphRows['value'] = $display;
         $chartInfo = array(

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO.php';
-require_once 'CRM/Core/DAO/Domain.php';
-require_once 'CRM/Core/I18n/SchemaStructure.php';
 class CRM_Core_I18n_Schema {
 
   /**
@@ -103,7 +99,7 @@ class CRM_Core_I18n_Schema {
       $queries[] = self::createViewQuery($locale, $table, $dao);
 
       // add new indices
-      $queries = array_merge($queries, self::createIndexQueries($locale, $table));
+      $queries = array_merge($queries, array_values(self::createIndexQueries($locale, $table)));
     }
 
     // execute the queries without i18n rewriting
@@ -160,7 +156,7 @@ class CRM_Core_I18n_Schema {
    * @return void
    */
   static
-  function makeSinglelingualTable($retain, $table, $class = 'CRM_Core_I18n_SchemaStructure') {
+    function makeSinglelingualTable($retain, $table, $class = 'CRM_Core_I18n_SchemaStructure', $triggers = array()) {
     $domain = new CRM_Core_DAO_Domain;
     $domain->find(TRUE);
     $locales = explode(CRM_Core_DAO::VALUE_SEPARATOR, $domain->locales);
@@ -169,11 +165,11 @@ class CRM_Core_I18n_Schema {
     if (!$locales) {
       return;
     }
-
+    
     eval("\$columns =& $class::columns();");
     eval("\$indices =& $class::indices();");
     $queries = array();
-
+    $dropQueries = array();
     // drop indices
     if (isset($indices[$table])) {
       foreach ($indices[$table] as $index) {
@@ -183,16 +179,12 @@ class CRM_Core_I18n_Schema {
       }
     }
 
-    // drop triggers
-    $queries[] = "DROP TRIGGER IF EXISTS {$table}_before_insert";
-    $queries[] = "DROP TRIGGER IF EXISTS {$table}_before_update";
-
     // deal with columns
     foreach ($columns[$table] as $column => $type) {
       $queries[] = "ALTER TABLE {$table} ADD {$column} {$type}";
       $queries[] = "UPDATE {$table} SET {$column} = {$column}_{$retain}";
       foreach ($locales as $loc) {
-        $queries[] = "ALTER TABLE {$table} DROP {$column}_{$loc}";
+        $dropQueries[] = "ALTER TABLE {$table} DROP {$column}_{$loc}";
       }
     }
 
@@ -209,6 +201,22 @@ class CRM_Core_I18n_Schema {
     foreach ($queries as $query) {
       $dao->query($query, FALSE);
     }
+    
+    foreach ($dropQueries as $query) {
+      $dao->query($query, FALSE);
+    }
+
+    if (CRM_Core_Config::isUpgradeMode() && !empty($triggers)) {
+      foreach ($triggers as $triggerInfo) {
+        $when = $triggerInfo['when'];
+        $event = $triggerInfo['event'];
+        $triggerName = "{$table}_{$when}_{$event}";
+        CRM_Core_DAO::executeQuery("DROP TRIGGER IF EXISTS {$triggerName}");
+      }
+    }
+
+    // invoke the meta trigger creation call
+    CRM_Core_DAO::triggerRebuild($table);
   }
 
   /**
@@ -253,11 +261,8 @@ class CRM_Core_I18n_Schema {
       $queries[] = self::createViewQuery($locale, $table, $dao);
 
       // add new indices
-      $queries = array_merge($queries, self::createIndexQueries($locale, $table));
+      $queries = array_merge($queries, array_values(self::createIndexQueries($locale, $table)));
     }
-
-    // add triggers
-    $queries = array_merge($queries, self::createTriggerQueries($locales, $locale));
 
     // execute the queries without i18n rewriting
     foreach ($queries as $query) {
@@ -268,6 +273,9 @@ class CRM_Core_I18n_Schema {
     $locales[] = $locale;
     $domain->locales = implode(CRM_Core_DAO::VALUE_SEPARATOR, $locales);
     $domain->save();
+
+    // invoke the meta trigger creation call
+    CRM_Core_DAO::triggerRebuild();
   }
 
   /**
@@ -282,12 +290,11 @@ class CRM_Core_I18n_Schema {
   function rebuildMultilingualSchema($locales, $version = NULL) {
     if ($version) {
       $latest = self::getLatestSchema($version);
-      $class = "CRM_Core_I18n_SchemaStructure_{$latest}";
       require_once "CRM/Core/I18n/SchemaStructure_{$latest}.php";
+      $class = "CRM_Core_I18n_SchemaStructure_{$latest}";
     }
     else {
       $class = 'CRM_Core_I18n_SchemaStructure';
-      require_once 'CRM/Core/I18n/SchemaStructure.php';
     }
     eval("\$indices =& $class::indices();");
     eval("\$tables  =& $class::tables();");
@@ -327,11 +334,13 @@ class CRM_Core_I18n_Schema {
 
     // rebuild triggers
     $last = array_pop($locales);
-    $queries = array_merge($queries, self::createTriggerQueries($locales, $last, $class));
 
     foreach ($queries as $query) {
       $dao->query($query, FALSE);
     }
+
+    // invoke the meta trigger creation call
+    CRM_Core_DAO::triggerRebuild();
   }
 
   /**
@@ -359,8 +368,10 @@ class CRM_Core_I18n_Schema {
     if ($_tables === NULL || $force) {
       if ($version) {
         $latest = self::getLatestSchema($version);
-        $class = "CRM_Core_I18n_SchemaStructure_{$latest}";
+        // FIXME: Doing require_once is a must here because a call like CRM_Core_I18n_SchemaStructure_4_1_0 makes
+        // class loader look for file like - CRM/Core/I18n/SchemaStructure/4/1/0.php which is not what we want to be loaded
         require_once "CRM/Core/I18n/SchemaStructure_{$latest}.php";
+        $class = "CRM_Core_I18n_SchemaStructure_{$latest}";
         eval("\$tables  =& $class::tables();");
       }
       else {
@@ -373,6 +384,9 @@ class CRM_Core_I18n_Schema {
 
   static
   function getLatestSchema($version) {
+    // remove any .upgrade sub-str from version. Makes it easy to do version_compare & give right result
+    $version = str_ireplace(".upgrade", "", $version);
+
     // fetch all the SchemaStructure versions we ship and sort by version
     $schemas = array();
     foreach (scandir(dirname(__FILE__)) as $file) {
@@ -431,86 +445,6 @@ class CRM_Core_I18n_Schema {
   }
 
   /**
-   * CREATE TRIGGER queries for a given set of locales
-   *
-   * @param $locales array  array of current database locales
-   * @param $locale string  new locale to add
-   * @param $class string   schema structure class to use
-   *
-   * @return array          array of CREATE TRIGGER queries
-   */
-  private static function createTriggerQueries($locales, $locale, $class = 'CRM_Core_I18n_SchemaStructure') {
-    eval("\$columns =& $class::columns();");
-    $queries = array();
-
-    // CRM-7786: there are cases where the INSERT happens early, so UPDATEs need to cater for NULL *_xx_YY fields
-    // FIXME: merge this and the below foreach loops
-    foreach ($columns as $table => $hash) {
-      $queries[] = "DROP TRIGGER IF EXISTS {$table}_before_update";
-
-      $trigger = array();
-      $trigger[] = "CREATE TRIGGER {$table}_before_update BEFORE UPDATE ON {$table} FOR EACH ROW BEGIN";
-
-      if ($locales) {
-        foreach ($hash as $column => $_) {
-          $trigger[] = "IF NEW.{$column}_{$locale} IS NOT NULL THEN";
-          foreach ($locales as $old) {
-            $trigger[] = "IF NEW.{$column}_{$old} IS NULL THEN SET NEW.{$column}_{$old} = NEW.{$column}_{$locale}; END IF;";
-          }
-          foreach ($locales as $old) {
-            $trigger[] = "ELSEIF NEW.{$column}_{$old} IS NOT NULL THEN";
-            foreach (array_merge($locales, array(
-              $locale)) as $loc) {
-              if ($loc == $old) {
-                continue;
-              }
-              $trigger[] = "IF NEW.{$column}_{$loc} IS NULL THEN SET NEW.{$column}_{$loc} = NEW.{$column}_{$old}; END IF;";
-            }
-          }
-          $trigger[] = 'END IF;';
-        }
-      }
-
-      $trigger[] = 'END';
-
-      $queries[] = implode(' ', $trigger);
-    }
-
-    // take care of the ON INSERT triggers
-    foreach ($columns as $table => $hash) {
-      $queries[] = "DROP TRIGGER IF EXISTS {$table}_before_insert";
-
-      $trigger = array();
-      $trigger[] = "CREATE TRIGGER {$table}_before_insert BEFORE INSERT ON {$table} FOR EACH ROW BEGIN";
-
-      if ($locales) {
-        foreach ($hash as $column => $_) {
-          $trigger[] = "IF NEW.{$column}_{$locale} IS NOT NULL THEN";
-          foreach ($locales as $old) {
-            $trigger[] = "SET NEW.{$column}_{$old} = NEW.{$column}_{$locale};";
-          }
-          foreach ($locales as $old) {
-            $trigger[] = "ELSEIF NEW.{$column}_{$old} IS NOT NULL THEN";
-            foreach (array_merge($locales, array(
-              $locale)) as $loc) {
-              if ($loc == $old) {
-                continue;
-              }
-              $trigger[] = "SET NEW.{$column}_{$loc} = NEW.{$column}_{$old};";
-            }
-          }
-          $trigger[] = 'END IF;';
-        }
-      }
-
-      $trigger[] = 'END';
-
-      $queries[] = implode(' ', $trigger);
-    }
-    return $queries;
-  }
-
-  /**
    * CREATE VIEW query for a given locale and table
    *
    * @param $locale string  locale of the view
@@ -537,6 +471,101 @@ class CRM_Core_I18n_Schema {
       $cols[] = "{$column}_{$locale} {$column}";
     }
     return "CREATE OR REPLACE VIEW {$table}_{$locale} AS SELECT " . implode(', ', $cols) . " FROM {$table}";
+  }
+
+  function triggerInfo(&$info, $tableName = NULL) {
+    // get the current supported locales
+    $domain = new CRM_Core_DAO_Domain();
+    $domain->find(TRUE);
+    if (empty($domain->locales)) {
+      return;
+    }
+
+    $locales = explode(CRM_Core_DAO::VALUE_SEPARATOR, $domain->locales);
+    $locale = array_pop($locales);
+
+    // CRM-10027
+    if (count($locales) == 0) {
+      return;
+    }
+    
+    $currentVer = CRM_Core_BAO_Domain::version(TRUE);
+    
+    if ($currentVer && CRM_Core_Config::isUpgradeMode()) {
+      // take exact version so that proper schema structure file in invoked
+      $latest = self::getLatestSchema($currentVer);
+      require_once "CRM/Core/I18n/SchemaStructure_{$latest}.php";
+      $class = "CRM_Core_I18n_SchemaStructure_{$latest}";
+    }
+    else {
+      $class = 'CRM_Core_I18n_SchemaStructure';
+    }
+    
+    eval("\$columns =& $class::columns();");
+
+    foreach ($columns as $table => $hash) {
+      if ($tableName &&
+        $tableName != $table
+      ) {
+        continue;
+      }
+
+      $trigger = array();
+
+      foreach ($hash as $column => $_) {
+        $trigger[] = "IF NEW.{$column}_{$locale} IS NOT NULL THEN";
+        foreach ($locales as $old) {
+          $trigger[] = "IF NEW.{$column}_{$old} IS NULL THEN SET NEW.{$column}_{$old} = NEW.{$column}_{$locale}; END IF;";
+        }
+        foreach ($locales as $old) {
+          $trigger[] = "ELSEIF NEW.{$column}_{$old} IS NOT NULL THEN";
+          foreach (array_merge($locales, array(
+            $locale)) as $loc) {
+            if ($loc == $old) {
+              continue;
+            }
+            $trigger[] = "IF NEW.{$column}_{$loc} IS NULL THEN SET NEW.{$column}_{$loc} = NEW.{$column}_{$old}; END IF;";
+          }
+        }
+        $trigger[] = 'END IF;';
+      }
+
+      $sql = implode(' ', $trigger);
+      $info[] = array('table' => array($table),
+        'when' => 'BEFORE',
+        'event' => array('UPDATE'),
+        'sql' => $sql,
+      );
+    }
+
+    // take care of the ON INSERT triggers
+    foreach ($columns as $table => $hash) {
+      $trigger = array();
+      foreach ($hash as $column => $_) {
+        $trigger[] = "IF NEW.{$column}_{$locale} IS NOT NULL THEN";
+        foreach ($locales as $old) {
+          $trigger[] = "SET NEW.{$column}_{$old} = NEW.{$column}_{$locale};";
+        }
+        foreach ($locales as $old) {
+          $trigger[] = "ELSEIF NEW.{$column}_{$old} IS NOT NULL THEN";
+          foreach (array_merge($locales, array(
+            $locale)) as $loc) {
+            if ($loc == $old) {
+              continue;
+            }
+            $trigger[] = "SET NEW.{$column}_{$loc} = NEW.{$column}_{$old};";
+          }
+        }
+        $trigger[] = 'END IF;';
+      }
+
+      $sql = implode(' ', $trigger);
+      $info[] = array('table' => array($table),
+        'when' => 'BEFORE',
+        'event' => array('INSERT'),
+        'sql' => $sql,
+      );
+    }
   }
 }
 

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
 
 /**
  * This class generates form components for Location Type
@@ -143,7 +141,6 @@ class CRM_Mailing_Form_Component extends CRM_Core_Form {
       $ids['id'] = $this->_id;
     }
 
-    require_once 'CRM/Mailing/BAO/Component.php';
     CRM_Mailing_BAO_Component::add($params, $ids);
   }
   //end of function
@@ -179,7 +176,7 @@ class CRM_Mailing_Form_Component extends CRM_Core_Form {
       }
       if (!empty($dataErrors)) {
         $errors['body_' . $type] = ts('The following errors were detected in %1 message:', array(
-          1 => $type)) . '<ul>' . implode('', $dataErrors) . '</ul><br /><a href="' . CRM_Utils_System::docURL2('CiviMail Action Tokens', TRUE) . '">' . ts('More information on tokens...') . '</a>';
+          1 => $type)) . '<ul>' . implode('', $dataErrors) . '</ul><br /><a href="' . CRM_Utils_System::docURL2('Tokens', TRUE, NULL, NULL, NULL, "wiki") . '">' . ts('More information on tokens...') . '</a>';
       }
     }
 

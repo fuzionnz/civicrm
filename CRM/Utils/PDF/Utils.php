@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +28,13 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 class CRM_Utils_PDF_Utils {
 
-  static
-  function html2pdf(&$text, $fileName = 'civicrm.pdf', $output = FALSE, $pdfFormat = NULL) {
+  static function html2pdf(&$text, $fileName = 'civicrm.pdf', $output = FALSE, $pdfFormat = NULL) {
     if (is_array($text)) {
       $pages = &$text;
     }
@@ -43,7 +42,6 @@ class CRM_Utils_PDF_Utils {
       $pages = array($text);
     }
     // Get PDF Page Format
-    require_once "CRM/Core/BAO/PdfFormat.php";
     $format = CRM_Core_BAO_PdfFormat::getDefaultValues();
     if (is_array($pdfFormat)) {
       // PDF Page Format parameters passed in
@@ -53,7 +51,6 @@ class CRM_Utils_PDF_Utils {
       // PDF Page Format ID passed in
       $format = CRM_Core_BAO_PdfFormat::getById($pdfFormat);
     }
-    require_once 'CRM/Core/BAO/PaperSize.php';
     $paperSize    = CRM_Core_BAO_PaperSize::getByName($format['paper_size']);
     $paper_width  = self::convertMetric($paperSize['width'], $paperSize['metric'], 'pt');
     $paper_height = self::convertMetric($paperSize['height'], $paperSize['metric'], 'pt');
@@ -70,6 +67,7 @@ class CRM_Utils_PDF_Utils {
     $html = "
 <html>
   <head>
+    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>
     <style>@page { margin: {$t}{$metric} {$r}{$metric} {$b}{$metric} {$l}{$metric}; }</style>
     <style type=\"text/css\">@import url({$config->userFrameworkResourceURL}css/print.css);</style>
   </head>
@@ -98,12 +96,20 @@ class CRM_Utils_PDF_Utils {
     </div>
   </body>
 </html>";
+    if ($config->wkhtmltopdfPath) {
+      return self::_html2pdf_wkhtmltopdf($paper_size, $orientation, $html, $output, $fileName);
+    }
+    else {
+      return self::_html2pdf_dompdf($paper_size, $orientation, $html, $output, $fileName);
+    }
+  }
 
+  static function _html2pdf_dompdf($paper_size, $orientation, $html, $output, $fileName) {
     require_once 'packages/dompdf/dompdf_config.inc.php';
     spl_autoload_register('DOMPDF_autoload');
     $dompdf = new DOMPDF();
     $dompdf->set_paper($paper_size, $orientation);
-    $dompdf->load_html(utf8_decode($html));
+    $dompdf->load_html($html);
     $dompdf->render();
 
     if ($output) {
@@ -114,12 +120,29 @@ class CRM_Utils_PDF_Utils {
     }
   }
 
+  static function _html2pdf_wkhtmltopdf($paper_size, $orientation, $html, $output, $fileName) {
+    require_once 'packages/snappy/src/autoload.php';
+    $config = CRM_Core_Config::singleton();
+    $snappy = new Knp\Snappy\Pdf($config->wkhtmltopdfPath);
+    $snappy->setOption("page-width", $paper_size[2] . "pt");
+    $snappy->setOption("page-height", $paper_size[3] . "pt");
+    $snappy->setOption("orientation", $orientation);
+    $pdf = $snappy->getOutputFromHtml($html);
+    if ($output) {
+      return $pdf;
+    }
+    else {
+      header('Content-Type: application/pdf');
+      header('Content-Disposition: attachment; filename="' . $fileName . '"');
+      echo $pdf;
+    }
+  }
+
   /*
      * function to convert value from one metric to another
      */
 
-  static
-  function convertMetric($value, $from, $to, $precision = NULL) {
+  static function convertMetric($value, $from, $to, $precision = NULL) {
     switch ($from . $to) {
       case 'incm':
         $value *= 2.54;
@@ -175,8 +198,7 @@ class CRM_Utils_PDF_Utils {
     return $value;
   }
 
-  static
-  function &pdflib($fileName,
+  static function &pdflib($fileName,
     $searchPath,
     &$values,
     $numPages = 1,

@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +33,7 @@
  *
  * @package CiviCRM_APIv3
  * @subpackage API_MailerGroup
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -41,7 +43,7 @@
  */
 
 
-require_once 'api/v3/utils.php';
+
 require_once 'CRM/Contact/BAO/Group.php';
 require_once 'CRM/Mailing/Event/BAO/Queue.php';
 require_once 'CRM/Mailing/Event/BAO/Subscribe.php';
@@ -51,31 +53,14 @@ require_once 'CRM/Mailing/Event/BAO/TrackableURLOpen.php';
 
 /**
  * Handle an unsubscribe event
+ * @deprecated
  *
  * @param array $params
  *
  * @return array
  */
 function civicrm_api3_mailing_group_event_unsubscribe($params) {
-
-  civicrm_api3_verify_mandatory($params,
-    'CRM_Mailing_Event_DAO_Unsubscribe',
-    array('job_id', 'event_queue_id', 'hash'),
-    FALSE
-  );
-
-  $job   = $params['job_id'];
-  $queue = $params['event_queue_id'];
-  $hash  = $params['hash'];
-
-  $groups = CRM_Mailing_Event_BAO_Unsubscribe::unsub_from_mailing($job, $queue, $hash);
-
-  if (count($groups)) {
-    CRM_Mailing_Event_BAO_Unsubscribe::send_unsub_response($queue, $groups, FALSE, $job);
-    return civicrm_api3_create_success($params);
-  }
-
-  return civicrm_api3_create_error('Queue event could not be found');
+  return civicrm_api('mailing_event_unsubscribe', 'create', $params);
 }
 
 /**
@@ -86,97 +71,32 @@ function civicrm_api3_mailing_group_event_unsubscribe($params) {
  * @return array
  */
 function civicrm_api3_mailing_group_event_domain_unsubscribe($params) {
-
-  civicrm_api3_verify_mandatory($params,
-    'CRM_Mailing_Event_DAO_Unsubscribe',
-    array('job_id', 'event_queue_id', 'hash'),
-    FALSE
-  );
-
-  $job   = $params['job_id'];
-  $queue = $params['event_queue_id'];
-  $hash  = $params['hash'];
-
-  $unsubs = CRM_Mailing_Event_BAO_Unsubscribe::unsub_from_domain($job, $queue, $hash);
-
-  if (!$unsubs) {
-    return civicrm_api3_create_error('Queue event could not be found');
-  }
-
-  CRM_Mailing_Event_BAO_Unsubscribe::send_unsub_response($queue, NULL, TRUE, $job);
-  return civicrm_api3_create_success($params);
+  $params['org_unsubscribe'] = 1;
+  return civicrm_api('mailing_event_unsubscribe', 'create', $params);
 }
 
 /**
  * Handle a resubscription event
+ * @deprecated
  *
  * @param array $params
  *
  * @return array
  */
 function civicrm_api3_mailing_group_event_resubscribe($params) {
-
-  civicrm_api3_verify_mandatory($params,
-    'CRM_Mailing_Event_DAO_Unsubscribe',
-    array('job_id', 'event_queue_id', 'hash'),
-    FALSE
-  );
-
-  $job   = $params['job_id'];
-  $queue = $params['event_queue_id'];
-  $hash  = $params['hash'];
-
-  $groups = CRM_Mailing_Event_BAO_Resubscribe::resub_to_mailing($job, $queue, $hash);
-
-  if (count($groups)) {
-    CRM_Mailing_Event_BAO_Resubscribe::send_resub_response($queue, $groups, FALSE, $job);
-    return civicrm_api3_create_success($params);
-  }
-  return civicrm_api3_create_error('Queue event could not be found');
+  return civicrm_api('mailing_event_resubscribe', 'create', $params);
 }
 
 /**
  * Handle a subscription event
+ * @deprecated
  *
  * @param array $params
  *
  * @return array
  */
 function civicrm_api3_mailing_group_event_subscribe($params) {
-
-  civicrm_api3_verify_mandatory($params,
-    'CRM_Mailing_Event_DAO_Subscribe',
-    array('email', 'group_id'),
-    FALSE
-  );
-
-  $email      = $params['email'];
-  $group_id   = $params['group_id'];
-  $contact_id = CRM_Utils_Array::value('contact_id', $params);
-
-  $group            = new CRM_Contact_DAO_Group();
-  $group->is_active = 1;
-  $group->id        = (int)$group_id;
-  if (!$group->find(TRUE)) {
-    return civicrm_api3_create_error('Invalid Group id');
-  }
-
-  $subscribe = CRM_Mailing_Event_BAO_Subscribe::subscribe($group_id, $email, $contact_id);
-
-  if ($subscribe !== NULL) {
-    /* Ask the contact for confirmation */
-
-    $subscribe->send_confirm_request($email);
-
-    $values = array();
-    $values['contact_id'] = $subscribe->contact_id;
-    $values['subscribe_id'] = $subscribe->id;
-    $values['hash'] = $subscribe->hash;
-    $values['is_error'] = 0;
-
-    return civicrm_api3_create_success($values);
-  }
-  return civicrm_api3_create_error('Subscription failed');
+  return civicrm_api('mailing_event_subscribe', 'create', $params);
 }
 
 function civicrm_api3_mailing_group_getfields($params) {

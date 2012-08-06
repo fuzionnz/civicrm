@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Activity/Form/Task.php';
 
 /**
  * This class provides the functionality to email a group of contacts
@@ -140,13 +138,10 @@ class CRM_Activity_Form_Task_FileOnCase extends CRM_Activity_Form_Task {
     $formparams      = $this->exportValues();
     $caseId          = $formparams['unclosed_case_id'];
     $filedActivities = 0;
-    require_once 'CRM/Activity/BAO/Activity.php';
-    require_once 'CRM/Activity/Page/AJAX.php';
     foreach ($this->_activityHolderIds as $key => $id) {
       $targetContactValues = $defaults = array();
       $params = array('id' => $id);
       CRM_Activity_BAO_Activity::retrieve($params, $defaults);
-      require_once 'CRM/Case/BAO/Case.php';
       if (CRM_Case_BAO_Case::checkPermission($id, 'File On Case', $defaults['activity_type_id'])) {
 
         if (!CRM_Utils_Array::crmIsEmptyArray($defaults['target_contact'])) {
@@ -175,8 +170,8 @@ class CRM_Activity_Form_Task_FileOnCase extends CRM_Activity_Form_Task {
       else {
         $errors[] = ts('Not permitted to file activity %1 %2.', array(
           1 => empty($defaults['subject']) ? '' : $defaults['subject'],
-            2 => $defaults['activity_date_time'],
-          ));
+          2 => $defaults['activity_date_time']
+        ));
       }
     }
 

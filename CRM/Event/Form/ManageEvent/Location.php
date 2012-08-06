@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,15 +29,10 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Event/Form/ManageEvent.php';
-require_once 'CRM/Event/BAO/Event.php';
-require_once 'CRM/Contact/Form/Location.php';
-require_once 'CRM/Core/SelectValues.php';
 
 /**
  * This class generates form components for processing Event Location
@@ -89,7 +84,6 @@ class CRM_Event_Form_ManageEvent_Location extends CRM_Event_Form_ManageEvent {
         'entity_id' => $this->_id,
         'entity_table' => 'civicrm_event',
       );
-      require_once 'CRM/Core/BAO/Location.php';
       $this->_values = CRM_Core_BAO_Location::getValues($params);
 
       //get event values.
@@ -126,7 +120,6 @@ class CRM_Event_Form_ManageEvent_Location extends CRM_Event_Form_ManageEvent {
       $defaults['address'][1]['country_id'] = $config->defaultContactCountry;
     }
 
-    require_once 'CRM/Contact/Form/Edit/Address.php';
     if (!empty($defaults['address'])) {
       foreach ($defaults['address'] as $key => $value) {
         CRM_Contact_Form_Edit_Address::fixStateSelect($this,
@@ -167,9 +160,8 @@ class CRM_Event_Form_ManageEvent_Location extends CRM_Event_Form_ManageEvent {
    */
   static
   function formRule($fields) {
-    $errors = array();
     // check for state/country mapping
-    CRM_Contact_Form_Edit_Address::formRule($fields, $errors);
+    $errors = CRM_Contact_Form_Edit_Address::formRule($fields);
 
     return empty($errors) ? TRUE : $errors;
   }
@@ -266,7 +258,7 @@ class CRM_Event_Form_ManageEvent_Location extends CRM_Event_Form_ManageEvent {
 
     // if 'create new loc' option is selected, set the loc_block_id for this event to null
     // so that an update would result in creating a new loc.
-    if ($this->_oldLocBlockId && ($params['location_option'] == 1)) {
+    if ($this->_oldLocBlockId && (CRM_Utils_Array::value('location_option', $params) == 1)) {
       $deleteOldBlock = TRUE;
       CRM_Core_DAO::setFieldValue('CRM_Event_DAO_Event', $this->_id,
         'loc_block_id', 'null'
@@ -284,7 +276,6 @@ class CRM_Event_Form_ManageEvent_Location extends CRM_Event_Form_ManageEvent {
     $params['entity_table'] = 'civicrm_event';
     $params['entity_id'] = $this->_id;
 
-    require_once 'CRM/Core/BAO/LocationType.php';
     $defaultLocationType = CRM_Core_BAO_LocationType::getDefault();
     foreach (array(
       'address', 'phone', 'email') as $block) {
@@ -300,13 +291,11 @@ class CRM_Event_Form_ManageEvent_Location extends CRM_Event_Form_ManageEvent {
     }
 
     // create/update event location
-    require_once 'CRM/Core/BAO/Location.php';
     $location = CRM_Core_BAO_Location::create($params, TRUE, 'event');
     $params['loc_block_id'] = $location['id'];
 
     // finally update event params
     $params['id'] = $this->_id;
-    require_once 'CRM/Event/BAO/Event.php';
     CRM_Event_BAO_Event::add($params);
 
     parent::endPostProcess();

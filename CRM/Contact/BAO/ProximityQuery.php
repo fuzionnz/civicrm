@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -75,7 +75,7 @@ class CRM_Contact_BAO_ProximityQuery {
 
   /*
     /**
-     * Estimate the Earth's radius at a given latitude. 
+     * Estimate the Earth's radius at a given latitude.
      * Default to an approximate average radius for the United States.
      */
 
@@ -209,7 +209,7 @@ class CRM_Contact_BAO_ProximityQuery {
      * to a query that includes the location table
      *
      * @param $longitude
-     * @param $latitude 
+     * @param $latitude
      */
 
   static
@@ -331,7 +331,7 @@ $earthDistanceSQL  <= $distance
     $qill = ts('Proximity search to a distance of %1 from %2',
       array(
         1 => $qillUnits,
-        2 => implode(', ', $qill),
+        2 => implode(', ', $qill)
       )
     );
 
@@ -347,7 +347,7 @@ $earthDistanceSQL  <= $distance
   static
   function fixInputParams(&$input) {
     foreach ($input as $param) {
-      if ($param[0] == 'prox_distance') {
+      if (CRM_Utils_Array::value('0', $param) == 'prox_distance') {
         // add prox_ prefix to these
         $param_alter = array('street_address', 'city', 'postal_code', 'state_province', 'country');
 

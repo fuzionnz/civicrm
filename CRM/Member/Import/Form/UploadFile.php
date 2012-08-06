@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Member/Import/Parser/Membership.php';
 
 /**
  * This class gets the name of the file to upload
@@ -81,10 +78,10 @@ class CRM_Member_Import_Form_UploadFile extends CRM_Core_Form {
     $this->addElement('checkbox', 'skipColumnHeader', ts('First row contains column headers'));
 
     $duplicateOptions = array();
-    $duplicateOptions[] = HTML_QuickForm::createElement('radio',
+    $duplicateOptions[] = $this->createElement('radio',
       NULL, NULL, ts('Insert new Membership'), CRM_Member_Import_Parser::DUPLICATE_SKIP
     );
-    $duplicateOptions[] = HTML_QuickForm::createElement('radio',
+    $duplicateOptions[] = $this->createElement('radio',
       NULL, NULL, ts('Update existing Membership'), CRM_Member_Import_Parser::DUPLICATE_UPDATE
     );
 
@@ -97,8 +94,6 @@ class CRM_Member_Import_Form_UploadFile extends CRM_Core_Form {
       ));
 
     //get the saved mapping details
-    require_once "CRM/Core/BAO/Mapping.php";
-    require_once "CRM/Core/OptionGroup.php";
     $mappingArray = CRM_Core_BAO_Mapping::getMappings(CRM_Core_OptionGroup::getValue('mapping_type',
         'Import Membership',
         'name'
@@ -112,20 +107,19 @@ class CRM_Member_Import_Form_UploadFile extends CRM_Core_Form {
     }
 
     //contact types option
-    require_once 'CRM/Contact/BAO/ContactType.php';
     $contactOptions = array();
     if (CRM_Contact_BAO_ContactType::isActive('Individual')) {
-      $contactOptions[] = HTML_QuickForm::createElement('radio',
+      $contactOptions[] = $this->createElement('radio',
         NULL, NULL, ts('Individual'), CRM_Member_Import_Parser::CONTACT_INDIVIDUAL
       );
     }
     if (CRM_Contact_BAO_ContactType::isActive('Household')) {
-      $contactOptions[] = HTML_QuickForm::createElement('radio',
+      $contactOptions[] = $this->createElement('radio',
         NULL, NULL, ts('Household'), CRM_Member_Import_Parser::CONTACT_HOUSEHOLD
       );
     }
     if (CRM_Contact_BAO_ContactType::isActive('Organization')) {
-      $contactOptions[] = HTML_QuickForm::createElement('radio',
+      $contactOptions[] = $this->createElement('radio',
         NULL, NULL, ts('Organization'), CRM_Member_Import_Parser::CONTACT_ORGANIZATION
       );
     }
@@ -140,7 +134,6 @@ class CRM_Member_Import_Form_UploadFile extends CRM_Core_Form {
       ));
 
     //build date formats
-    require_once 'CRM/Core/Form/Date.php';
     CRM_Core_Form_Date::buildAllowedDateFormats($this);
 
     $this->addButtons(array(

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -73,8 +73,7 @@ class CRM_Core_Permission {
    * @static
    * @access public
    */
-  static
-  function check($str) {
+  static function check($str) {
     $config = CRM_Core_Config::singleton();
     require_once (str_replace('_', DIRECTORY_SEPARATOR, $config->userPermissionClass) . '.php');
     return eval('return ' . $config->userPermissionClass . '::check( $str ); ');
@@ -89,8 +88,7 @@ class CRM_Core_Permission {
    * @static
    * @access public
    */
-  static
-  function checkGroupRole($array) {
+  static function checkGroupRole($array) {
     $config = CRM_Core_Config::singleton();
     require_once (str_replace('_', DIRECTORY_SEPARATOR, $config->userPermissionClass) . '.php');
     return eval('return ' . $config->userPermissionClass . '::checkGroupRole( $array ); ');
@@ -163,12 +161,10 @@ class CRM_Core_Permission {
       $defaultGroups = array_keys($customGroups);
     }
 
-    require_once 'CRM/ACL/API.php';
     return CRM_ACL_API::group($type, NULL, 'civicrm_custom_group', $customGroups, $defaultGroups);
   }
 
-  static
-  function customGroupClause($type = CRM_Core_Permission::VIEW, $prefix = NULL, $reset = FALSE) {
+  static function customGroupClause($type = CRM_Core_Permission::VIEW, $prefix = NULL, $reset = FALSE) {
     if (self::customGroupAdmin()) {
       return ' ( 1 ) ';
     }
@@ -229,12 +225,10 @@ class CRM_Core_Permission {
         break;
     }
 
-    require_once 'CRM/ACL/API.php';
     return CRM_ACL_API::group($type, NULL, 'civicrm_uf_group', $ufGroups);
   }
 
-  static
-  function ufGroupClause($type = CRM_Core_Permission::VIEW, $prefix = NULL, $returnUFGroupIds = FALSE) {
+  static function ufGroupClause($type = CRM_Core_Permission::VIEW, $prefix = NULL, $returnUFGroupIds = FALSE) {
     $groups = self::ufGroup($type);
     if ($returnUFGroupIds) {
       return $groups;
@@ -248,7 +242,6 @@ class CRM_Core_Permission {
   }
 
   public static function event($type = CRM_Core_Permission::VIEW, $eventID = NULL) {
-    require_once 'CRM/Event/PseudoConstant.php';
     $events = CRM_Event_PseudoConstant::event(NULL, TRUE);
     $includeEvents = array();
 
@@ -263,7 +256,6 @@ class CRM_Core_Permission {
       $includeEvents = array_keys($events);
     }
 
-    require_once 'CRM/ACL/API.php';
     $permissionedEvents = CRM_ACL_API::group($type, NULL, 'civicrm_event', $events, $includeEvents);
     if (!$eventID) {
       return $permissionedEvents;
@@ -271,8 +263,7 @@ class CRM_Core_Permission {
     return array_search($eventID, $permissionedEvents) === FALSE ? NULL : $eventID;
   }
 
-  static
-  function eventClause($type = CRM_Core_Permission::VIEW, $prefix = NULL) {
+  static function eventClause($type = CRM_Core_Permission::VIEW, $prefix = NULL) {
     $events = self::event($type);
     if (empty($events)) {
       return ' ( 0 ) ';
@@ -282,8 +273,7 @@ class CRM_Core_Permission {
     }
   }
 
-  static
-  function access($module, $checkPermission = TRUE) {
+  static function access($module, $checkPermission = TRUE) {
     $config = CRM_Core_Config::singleton();
 
     if (!in_array($module, $config->enableComponents)) {
@@ -292,7 +282,6 @@ class CRM_Core_Permission {
 
     if ($checkPermission) {
       if ($module == 'CiviCase') {
-        require_once 'CRM/Case/BAO/Case.php';
         return CRM_Case_BAO_Case::accessCiviCase();
       }
       else {
@@ -310,8 +299,7 @@ class CRM_Core_Permission {
    * @param $action action to be check across component
    *
    **/
-  static
-  function checkActionPermission($module, $action) {
+  static function checkActionPermission($module, $action) {
     //check delete related permissions.
     if ($action & CRM_Core_Action::DELETE) {
       $permissionName = "delete in $module";
@@ -330,7 +318,6 @@ class CRM_Core_Permission {
     }
 
     if ($module == 'CiviCase' && !$permissionName) {
-      require_once 'CRM/Case/BAO/Case.php';
       return CRM_Case_BAO_Case::accessCiviCase();
     }
     else {
@@ -339,8 +326,7 @@ class CRM_Core_Permission {
     }
   }
 
-  static
-  function checkMenu(&$args, $op = 'and') {
+  static function checkMenu(&$args, $op = 'and') {
     if (!is_array($args)) {
       return $args;
     }
@@ -356,8 +342,7 @@ class CRM_Core_Permission {
     return ($op == 'or') ? FALSE : TRUE;
   }
 
-  static
-  function checkMenuItem(&$item) {
+  static function checkMenuItem(&$item) {
     if (!array_key_exists('access_callback', $item)) {
       CRM_Core_Error::backtrace();
       CRM_Core_Error::fatal();
@@ -390,7 +375,6 @@ class CRM_Core_Permission {
     // check whether the following Ajax requests submitted the right key
     // FIXME: this should be integrated into ACLs proper
     if (CRM_Utils_Array::value('page_type', $item) == 3) {
-      require_once 'CRM/Core/Key.php';
       if (!CRM_Core_Key::validate($_REQUEST['key'], $item['path'])) {
         return FALSE;
       }
@@ -402,19 +386,14 @@ class CRM_Core_Permission {
       $item['access_callback'][1] == 'checkMenu'
     ) {
       $op = CRM_Utils_Array::value(1, $item['access_arguments'], 'and');
-      return self::checkMenu($item['access_arguments'][0],
-        $op
-      );
+      return self::checkMenu($item['access_arguments'][0], $op);
     }
     else {
-      return call_user_func_array($item['access_callback'],
-        $item['access_arguments']
-      );
+      return call_user_func_array($item['access_callback'], $item['access_arguments']);
     }
   }
 
-  static
-  function &basicPermissions($all = FALSE) {
+  static function &basicPermissions($all = FALSE) {
     static $permissions = NULL;
 
     if (!$permissions) {
@@ -426,7 +405,6 @@ class CRM_Core_Permission {
       }
 
       $config = CRM_Core_Config::singleton();
-      require_once 'CRM/Core/Component.php';
 
       if (!$all) {
         $components = CRM_Core_Component::getEnabledComponents();
@@ -449,8 +427,7 @@ class CRM_Core_Permission {
     return $permissions;
   }
 
-  static
-  function getCorePermissions() {
+  static function getCorePermissions() {
     $prefix = ts('CiviCRM') . ': ';
     $permissions = array(
       'add contacts' => $prefix . ts('add contacts'),
@@ -473,6 +450,7 @@ class CRM_Core_Permission {
       'access CiviCRM' => $prefix . ts('access CiviCRM'),
       'access Contact Dashboard' => $prefix . ts('access Contact Dashboard'),
       'translate CiviCRM' => $prefix . ts('translate CiviCRM'),
+      'administer reserved groups' => $prefix . ts('administer reserved groups'),
       'administer Tagsets' => $prefix . ts('administer Tagsets'),
       'administer reserved tags' => $prefix . ts('administer reserved tags'),
       'administer dedupe rules' => $prefix . ts('administer dedupe rules'),
@@ -491,8 +469,7 @@ class CRM_Core_Permission {
    *
    * return boolean true/false.
    **/
-  static
-  function giveMeAllACLs() {
+  static function giveMeAllACLs() {
     if (CRM_Core_Permission::check('view all contacts') ||
       CRM_Core_Permission::check('edit all contacts')
     ) {
@@ -506,7 +483,6 @@ class CRM_Core_Permission {
       // For multisite just check if there are contacts in acl_contact_cache table for now.
       // FixMe: so even if a user in multisite has very limited permission could still
       // see search / contact navigation options for example.
-      require_once 'CRM/Contact/BAO/Contact/Permission.php';
       return CRM_Contact_BAO_Contact_Permission::hasContactsInCache(CRM_Core_Permission::VIEW,
         $contactID
       );
@@ -526,7 +502,6 @@ class CRM_Core_Permission {
     $tables = $whereTables = array();
     $where = NULL;
 
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::aclWhereClause(CRM_Core_Permission::VIEW,
       $tables, $whereTables,
       $contactID, $where
@@ -542,8 +517,7 @@ class CRM_Core_Permission {
    * return string $componentName the name of component.
    * @static
    */
-  static
-  function getComponentName($permission) {
+  static function getComponentName($permission) {
     $componentName = NULL;
     $permission = trim($permission);
     if (empty($permission)) {
@@ -552,7 +526,6 @@ class CRM_Core_Permission {
 
     static $allCompPermissions;
     if (!is_array($allCompPermissions)) {
-      require_once 'CRM/Core/Component.php';
       $components = CRM_Core_Component::getComponents();
       foreach ($components as $name => $comp) {
         $allCompPermissions[$name] = $comp->getPermissions();
@@ -597,9 +570,7 @@ class CRM_Core_Permission {
     return eval('return ' . $config->userRoleClass . '::roleEmails( $roleName );');
   }
 
-  static
-  function isMultisiteEnabled() {
-    require_once 'CRM/Core/BAO/Setting.php';
+  static function isMultisiteEnabled() {
     return CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::MULTISITE_PREFERENCES_NAME,
       'is_enabled'
     ) ? TRUE : FALSE;

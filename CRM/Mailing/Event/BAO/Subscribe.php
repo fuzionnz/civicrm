@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,17 +28,13 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
 
 
 require_once 'Mail/mime.php';
-require_once 'CRM/Utils/Mail.php';
-require_once 'CRM/Utils/Verp.php';
-
-require_once 'CRM/Mailing/Event/DAO/Subscribe.php';
 class CRM_Mailing_Event_BAO_Subscribe extends CRM_Mailing_Event_DAO_Subscribe {
 
   /**
@@ -69,7 +65,6 @@ class CRM_Mailing_Event_BAO_Subscribe extends CRM_Mailing_Event_DAO_Subscribe {
     $contact_id = NULL;
     $success    = NULL;
 
-    require_once 'CRM/Contact/BAO/Group.php';
     $bao = CRM_Contact_BAO_Group::retrieve($params, $defaults);
     if ($bao && substr($bao->visibility, 0, 6) != 'Public' && $context != 'profile') {
       return $success;
@@ -101,11 +96,9 @@ LEFT JOIN civicrm_email      ON contact_a.id = civicrm_email.contact_id
       $dao->free();
     }
 
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
     if (!$contact_id) {
-      require_once 'CRM/Core/BAO/LocationType.php';
       require_once 'api/v3/DeprecatedUtils.php';
 
       /* If the contact does not exist, create one. */
@@ -121,7 +114,6 @@ LEFT JOIN civicrm_email      ON contact_a.id = civicrm_email.contact_id
       );
       _civicrm_api3_deprecated_add_formatted_param($value, $formatted);
 
-      require_once 'CRM/Import/Parser.php';
       $formatted['onDuplicate'] = CRM_Import_Parser::DUPLICATE_SKIP;
       $formatted['fixAddress'] = TRUE;
       require_once 'api/api.php';
@@ -138,9 +130,6 @@ LEFT JOIN civicrm_email      ON contact_a.id = civicrm_email.contact_id
       return $success;
     }
 
-    require_once 'CRM/Core/BAO/Email.php';
-    require_once 'CRM/Core/BAO/Location.php';
-    require_once 'CRM/Contact/BAO/Contact.php';
 
     /* Get the primary email id from the contact to use as a hash input */
 
@@ -171,7 +160,6 @@ SELECT     civicrm_email.id as email_id
     $se->save();
 
     $contacts = array($contact_id);
-    require_once 'CRM/Contact/BAO/GroupContact.php';
     CRM_Contact_BAO_GroupContact::addContactsToGroup($contacts, $group_id,
       'Email', 'Pending', $se->id
     );
@@ -214,17 +202,14 @@ SELECT     civicrm_email.id as email_id
   public function send_confirm_request($email) {
     $config = CRM_Core_Config::singleton();
 
-    require_once 'CRM/Core/BAO/Domain.php';
     $domain = CRM_Core_BAO_Domain::getDomain();
 
     //get the default domain email address.
     list($domainEmailName, $domainEmailAddress) = CRM_Core_BAO_Domain::getNameAndEmail();
 
-    require_once 'CRM/Core/BAO/MailSettings.php';
     $localpart = CRM_Core_BAO_MailSettings::defaultLocalpart();
     $emailDomain = CRM_Core_BAO_MailSettings::defaultDomain();
 
-    require_once 'CRM/Utils/Verp.php';
     $confirm = implode($config->verpSeparator,
       array(
         $localpart . 'c',
@@ -234,12 +219,10 @@ SELECT     civicrm_email.id as email_id
       )
     ) . "@$emailDomain";
 
-    require_once 'CRM/Contact/BAO/Group.php';
     $group = new CRM_Contact_BAO_Group();
     $group->id = $this->group_id;
     $group->find(TRUE);
 
-    require_once 'CRM/Mailing/BAO/Component.php';
     $component = new CRM_Mailing_BAO_Component();
     $component->is_default = 1;
     $component->is_active = 1;
@@ -269,13 +252,11 @@ SELECT     civicrm_email.id as email_id
       $text = CRM_Utils_String::htmlToText($component->body_html);
     }
 
-    require_once 'CRM/Mailing/BAO/Mailing.php';
     $bao            = new CRM_Mailing_BAO_Mailing();
     $bao->body_text = $text;
     $bao->body_html = $html;
     $tokens         = $bao->getTokens();
 
-    require_once 'CRM/Utils/Token.php';
     $html = CRM_Utils_Token::replaceDomainTokens($html, $domain, TRUE, $tokens['html']);
     $html = CRM_Utils_Token::replaceSubscribeTokens($html,
       $group->title,
@@ -294,11 +275,15 @@ SELECT     civicrm_email.id as email_id
 
     $message->setHTMLBody($html);
     $message->setTxtBody($text);
-    $b      = CRM_Utils_Mail::setMimeParams($message);
-    $h      = &$message->headers($headers);
+    $b = CRM_Utils_Mail::setMimeParams($message);
+    $h = &$message->headers($headers);
+    CRM_Mailing_BAO_Mailing::addMessageIdHeader($h, 's',
+      $this->contact_id,
+      $this->id,
+      $this->hash
+    );
     $mailer = &$config->getMailer();
 
-    require_once 'CRM/Mailing/BAO/Mailing.php';
     PEAR::setErrorHandling(PEAR_ERROR_CALLBACK,
       array('CRM_Core_Error', 'nullHandler')
     );

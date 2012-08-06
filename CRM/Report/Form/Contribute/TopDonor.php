@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
-require_once 'CRM/Contribute/PseudoConstant.php';
 class CRM_Report_Form_Contribute_TopDonor extends CRM_Report_Form {
 
   protected $_summary = NULL;
@@ -312,7 +311,6 @@ class CRM_Report_Form_Contribute_TopDonor extends CRM_Report_Form {
 
   function add2group($groupID) {
     if (is_numeric($groupID)) {
-      require_once 'CRM/Contact/BAO/GroupContact.php';
 
       $sql = " 
 {$this->_select} {$this->_from}  {$this->_where} {$this->_groupBy} 
@@ -332,7 +330,6 @@ ORDER BY civicrm_contribution_total_amount_sum DESC
   }
 
   function limit($rowCount = CRM_Report_Form::ROW_COUNT_LIMIT) {
-    require_once 'CRM/Utils/Pager.php';
     // lets do the pager if in html mode
     $this->_limit = NULL;
     if ($this->_outputMode == 'html' || $this->_outputMode == 'group') {

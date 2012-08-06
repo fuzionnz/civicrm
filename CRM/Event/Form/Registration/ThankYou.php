@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,12 +29,10 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Event/Form/Registration.php';
 
 /**
  * This class generates form components for processing Event
@@ -91,12 +89,21 @@ class CRM_Event_Form_Registration_ThankYou extends CRM_Event_Form_Registration {
    * @access public
    */
   public function buildQuickForm() {
+    // Assign the email address from a contact id lookup as in CRM_Event_BAO_Event->sendMail()
+    if (isset($this->_params[0]['contact_id'])) {
+      list($displayName, $email) = CRM_Contact_BAO_Contact_Location::getEmailDetails($this->_params[0]['contact_id']);
+      $this->assign('email', $email);
+    }
     $this->assignToTemplate();
 
     $this->buildCustom($this->_values['custom_pre_id'], 'customPre', TRUE);
     $this->buildCustom($this->_values['custom_post_id'], 'customPost', TRUE);
 
-    $this->assign('lineItem', $this->_lineItem);
+    if ($this->_priceSetId && !CRM_Core_DAO::getFieldValue('CRM_Price_DAO_Set', $this->_priceSetId, 'is_quick_config')) {
+
+      $this->assign('lineItem', $this->_lineItem);
+
+    }
     $this->assign('totalAmount', $this->_totalAmount);
     $hookDiscount = $this->get('hookDiscount');
     if ($hookDiscount) {
@@ -121,7 +128,6 @@ class CRM_Event_Form_Registration_ThankYou extends CRM_Event_Form_Registration {
       }
     }
     $fields['state_province'] = $fields['country'] = $fields['email'] = 1;
-    require_once 'CRM/Contact/BAO/Contact.php';
     foreach ($fields as $name => $dontCare) {
       if (isset($this->_params[0][$name])) {
         $defaults[$name] = $this->_params[0][$name];
@@ -143,7 +149,6 @@ class CRM_Event_Form_Registration_ThankYou extends CRM_Event_Form_Registration {
 
     $this->setDefaults($defaults);
 
-    require_once 'CRM/Friend/BAO/Friend.php';
 
     $params['entity_id'] = $this->_eventId;
     $params['entity_table'] = 'civicrm_event';
@@ -179,7 +184,6 @@ class CRM_Event_Form_Registration_ThankYou extends CRM_Event_Form_Registration {
     $this->assign('isRequireApproval', $isRequireApproval);
 
     // find pcp info
-    require_once "CRM/PCP/DAO/PCPBlock.php";
     $eventId           = $this->_eventId;
     $dao               = new CRM_PCP_DAO_PCPBlock();
     $dao->entity_table = 'civicrm_event';
@@ -193,7 +197,6 @@ class CRM_Event_Form_Registration_ThankYou extends CRM_Event_Form_Registration {
     }
 
     // Assign Participant Count to Lineitem Table
-    require_once 'CRM/Price/BAO/Set.php';
     $this->assign('pricesetFieldsCount', CRM_Price_BAO_Set::getPricesetCount($this->_priceSetId));
 
     // can we blow away the session now to prevent hackery

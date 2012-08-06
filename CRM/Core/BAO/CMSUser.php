@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -191,14 +191,14 @@ class CRM_Core_BAO_CMSUser {
     $status .= ' ' . ts('Checked one user record.',
       array(
         'count' => $contactCount,
-        'plural' => 'Checked %count user records.',
+        'plural' => 'Checked %count user records.'
       )
     );
     if ($contactMatching) {
       $status .= ' ' . ts('Found one matching contact record.',
         array(
           'count' => $contactMatching,
-          'plural' => 'Found %count matching contact records.',
+          'plural' => 'Found %count matching contact records.'
         )
       );
     }
@@ -206,7 +206,7 @@ class CRM_Core_BAO_CMSUser {
     $status .= ' ' . ts('Created one new contact record.',
       array(
         'count' => $contactCreated,
-        'plural' => 'Created %count new contact records.',
+        'plural' => 'Created %count new contact records.'
       )
     );
     CRM_Core_Session::setStatus($status, TRUE);
@@ -312,7 +312,6 @@ class CRM_Core_BAO_CMSUser {
         }
 
         $form->assign('isCMS', $required);
-        require_once 'CRM/Core/Action.php';
         if (!$userID || $action & CRM_Core_Action::PREVIEW || $action & CRM_Core_Action::PROFILE) {
           $form->add('text', 'cms_name', ts('Username'), NULL, $required);
           if (($isDrupal && !variable_get('user_email_verification', TRUE)) OR ($isJoomla) OR ($isWordPress)) {

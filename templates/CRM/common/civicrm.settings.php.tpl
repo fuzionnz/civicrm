@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -192,7 +192,7 @@ define( 'CIVICRM_DOMAIN_ID'      , 1 );
 
 /**
  * Settings to enable external caching using a Memcache server.  This is an
- * advanced features, and you should read and understand the documentation
+ * advanced feature, and you should read and understand the documentation
  * before you turn it on. We cannot store these settings in the DB since the
  * config could potentially also be cached and we need to avoid an infinite
  * recursion scenario.
@@ -202,11 +202,17 @@ define( 'CIVICRM_DOMAIN_ID'      , 1 );
 
 /**
  * If you have a memcache server configured and want CiviCRM to make use of it,
- * set the following to 1.  You should only set this once you have your memcache
+ * set the following constant.  You should only set this once you have your memcache
  * server up and working, because CiviCRM will not start up if your server is
- * unavailable on the host and port that you specify.
+ * unavailable on the host and port that you specify. By default CiviCRM will use
+ * an in-memory array cache
+ *
+ * To use the php extension memcache  use a value of 'Memcache'
+ * To use the php extension memcached use a value of 'Memcached'
+ * To not use any caching (not recommended), use a value of 'NoCache'
+ *
  */
-define( 'CIVICRM_USE_MEMCACHE', 0 );
+define( 'CIVICRM_DB_CACHE_CLASS', 'ArrayCache' );
 
 /**
  * Change this to the IP address of your memcache server if it is not on the
@@ -242,11 +248,14 @@ define( 'CIVICRM_MEMCACHE_PREFIX', '' );
  *
  */
 
-$include_path = '.'        . PATH_SEPARATOR .
+$include_path = '.'           . PATH_SEPARATOR .
                 $civicrm_root . PATH_SEPARATOR .
                 $civicrm_root . DIRECTORY_SEPARATOR . 'packages' . PATH_SEPARATOR .
                 get_include_path( );
-set_include_path( $include_path );
+if ( set_include_path( $include_path ) === false ) {
+   echo "Could not set the include path<p>";
+   exit( );
+}
 
 if ( function_exists( 'variable_get' ) && variable_get('clean_url', '0') != '0' ) {
     define( 'CIVICRM_CLEANURL', 1 );
@@ -269,3 +278,6 @@ switch ($memLimitUnit) {
 if ($memLimit >= 0 and $memLimit < 134217728) {
     ini_set('memory_limit', '128M');
 }
+
+require_once 'CRM/Core/ClassLoader.php';
+CRM_Core_ClassLoader::singleton()->register();

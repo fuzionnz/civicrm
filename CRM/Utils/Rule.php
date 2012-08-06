@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -514,7 +514,6 @@ class CRM_Utils_Rule {
 
   static
   function optionExists($value, $options) {
-    require_once 'CRM/Core/OptionValue.php';
     return CRM_Core_OptionValue::optionExists($value, $options[0], $options[1], $options[2], CRM_Utils_Array::value(3, $options, 'name'));
   }
 
@@ -563,7 +562,6 @@ class CRM_Utils_Rule {
   static
   function autocomplete($value, $options) {
     if ($value) {
-      require_once 'CRM/Core/BAO/CustomOption.php';
       $selectOption = CRM_Core_BAO_CustomOption::valuesByID($options['fieldID'], $options['optionGroupID']);
 
       if (!in_array($value, $selectOption)) {
@@ -641,7 +639,6 @@ class CRM_Utils_Rule {
 
   static
   function qfKey($key) {
-    require_once 'CRM/Core/Key.php';
     return ($key) ? CRM_Core_Key::valid($key) : FALSE;
   }
 }

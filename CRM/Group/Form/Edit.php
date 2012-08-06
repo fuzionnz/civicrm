@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,17 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/Form.php';
-require_once 'CRM/Mailing/Info.php';
-require_once 'CRM/Custom/Form/CustomData.php';
-require_once 'CRM/Contact/BAO/GroupNesting.php';
-require_once 'CRM/Core/BAO/Domain.php';
-require_once 'CRM/Core/OptionGroup.php';
 
 /**
  * This class is to build the form for adding Group
@@ -149,7 +142,7 @@ class CRM_Group_Form_Edit extends CRM_Core_Form {
     }
 
     //build custom data
-    CRM_Custom_Form_Customdata::preProcess($this, NULL, NULL, 1, 'Group', $this->_id);
+    CRM_Custom_Form_CustomData::preProcess($this, NULL, NULL, 1, 'Group', $this->_id);
   }
 
   /*
@@ -177,7 +170,6 @@ class CRM_Group_Form_Edit extends CRM_Core_Form {
       if (CRM_Core_Permission::check('administer Multiple Organizations') &&
         CRM_Core_Permission::isMultisiteEnabled()
       ) {
-        require_once 'CRM/Contact/BAO/GroupOrganization.php';
         CRM_Contact_BAO_GroupOrganization::retrieve($this->_id, $defaults);
 
         if (CRM_Utils_Array::value('group_organization', $defaults)) {
@@ -208,7 +200,7 @@ class CRM_Group_Form_Edit extends CRM_Core_Form {
     }
 
     // custom data set defaults
-    $defaults += CRM_Custom_Form_Customdata::setDefaultValues($this);
+    $defaults += CRM_Custom_Form_CustomData::setDefaultValues($this);
     return $defaults;
   }
 
@@ -284,7 +276,6 @@ class CRM_Group_Form_Edit extends CRM_Core_Form {
     $this->assign_by_ref('parent_groups', $parentGroupElements);
 
     if (isset($this->_id)) {
-      require_once 'CRM/Contact/BAO/GroupNestingCache.php';
       $potentialParentGroupIds = CRM_Contact_BAO_GroupNestingCache::getPotentialCandidates($this->_id,
         $groupNames
       );
@@ -322,8 +313,15 @@ class CRM_Group_Form_Edit extends CRM_Core_Form {
       $this->addElement('text', 'organization', ts('Organization'), '');
       $this->addElement('hidden', 'organization_id', '', array('id' => 'organization_id'));
     }
+
+    // is_reserved property CRM-9936
+    $this->addElement('checkbox', 'is_reserved', ts('Reserved Group?'));
+    if (!CRM_Core_Permission::check('administer reserved groups')) {
+      $this->freeze('is_reserved');
+    }
+
     //build custom data
-    CRM_Custom_Form_Customdata::buildQuickForm($this);
+    CRM_Custom_Form_CustomData::buildQuickForm($this);
 
     $this->addButtons(array(
         array(
@@ -442,6 +440,8 @@ WHERE  title = %1
         $params['group_organization'] = $this->_groupOrganizationID;
       }
 
+      $params['is_reserved'] = CRM_Utils_Array::value('is_reserved', $params, FALSE);
+
       $customFields = CRM_Core_BAO_CustomField::getFields('Group');
       $params['custom'] = CRM_Core_BAO_CustomField::postProcess($params,
         $customFields,
@@ -449,7 +449,6 @@ WHERE  title = %1
         'Group'
       );
 
-      require_once 'CRM/Contact/BAO/Group.php';
       $group = CRM_Contact_BAO_Group::create($params);
 
       /*
@@ -483,7 +482,6 @@ WHERE  title = %1
 
     // update the nesting cache
     if ($updateNestingCache) {
-      require_once 'CRM/Contact/BAO/GroupNestingCache.php';
       CRM_Contact_BAO_GroupNestingCache::update();
     }
   }

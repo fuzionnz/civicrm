@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,7 +34,7 @@
  *
  * @package CiviCRM_APIv3
  * @subpackage API_Job
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id: Contact.php 30879 2010-11-22 15:45:55Z shot $
  *
  */
@@ -235,6 +237,24 @@ function civicrm_api3_job_process_mailing($params) {
   }
 }
 
+/**
+ * Process sms queue
+ *
+ * @param array $params
+ *
+ * @return array
+ */
+function civicrm_api3_job_process_sms($params) {
+  require_once 'CRM/Mailing/BAO/Mailing.php';
+  if (!CRM_Mailing_BAO_Mailing::processQueue('sms')) {
+    return civicrm_api3_create_error("Process Queue failed");
+  }
+  else {
+    $values = array();
+    return civicrm_api3_create_success($values, $params, 'mailing', 'process');
+  }
+}
+
 function civicrm_api3_job_fetch_bounces($params) {
   require_once 'CRM/Utils/Mail/EmailProcessor.php';
   require_once 'CRM/Core/Lock.php';
@@ -258,13 +278,12 @@ function civicrm_api3_job_fetch_activities($params) {
   if (!$lock->isAcquired()) {
     return civicrm_api3_create_error("Could not acquire lock, another EmailProcessor process is running");
   }
-  try {
-    CRM_Utils_Mail_EmailProcessor::processActivities();
-    $values = array();
+    try {
+       CRM_Utils_Mail_EmailProcessor::processActivities();
+       $values = array( );
     $lock->release();
-    return civicrm_api3_create_success($values, $params, 'mailing', 'activities');
-  }
-  catch(Exception$e) {
+       return civicrm_api3_create_success($values, $params,'mailing','activities');
+    } catch (Exception $e) {
     $lock->release();
     return civicrm_api3_create_error("Process Activities failed");
   }
@@ -362,6 +381,78 @@ function civicrm_api3_job_process_membership_reminder_date($params) {
   }
 }
 
+/**
+ * Merges given pair of duplicate contacts.
+ *
+ * @param  array   $params   input parameters
+ *
+ * Allowed @params array keys are:
+ * {int     $rgid        rule group id}
+ * {int     $gid         group id}
+ * {string  mode        helps decide how to behave when there are conflicts.
+ *                      A 'safe' value skips the merge if there are no conflicts. Does a force merge otherwise.}
+ * {boolean auto_flip   wether to let api decide which contact to retain and which to delete.}
+ *
+ * @return array  API Result Array
+ *
+ * @static void
+ * @access public
+ */
+function civicrm_api3_job_process_batch_merge($params) {
+  $rgid = CRM_Utils_Array::value('rgid', $params);
+  $gid = CRM_Utils_Array::value('gid', $params);
+
+  $mode = CRM_Utils_Array::value('mode', $params, 'safe');
+  $autoFlip = CRM_Utils_Array::value('auto_flip', $params, TRUE);
+
+  require_once 'CRM/Dedupe/Merger.php';
+  $result = CRM_Dedupe_Merger::batchMerge($rgid, $gid, $mode, $autoFlip);
+
+  if ($result['is_error'] == 0) {
+    return civicrm_api3_create_success();
+  }
+  else {
+    return civicrm_api3_create_error($result['messages']);
+  }
+}
+
+/**
+ * Runs handlePaymentCron method in the specified payment processor
+ *
+ * @param  array   $params   input parameters
+ *
+ * Expected @params array keys are:
+ * {string  'processor_name' - the name of the payment processor, eg: Sagepay}
+ *
+ * @access public
+ */
+function civicrm_api3_job_run_payment_cron($params) {
+
+  require_once 'CRM/Core/Payment.php';
+
+  // live mode
+  CRM_Core_Payment::handlePaymentMethod(
+    'PaymentCron',
+    array_merge(
+      $params,
+      array(
+        'caller' => 'api',
+      )
+    )
+  );
+
+  // test mode
+  CRM_Core_Payment::handlePaymentMethod(
+    'PaymentCron',
+    array_merge(
+      $params,
+      array(
+        'mode' => 'test',
+      )
+    )
+  );
+}
+
 /*
  * This api cleans up all the old session entries and temp tables. We recommend that sites run this on an hourly basis
  *
@@ -376,6 +467,7 @@ function civicrm_api3_job_cleanup( $params ) {
 
   $session   = CRM_Utils_Array::value( 'session'   , $params, true  );
   $tempTable = CRM_Utils_Array::value( 'tempTables', $params, true  );
+  $jobLog    = CRM_Utils_Array::value( 'jobLog'    , $params, true  );
   $dbCache   = CRM_Utils_Array::value( 'dbCache'   , $params, false );
   $memCache  = CRM_Utils_Array::value( 'memCache'  , $params, false );
   $prevNext  = CRM_Utils_Array::value( 'prevNext'  , $params, false );
@@ -385,12 +477,15 @@ function civicrm_api3_job_cleanup( $params ) {
     CRM_Core_BAO_Cache::cleanup( $session, $tempTable, $prevNext );
   }
 
-  if ( $dbCacheCleanup ) {
+  if ( $jobLog ) {
+    CRM_Core_BAO_Job::cleanup( );
+  }
+
+  if ( $dbCache ) {
     CRM_Core_Config::clearDBCache( );
   }
 
-  if ( $memCacheCleanup ) {
+  if ( $memCache ) {
     CRM_Utils_System::flushCache( );
   }
-
 }

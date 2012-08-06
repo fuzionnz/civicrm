@@ -2,7 +2,6 @@
 .svn
 .buildpath
 .project
-drupal
 *.afm.php
 packages/dompdf/lib/fonts/log.htm
 .svn

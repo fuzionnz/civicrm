@@ -1296,7 +1296,10 @@ AND civicrm_membership.is_test = %2";
         );
       }
     }
-
+    $membershipContactId = $contactID;
+   if(isset($contribution[1]->honor_contact_id)){
+      $membershipContactId = $membershipParams['membership_contact_id'] = $contribution[1]->honor_contact_id;
+    }
     $index = CRM_Utils_Array::value('is_separate_payment', $memBlockDetails) ? 2 : 1;
 
     if (!CRM_Utils_Array::value($index, $errors)) {
@@ -1307,7 +1310,7 @@ AND civicrm_membership.is_test = %2";
       if (is_array($membershipTypeID)) {
         $createdMemberships = array();
         foreach ($membershipTypeID as $memType) {
-          $membership = self::renewMembership($contactID, $memType,
+          $membership = self::renewMembership($membershipContactId, $memType,
             $isTest, $form, NULL,
             CRM_Utils_Array::value('cms_contactID', $membershipParams),
             $customFieldsFormatted

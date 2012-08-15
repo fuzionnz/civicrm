@@ -23,10 +23,9 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
-{* 
+{*
  * If you MODIFY this file, please make sure you also modify jquery.files.tpl.
- * Cannot get rid of this since we use it for joomla, standalone, print
- * html profile etc
+ * Cannot get rid of this since we use it for print html, standalone profile etc
  *}
 <script type="text/javascript" src="{$config->resourceBase}packages/jquery/jquery.min.js"></script>
 <script type="text/javascript" src="{$config->resourceBase}packages/jquery/jquery-ui-1.8.16/js/jquery-ui-1.8.16.custom.min.js"></script>
@@ -84,7 +83,6 @@
 <script type="text/javascript" src="{$config->resourceBase}js/jquery/jquery.crmaccordions.js"></script>
 <script type="text/javascript" src="{$config->resourceBase}js/jquery/jquery.crmasmselect.js"></script>
 <script type="text/javascript" src="{$config->resourceBase}js/jquery/jquery.crmtooltip.js"></script>
-<script type="text/javascript" src="{$config->resourceBase}js/jquery/jquery.crmrowhighlighter.js"></script>
 
 {* CRM-6819: localize datepicker *}
 {if $l10nURL}

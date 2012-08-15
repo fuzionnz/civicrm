@@ -67,6 +67,50 @@ class CRM_Upgrade_Incremental_php_FourTwo {
         ));
       }
     }
+    if ($rev == '4.2.alpha1') { 
+      $query = "
+ SELECT cc.id,GROUP_CONCAT(cm.id) as membership_id 
+ FROM civicrm_membership_payment cmp
+ LEFT JOIN `civicrm_contribution` cc ON cc.id = cmp.contribution_id
+ LEFT JOIN civicrm_line_item cli ON cc.id=cli.entity_id and cli.entity_table = 'civicrm_contribution'
+ LEFT JOIN civicrm_membership cm ON cm.id=cmp.membership_id
+ LEFT JOIN civicrm_membership_type cmt ON cmt.id = cm.membership_type_id
+ WHERE cli.entity_id IS NULL 
+ GROUP BY cc.id, cm.membership_type_id
+ HAVING count(cc.id) > 1 and count(cm.membership_type_id) > 1 ";
+
+      $dao = CRM_Core_DAO::executeQuery($query);
+      if ($dao->N) {
+        $activityTypes = CRM_Core_PseudoConstant::activityType(TRUE, FALSE, FALSE, 'name');
+        $activityid = array(
+          array_search('Membership Signup', $activityTypes),
+          array_search('Membership Renewal', $activityTypes),
+          array_search('Membership Renewal Reminder', $activityTypes),
+        );
+        if (array_search('Change Membership Type', $activityTypes)) {
+          $activityid[] = array_search('Change Membership Type', $activityTypes); 
+        }
+        if (array_search('Change Membership Status', $activityTypes)) {
+          $activityid[] = array_search('Change Membership Type', $activityTypes); 
+        }
+      }
+      while ($dao->fetch()) {
+        $membershiIds = explode(',', $dao->membership_id);
+        sort($membershiIds);
+        array_pop($membershiIds);
+        foreach($membershiIds as $id){
+          $params = array(
+            'source_record_id' => $id,
+            'activity_type_id' => $activityid,
+          );
+          CRM_Activity_BAO_Activity::deleteActivity($params);
+          
+          $membership     = new CRM_Member_DAO_Membership();
+          $membership->id = $id;
+          $membership->delete();
+        }
+      }
+    } 
   }
 
   /**
@@ -80,9 +124,39 @@ class CRM_Upgrade_Incremental_php_FourTwo {
     if ($rev == '4.2.alpha1') {
       $postUpgradeMessage .= '<br />' . ts('Default versions of the following System Workflow Message Templates have been modified to handle new functionality: <ul><li>Events - Registration Confirmation and Receipt (on-line)</li><li>Pledges - Acknowledgement</li><li>Pledges - Payment Reminder</li></ul>. If you have modified these templates, please review the new default versions and implement updates as needed to your copies (Administer > Communications > Message Templates > System Workflow Messages).');
     }
+    if ($rev == '4.2.beta5') {
+      $config = CRM_Core_Config::singleton();
+      if (!empty($config->extensionsDir)) {
+        $postUpgradeMessage .= '<br />' . ts('Please <a href="%1" target="_blank">configure the Extesion Resource URL</a>.', array(
+          1 => CRM_Utils_system::url('civicrm/admin/setting/url', 'reset=1')
+        ));
+      }
+    }
   }
 
   function upgrade_4_2_alpha1($rev) {
+
+    // Drop index UI_title for civicrm_price_set 
+    $domain = new CRM_Core_DAO_Domain;
+    $domain->find(TRUE);
+    if ($domain->locales) {
+      $params = array();
+      $locales = explode(CRM_Core_DAO::VALUE_SEPARATOR, $domain->locales);
+      foreach ($locales as $locale) {
+        $query = "SHOW KEYS FROM `civicrm_price_set` WHERE key_name = 'UI_title_{$locale}'";
+        $dao = CRM_Core_DAO::executeQuery($query, $params, TRUE, NULL, FALSE, FALSE);
+        if ($dao->N) {
+          CRM_Core_DAO::executeQuery("ALTER TABLE `civicrm_price_set` DROP INDEX `UI_title_{$locale}`", $params, TRUE, NULL, FALSE, FALSE);
+        }
+      }
+    } else {
+      $query = "SHOW KEYS FROM `civicrm_price_set` WHERE key_name = 'UI_title'";
+      $dao = CRM_Core_DAO::executeQuery($query);
+      if ($dao->N) {
+        CRM_Core_DAO::executeQuery("ALTER TABLE `civicrm_price_set` DROP INDEX `UI_title`");
+      }
+    }
+
     // Some steps take a long time, so we break them up into separate
     // tasks and enqueue them separately.
     $this->addTask(ts('Upgrade DB to 4.2.alpha1: SQL'), 'task_4_2_alpha1_runSql', $rev);
@@ -126,6 +200,15 @@ class CRM_Upgrade_Incremental_php_FourTwo {
       $title = ts('Upgrade DB to 4.2.alpha1: Participant (%1 => %2)', array(1 => $startId, 2 => $endId));
       $this->addTask($title, 'task_4_2_alpha1_convertParticipants', $startId, $endId);
     } 
+  }
+
+  function upgrade_4_2_beta5($rev) {
+    // CRM-10629 Create a setting for extension URLs
+    // For some reason, this isn't working when placed in the .sql file
+    CRM_Core_DAO::executeQuery("
+      INSERT INTO civicrm_setting(group_name,name,value,domain_id,is_domain)
+      VALUES ('URL Preferences', 'extensionsURL',NULL,1,1);
+    ");
   }
 
   /**

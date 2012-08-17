@@ -122,11 +122,13 @@ class CRM_Core_Permission_Drupal6 {
    * @param int $type the type of permission needed
    * @param  array $tables (reference ) add the tables that are needed for the select clause
    * @param  array $whereTables (reference ) add the tables that are needed for the where clause
+   * @param string $entityTable table permissions pertain to - if this is civicrm_group it will not be
+   *    necessary to resolve smart groups
    *
    * @return string the group where clause for this user
    * @access public
    */
-  public static function groupClause($type, &$tables, &$whereTables) {
+  public static function groupClause($type, &$tables, &$whereTables, $entityTable = 'civicrm_contact') {
     if (!isset(self::$_viewPermissionedGroups)) {
       self::group();
     }
@@ -166,28 +168,31 @@ class CRM_Core_Permission_Drupal6 {
       if (self::$_viewAdminUser) {
         $clause = ' ( 1 ) ';
       }
-      elseif (empty(self::$_viewPermissionedGroups)) {
+      elseif (empty(self::$_viewPermissionedGroups[$groupKey])) {
         $clause = ' ( 0 ) ';
       }
       else {
         $clauses = array();
-        $groups = implode(', ', self::$_viewPermissionedGroups);
-        $clauses[] = ' ( civicrm_group_contact.group_id IN (' . implode(', ', array_keys(self::$_viewPermissionedGroups)) . " ) AND civicrm_group_contact.status = 'Added' ) ";
+        $groups = implode(', ', self::$_viewPermissionedGroups[$groupKey]);
+        $clauses[] = ' ( civicrm_group_contact.group_id IN (' . implode(', ', array_keys(self::$_viewPermissionedGroups[$groupKey])) . " ) AND civicrm_group_contact.status = 'Added' ) ";
         $tables['civicrm_group_contact'] = 1;
         $whereTables['civicrm_group_contact'] = 1;
 
-
-        // foreach group that is potentially a saved search, add the saved search clause
-        foreach (array_keys(self::$_viewPermissionedGroups) as $id) {
-          $group = new CRM_Contact_DAO_Group();
-          $group->id = $id;
-          if ($group->find(TRUE) && $group->saved_search_id) {
-            $clause = CRM_Contact_BAO_SavedSearch::whereClause($group->saved_search_id,
-              $tables,
-              $whereTables
-            );
-            if (trim($clause)) {
-              $clauses[] = $clause;
+        if($entityTable == 'civicrm_contact'){
+        // foreach group that is potentially a saved search, add the saved search clause if we are trying to determin
+        // which contacts can be seen. per CRM-10667 - we don't need to add smart group clauses if after a
+        // list of groups
+        foreach (array_keys(self::$_viewPermissionedGroups[$groupKey]) as $id) {
+            $group = new CRM_Contact_DAO_Group();
+            $group->id = $id;
+            if ($group->find(TRUE) && $group->saved_search_id) {
+              $clause = CRM_Contact_BAO_SavedSearch::whereClause($group->saved_search_id,
+                $tables,
+                $whereTables
+              );
+              if (trim($clause)) {
+                $clauses[] = $clause;
+              }
             }
           }
         }

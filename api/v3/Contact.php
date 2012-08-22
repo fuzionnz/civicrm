@@ -169,7 +169,7 @@ function _civicrm_api3_contact_create_spec(&$params) {
 function civicrm_api3_contact_get($params) {
   $options = array();
   _civicrm_api3_contact_get_supportanomalies($params, $options);
-  $contacts = _civicrm_api3_get_using_query_object($params,$options);
+  $contacts = _civicrm_api3_get_using_query_object('contact', $params, $options);
 
   // CRM-7929 Quick fix by colemanw
   // TODO: Figure out what function is responsible for prepending 'individual_' to these keys
@@ -725,19 +725,24 @@ LIMIT    0, {$limit}
       $listCurrentEmployer = FALSE;
     }
   }
-
+  
   //return organization name if doesn't exist in db
   if (empty($contactList)) {
     if (CRM_Utils_Array::value('org', $params)) {
       if ($listCurrentEmployer && !empty($currEmpDetails)) {
         $contactList = array(
-          'data' => $currEmpDetails['data'],
-          'id' => $currEmpDetails['id'],
+          array(
+            'data' => $currEmpDetails['data'],
+            'id'   => $currEmpDetails['id']
+          )
         );
       }
       else {
-        $contactList = array('data' => CRM_Utils_Array::value('s', $params),
-          'id' => CRM_Utils_Array::value('s', $params),
+        $contactList = array(
+          array(
+            'data' => $name,
+            'id'   => $name
+          )
         );
       }
     }

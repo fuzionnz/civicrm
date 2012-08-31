@@ -39,6 +39,7 @@ class CRM_Logging_ReportDetail extends CRM_Report_Form {
   protected $log_date;
   protected $raw;
   protected $tables = array();
+  protected $interval = '10 SECOND';
 
   // detail/summary report ids
   protected $detail;
@@ -59,15 +60,15 @@ class CRM_Logging_ReportDetail extends CRM_Report_Form {
     parent::__construct();
 
     CRM_Utils_System::resetBreadCrumb();
-    $breadcrumb = 
+    $breadcrumb =
       array(
-            array('title' => ts('Home'), 
+            array('title' => ts('Home'),
                   'url' => CRM_Utils_System::url()),
-            array('title' => ts('CiviCRM'), 
+            array('title' => ts('CiviCRM'),
                   'url' => CRM_Utils_System::url('civicrm', 'reset=1')),
-            array('title' => ts('View Contact'), 
+            array('title' => ts('View Contact'),
                   'url' => CRM_Utils_System::url('civicrm/contact/view', "reset=1&cid={$this->cid}")),
-            array('title' => ts('Search Results'), 
+            array('title' => ts('Search Results'),
                   'url' => CRM_Utils_System::url('civicrm/contact/search', "force=1")),
             );
     CRM_Utils_System::appendBreadCrumb($breadcrumb);
@@ -122,9 +123,8 @@ class CRM_Logging_ReportDetail extends CRM_Report_Form {
   protected function diffsInTable($table) {
     $rows = array();
 
-    $differ = new CRM_Logging_Differ($this->log_conn_id, $this->log_date);
+    $differ = new CRM_Logging_Differ($this->log_conn_id, $this->log_date, $this->interval);
     $diffs = $differ->diffsInTable($table, $this->cid);
-
     // return early if nothing found
     if (empty($diffs)) {
       return $rows;
@@ -184,7 +184,7 @@ class CRM_Logging_ReportDetail extends CRM_Report_Form {
         }
       }
 
-      $rows[] = array('field' => $field . " (id: {$diff['id']})", 'from' => $from, 'to' => $to);
+      $rows[] = array('field' => $field . " (id: {$diff['id']})", 'from' => $from, 'to' => $to, 'contact_id' => $diff['contact_id']);
     }
 
     return $rows;

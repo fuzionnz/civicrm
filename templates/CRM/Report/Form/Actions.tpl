@@ -55,6 +55,12 @@
                                 <td align="right">{$form.$chart.html}</td>
                             </tr>
                         {/if}
+                        {if $form.btn_group_contact}
+                            <tr>
+                                <td>{$form.btn_group_contact.html|crmReplace:class:big}</td>
+                                <td align="right">{$form.$btn_group_contact.html}</td>
+                            </tr>
+                        {/if}
                         {if $form.groups}
                             <tr>
                                 <td>{$form.groups.html|crmReplace:class:big}</td>

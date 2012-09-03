@@ -24,9 +24,9 @@ $config = CRM_Core_Config::singleton();
  */
 
 $query = "
-SELECT  url_site, password, user_name, signature 
-FROM    civicrm_payment_processor 
-WHERE   payment_processor_type = 'Payment_Express' 
+SELECT  url_site, password, user_name, signature
+FROM    civicrm_payment_processor
+WHERE   payment_processor_type = 'Payment_Express'
 AND     user_name = %1
 ";
 $params = array(1 => array($_GET['userid'], 'String'));

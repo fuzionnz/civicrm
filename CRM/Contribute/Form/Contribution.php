@@ -1139,7 +1139,8 @@ WHERE  contribution_id = {$this->_id}
       $this->_priceSetId = $priceSetId = CRM_Core_DAO::getFieldValue('CRM_Price_DAO_Set', 'default_contribution_amount', 'id', 'name');
       $this->_priceSet = current(CRM_Price_BAO_Set::getSetDetail($priceSetId));
       $fieldID = key($this->_priceSet['fields']);
-      $this->_priceSet['fields'][$fieldID]['options'][$fieldID]['amount'] = $submittedValues['total_amount'];
+      $fieldValueId = key($this->_priceSet['fields'][$fieldID]['options']);
+      $this->_priceSet['fields'][$fieldID]['options'][$fieldValueId]['amount'] = $submittedValues['total_amount'];
       $submittedValues['price_'.$fieldID] = 1;
     }
 

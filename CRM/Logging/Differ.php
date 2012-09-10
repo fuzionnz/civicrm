@@ -148,15 +148,25 @@ class CRM_Logging_Differ {
         if (CRM_Utils_Array::value($diff, $original) === CRM_Utils_Array::value($diff, $changed)) {
           continue;
         }
-
+        $extraFields = array();
+        $contactIdField = $this->getContactIdField($table);
+        if($contactIdField == 'contact_id_a'){
+          // this is a relationship - pass back b contact too
+          // note that in some cases the contact can change e.g a merge
+          $extraFields = array(
+            'contact_id_b' => CRM_Utils_Array::value('contact_id_b', $changed),
+            'original_contact_id_b' => CRM_Utils_Array::value('contact_id_b', $original),
+          );
+        }
         $diffs[] = array(
           'action' => $changed['log_action'],
           'id' => $id,
           'field' => $diff,
           'from' => CRM_Utils_Array::value($diff, $original),
           'to' => CRM_Utils_Array::value($diff, $changed),
-          'contact_id' => CRM_Utils_Array::value('contact_id', $changed, CRM_Utils_Array::value('entity_id', $changed)),
-        );
+          'contact_id' => CRM_Utils_Array::value($contactIdField, $changed),
+          'original_contact_id' => CRM_Utils_Array::value($contactIdField, $original),
+        )+ $extraFields;
       }
     }
 
@@ -282,6 +292,27 @@ ORDER BY log_date
     }
 
     return array($titles, $values);
+  }
+
+  function getContactIdField($table){
+    switch ($table) {
+      case 'civicrm_contact':
+        $contactIdField = 'id';
+        break;
+      case 'civicrm_note':
+      case 'civicrm_entity_tag':
+        $contactIdField = 'entity_id';
+        break;
+      case 'civicrm_relationship':
+        $contactIdField = 'contact_id_a';
+        break;
+      default:
+        $contactIdField = 'contact_id';
+        if ( strpos($table, 'civicrm_value') !== false ) {
+          $contactIdField = 'entity_id';
+        }
+    }
+    return $contactIdField;
   }
 }
 

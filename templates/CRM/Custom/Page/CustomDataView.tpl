@@ -88,7 +88,24 @@
                     {if $element.contact_ref_id}
                       <a href='/civicrm/contact/view?reset=1&cid={$element.contact_ref_id}'>
                   {/if}
-                  {$element.field_value}
+                  {strip}
+                  {if $entity && ($element.field_type == 'Text' || $element.field_type =='TextArea' )}
+                    <div data-action="create" class="crm-editable crmf-custom_{$field_id} crm-editable-enabled">
+                      {$element.field_value}
+                    </div>
+                  {elseif $element.field_type =='Radio' && $entity}
+                    {if $element.field_data_type == 'Boolean'}
+                      {assign var='custOptions' value="`$smarty.ldelim`\"0\":\"No\",\"1\":\"Yes\"`$smarty.rdelim`"}
+                    {else}
+                      {crmAPI entity=$customDataType action="getoptions" var="custOptions" json=1 field="custom_`$field_id`"}
+                    {/if}
+                      <span data-action="create" class="crm-editable crmf-custom_{$field_id} editable_select crm-editable-enabled" data-type='select' data-options='{$custOptions}'">
+                      {$element.field_value}
+                    </span>
+                  {else}
+                    {$element.field_value}
+                  {/if}
+                  {/strip}
                   {if $element.contact_ref_id}
                     </a>
                   {/if}

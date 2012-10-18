@@ -41,7 +41,7 @@ class CRM_Upgrade_Incremental_php_FourTwo {
   function verifyPreDBstate(&$errors) {
     return TRUE;
   }
-  
+
   /**
    * Compute any messages which should be displayed before upgrade
    *
@@ -60,7 +60,7 @@ class CRM_Upgrade_Incremental_php_FourTwo {
         CRM_Core_Error::fatal($errors);
         return FALSE;
       }
-      
+
       // CRM-10613 delete bad data for membership
       self::deleteBadData();
       if (!empty(self::$_deleteBadDatas)) {
@@ -69,12 +69,12 @@ class CRM_Upgrade_Incremental_php_FourTwo {
           $retainedMembership .= "<tr><td>{$badData['contribution']}</td><td>" . array_pop($badData['memberships']) . "</td><tr>";
           foreach ($badData['memberships'] as $value ) {
             $deletedMembership .= "<li>{$value}</li>";
-            $deletedPayments .= "<tr><td>{$badData['contribution']}</td><td>" . $value . "</td><tr>"; 
+            $deletedPayments .= "<tr><td>{$badData['contribution']}</td><td>" . $value . "</td><tr>";
           }
         }
         $preUpgradeMessage .= "<br /><strong>" . ts('The upgrade from CiviCRM version 4.1 to version 4.2 has identified some data integrity issues in the database. If you continue, it will attempt to solve a problem of multiple memberships or multiple payments for a membership associated with a single contribution by deleting the following records:') . "</strong>";
 
-        $preUpgradeMessage .= "<br /><strong>" . ts('For contribution ID ##, membership ID ## will be retained') . "</strong>"; 
+        $preUpgradeMessage .= "<br /><strong>" . ts('For contribution ID ##, membership ID ## will be retained') . "</strong>";
         $preUpgradeMessage .= "<table><tr><th>contribution ID</th><th>membership ID</th></tr>" . $retainedMembership . "</table>";
         $preUpgradeMessage .= "<strong>" . ts('and the following memberships will be deleted:') . "</strong><ul>" . $deletedMembership . "</ul>";
         $preUpgradeMessage .= "<strong>" . ts('In addition, the following links between this contribution and memberships will be deleted:') . "</strong>";
@@ -82,7 +82,7 @@ class CRM_Upgrade_Incremental_php_FourTwo {
       }
     }
 
-    if ($rev == '4.2.beta2') {  
+    if ($rev == '4.2.beta2') {
       // note: error conditions are also checked in upgrade_4_2_beta2()
       if (!defined('CIVICRM_SETTINGS_PATH')) {
         $preUpgradeMessage .= '<br />' . ts('Could not determine path to civicrm.settings.php. Please manually locate it and add these lines at the bottom: <pre>%1</pre>', array(
@@ -97,7 +97,7 @@ class CRM_Upgrade_Incremental_php_FourTwo {
         ));
       }
     }
-    if ($rev == '4.2.2') {  
+    if ($rev == '4.2.2') {
       $query = " SELECT cli.id
 FROM `civicrm_line_item` cli
 INNER JOIN civicrm_membership_payment cmp ON cmp.contribution_id = cli.entity_id AND cli.entity_table = 'civicrm_contribution'
@@ -128,7 +128,7 @@ INNER JOIN civicrm_price_set cps ON cps.id = cpf.price_set_id AND cps.name <>'de
         foreach (self::$_deleteBadDatas as $badData) {
           array_pop($badData['memberships']);
           foreach ($badData['memberships'] as $value ) {
-            $postUpgradeMessage .= "<tr><td>{$badData['contribution']}</td><td>" . $value . "</td><tr>"; 
+            $postUpgradeMessage .= "<tr><td>{$badData['contribution']}</td><td>" . $value . "</td><tr>";
           }
         }
         $postUpgradeMessage .= "</table>";
@@ -151,16 +151,16 @@ INNER JOIN civicrm_price_set cps ON cps.id = cpf.price_set_id AND cps.name <>'de
     $params = array();
     $tables = array('civicrm_contribution_page' =>'FK_civicrm_contribution_page_payment_processor_id',
                     'civicrm_event' => 'FK_civicrm_event_payment_processor_id',
-                    'civicrm_group' => 'FK_civicrm_group_saved_search_id', 
+                    'civicrm_group' => 'FK_civicrm_group_saved_search_id',
                     );
     foreach($tables as $tableName => $fKey){
       $foreignKeyExists = CRM_Core_DAO::checkConstraintExists($tableName,$fKey);
       if ($foreignKeyExists){
         CRM_Core_DAO::executeQuery("ALTER TABLE {$tableName} DROP FOREIGN KEY {$fKey}", $params, TRUE, NULL, FALSE, FALSE);
         CRM_Core_DAO::executeQuery("ALTER TABLE {$tableName} DROP INDEX {$fKey}", $params, TRUE, NULL, FALSE, FALSE);
-      } 
+      }
     }
-    // Drop index UI_title for civicrm_price_set 
+    // Drop index UI_title for civicrm_price_set
     $domain = new CRM_Core_DAO_Domain;
     $domain->find(TRUE);
     if ($domain->locales) {
@@ -203,12 +203,12 @@ INNER JOIN civicrm_price_set cps ON cps.id = cpf.price_set_id AND cps.name <>'de
     $this->addTask(ts('Upgrade DB to 4.2.beta3: SQL'), 'task_4_2_alpha1_runSql', $rev);
     $minParticipantId = CRM_Core_DAO::singleValueQuery('SELECT coalesce(min(id),0) FROM civicrm_participant');
     $maxParticipantId = CRM_Core_DAO::singleValueQuery('SELECT coalesce(max(id),0) FROM civicrm_participant');
-    
+
     for ($startId = $minParticipantId; $startId <= $maxParticipantId; $startId += self::BATCH_SIZE) {
       $endId = $startId + self::BATCH_SIZE - 1;
       $title = ts('Upgrade DB to 4.2.alpha1: Participant (%1 => %2)', array(1 => $startId, 2 => $endId));
       $this->addTask($title, 'task_4_2_alpha1_convertParticipants', $startId, $endId);
-    } 
+    }
   }
 
   function upgrade_4_2_beta5($rev) {
@@ -219,7 +219,7 @@ INNER JOIN civicrm_price_set cps ON cps.id = cpf.price_set_id AND cps.name <>'de
       VALUES ('URL Preferences', 'extensionsURL',NULL,1,1);
     ");
   }
-  
+
   function upgrade_4_2_0($rev) {
     $this->addTask(ts('Upgrade DB to 4.2.0: SQL'), 'task_4_2_alpha1_runSql', $rev);
   }
@@ -228,7 +228,7 @@ INNER JOIN civicrm_price_set cps ON cps.id = cpf.price_set_id AND cps.name <>'de
     $this->addTask(ts('Upgrade DB to 4.2.2: SQL'), 'task_4_2_alpha1_runSql', $rev);
     //create line items for memberships and participants for api/import
     self::convertContribution();
-    
+
     // CRM-10937 Fix the title on civicrm_dedupe_rule_group
     $upgrade = new CRM_Upgrade_Form();
     if ($upgrade->multilingual) {
@@ -240,7 +240,7 @@ INNER JOIN civicrm_price_set cps ON cps.id = cpf.price_set_id AND cps.name <>'de
                    AND column_name = 'title'";
 
       $dao = CRM_Core_DAO::executeQuery($query);
-     
+
       if (!$dao->N) {
         $domain = new CRM_Core_DAO_Domain;
         $domain->find(TRUE);
@@ -248,10 +248,10 @@ INNER JOIN civicrm_price_set cps ON cps.id = cpf.price_set_id AND cps.name <>'de
         if ($domain->locales) {
           $locales = explode(CRM_Core_DAO::VALUE_SEPARATOR, $domain->locales);
           $locale = array_shift($locales);
-          
+
           // Use the first language (they should all have the same value)
           CRM_Core_DAO::executeQuery("ALTER TABLE `civicrm_dedupe_rule_group` CHANGE `title_{$locale}` `title` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'Label of the rule group'", $params, TRUE, NULL, FALSE, FALSE);
-          
+
           // Drop remaining the column for the remaining languages
           foreach ($locales as $locale) {
             CRM_Core_DAO::executeQuery("ALTER TABLE `civicrm_dedupe_rule_group` DROP `title_{$locale}`", $params, TRUE, NULL, FALSE, FALSE);
@@ -260,7 +260,46 @@ INNER JOIN civicrm_price_set cps ON cps.id = cpf.price_set_id AND cps.name <>'de
       }
     }
   }
-  
+
+  function upgrade_4_2_3($rev) {
+    $this->addTask(ts('Upgrade DB to 4.2.3: SQL'), 'task_4_2_alpha1_runSql', $rev);
+    // CRM-10953 Remove duplicate activity type for 'Reminder Sent' which is mistakenly inserted by 4.2.alpha1 upgrade script
+    $queryMin = "
+SELECT coalesce(min(value),0) from civicrm_option_value ov
+WHERE ov.option_group_id =
+  (SELECT id from civicrm_option_group og WHERE og.name = 'activity_type') AND
+ov.name = 'Reminder Sent'";
+
+    $minReminderSent = CRM_Core_DAO::singleValueQuery($queryMin);
+
+    $queryMax = "
+SELECT coalesce(max(value),0) from civicrm_option_value ov
+WHERE ov.option_group_id =
+  (SELECT id from civicrm_option_group og WHERE og.name = 'activity_type') AND
+ov.name = 'Reminder Sent'";
+
+    $maxReminderSent = CRM_Core_DAO::singleValueQuery($queryMax);
+
+    // If we have two different values, replace new value with original in any activities
+    if ($maxReminderSent > $minReminderSent) {
+      $query = "
+UPDATE civicrm_activity
+SET activity_type_id = {$minReminderSent}
+WHERE activity_type_id = {$maxReminderSent}";
+
+      CRM_Core_DAO::executeQuery($query);
+
+      // Then delete the newer (duplicate) option_value row
+      $query = "
+DELETE from civicrm_option_value
+  WHERE option_group_id =
+    (SELECT id from civicrm_option_group og WHERE og.name = 'activity_type') AND
+  value = '{$maxReminderSent}'";
+
+      CRM_Core_DAO::executeQuery($query);
+    }
+  }
+
   function convertContribution(){
     $minContributionId = CRM_Core_DAO::singleValueQuery('SELECT coalesce(min(id),0) FROM civicrm_contribution');
     $maxContributionId = CRM_Core_DAO::singleValueQuery('SELECT coalesce(max(id),0) FROM civicrm_contribution');
@@ -268,17 +307,17 @@ INNER JOIN civicrm_price_set cps ON cps.id = cpf.price_set_id AND cps.name <>'de
       $endId = $startId + self::BATCH_SIZE - 1;
       $title = ts('Upgrade DB to 4.2.alpha1: Contributions (%1 => %2)', array(1 => $startId, 2 => $endId));
       $this->addTask($title, 'task_4_2_alpha1_convertContributions', $startId, $endId);
-    } 
+    }
     $minParticipantId = CRM_Core_DAO::singleValueQuery('SELECT coalesce(min(id),0) FROM civicrm_participant');
     $maxParticipantId = CRM_Core_DAO::singleValueQuery('SELECT coalesce(max(id),0) FROM civicrm_participant');
-    
+
     for ($startId = $minParticipantId; $startId <= $maxParticipantId; $startId += self::BATCH_SIZE) {
       $endId = $startId + self::BATCH_SIZE - 1;
       $title = ts('Upgrade DB to 4.2.alpha1: Participant (%1 => %2)', array(1 => $startId, 2 => $endId));
       $this->addTask($title, 'task_4_2_alpha1_convertParticipants', $startId, $endId);
     }
   }
-  
+
   /**
    * (Queue Task Callback)
    *
@@ -350,22 +389,22 @@ WHERE     cpse.price_set_id IS NULL";
   }
 
   /**
-   * 
+   *
    * Function to Delete bad data
    */
   static function deleteBadData($deleteMembership = NULL, $rev = NULL) {
     //CRM-10613
 
-    $query = "SELECT cc.id, cmp.membership_id 
+    $query = "SELECT cc.id, cmp.membership_id
  FROM civicrm_membership_payment cmp
  INNER JOIN `civicrm_contribution` cc ON cc.id = cmp.contribution_id
  LEFT JOIN civicrm_line_item cli ON cc.id=cli.entity_id and cli.entity_table = 'civicrm_contribution'
  INNER JOIN civicrm_membership cm ON cm.id=cmp.membership_id
  INNER JOIN civicrm_membership_type cmt ON cmt.id = cm.membership_type_id
- INNER JOIN civicrm_membership_payment cmp1 on cmp.contribution_id = cmp1.contribution_id 
- WHERE cli.entity_id IS NULL 
+ INNER JOIN civicrm_membership_payment cmp1 on cmp.contribution_id = cmp1.contribution_id
+ WHERE cli.entity_id IS NULL
  GROUP BY cmp.membership_id
- HAVING COUNT(cmp.contribution_id) > 1 
+ HAVING COUNT(cmp.contribution_id) > 1
  ORDER BY cmp.membership_id ASC";
 
     $dao = CRM_Core_DAO::executeQuery($query);
@@ -399,7 +438,7 @@ WHERE     cpse.price_set_id IS NULL";
           $membership->delete();
           CRM_Core_Error::debug_log_message(ts("contribution ID = %1 , membership ID = %2 has been deleted successfully.", array (
             1 => $contributionId,
-            2 => $membership->id,                                                                                                          
+            2 => $membership->id,
           )), FALSE, "Upgrade{$rev}Data");
         }
       }
@@ -430,7 +469,7 @@ WHERE     cpse.price_set_id IS NULL";
       if (empty($optionValue))
         return;
     }
-      
+
     if (! CRM_Core_DAO::getFieldValue('CRM_Price_BAO_Set', $pageTitle, 'id', 'name', true)) {
       $setParams['name'] = $pageTitle;
     }
@@ -504,7 +543,7 @@ WHERE     cpse.price_set_id IS NULL";
             }
           }
           $priceField = CRM_Price_BAO_Field::create($fieldParams);
-          
+
           $setParams = array(
             'id'                   => $priceSet->id,
             'extends'              => CRM_Core_Component::getComponentID('CiviMember'),
@@ -660,7 +699,7 @@ WHERE     cpf.price_set_id = %1
 
     return TRUE;
   }
-  
+
   /**
    * (Queue Task Callback)
    *

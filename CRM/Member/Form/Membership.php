@@ -493,29 +493,43 @@ class CRM_Member_Form_Membership extends CRM_Member_Form {
     $dao = new CRM_Member_DAO_MembershipType();
     $dao->domain_id = CRM_Core_Config::domainID();
     $dao->find();
-    $membershipType = array();
-    while ($dao->fetch()) {
-      if ($dao->is_active) {
-        $membershipType[$dao->id] = $dao->name;
-        if ($this->_mode && !$dao->minimum_fee) {
+
+    // retrieve all memberships
+    $allMemberships = CRM_Member_BAO_Membership::buildMembershipTypeValues($this);
+
+    $allMembershipInfo = $membershipType = array();
+    foreach( $allMemberships as $key => $values ) {
+      if (CRM_Utils_Array::value('is_active', $values) ) {
+        $membershipType[$key] = CRM_Utils_Array::value('name', $values);
+        if ($this->_mode && !CRM_Utils_Array::value('minimum_fee', $values)) {
           continue;
         }
         else {
-          if (!CRM_Utils_Array::value($dao->member_of_contact_id, $selMemTypeOrg)) {
-            $selMemTypeOrg[$dao->member_of_contact_id] = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
-              $dao->member_of_contact_id,
+          $memberOfContactId = CRM_Utils_Array::value('member_of_contact_id', $values);
+          if (!CRM_Utils_Array::value($memberOfContactId, $selMemTypeOrg)) {
+            $selMemTypeOrg[$memberOfContactId] = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
+              $memberOfContactId,
               'display_name',
               'id'
             );
 
-            $selOrgMemType[$dao->member_of_contact_id][0] = ts('- select -');
+            $selOrgMemType[$memberOfContactId][0] = ts('- select -');
           }
-          if (!CRM_Utils_Array::value($dao->id, $selOrgMemType[$dao->member_of_contact_id])) {
-            $selOrgMemType[$dao->member_of_contact_id][$dao->id] = $dao->name;
+          if (!CRM_Utils_Array::value($key, $selOrgMemType[$memberOfContactId])) {
+            $selOrgMemType[$memberOfContactId][$key] = CRM_Utils_Array::value('name', $values);
           }
         }
+
+        // build membership info array, which is used to set the payment information block when
+        // membership type is selected.
+        $allMembershipInfo[$key] = array(
+          'contribution_type_id' => CRM_Utils_Array::value('contribution_type_id', $values),
+          'total_amount'         => CRM_Utils_Array::value('minimum_fee', $values)
+        );
       }
     }
+
+    $this->assign('allMembershipInfo', json_encode($allMembershipInfo));
 
     // show organization by default, if only one organization in
     // the list

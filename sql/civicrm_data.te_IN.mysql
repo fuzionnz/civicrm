@@ -4621,8 +4621,8 @@ VALUES
    (@option_group_id_act, 'Canvass',                            29, 'Canvass', NULL,0, 0, 28, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'PhoneBank',                          30, 'PhoneBank', NULL,0, 0, 29, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'WalkList',                           31, 'WalkList', NULL,0, 0, 30, '', 0, 1, 1, @campaignCompId, NULL),
-   (@option_group_id_act, 'Petition',                           32, 'Petition', NULL,0, 0, 31, '', 0, 1, 1, @campaignCompId, NULL),
-   (@option_group_id_act, 'BULK SMS',                           34, 'BULK SMS',         NULL, 1, NULL, 34, 'BULK SMS',                                                    0, 1, 1, NULL, NULL),
+   (@option_group_id_act, 'Petition Signature',                 32, 'Petition', NULL,0, 0, 31, '', 0, 1, 1, @campaignCompId, NULL),
+   (@option_group_id_act, 'Mass SMS',                           34, 'Mass SMS',         NULL, 1, NULL, 34, 'Mass SMS',                                                    0, 1, 1, NULL, NULL),
 
 -- Activity Types for CiviCampaign CiviCase
    (@option_group_id_act, 'Change Custom Data',                 33, 'Change Custom Data', NULL,0, 0, 33, '', 0, 1, 1, @caseCompId, NULL),
@@ -4856,12 +4856,9 @@ VALUES
   (@option_group_id_report, 'Survey Report (Detail)',    'survey/detail', 'CRM_Report_Form_Campaign_SurveyDetails',  NULL, 0, NULL, 43, 'Detailed report for canvassing, phone-banking, walk lists or other surveys.', 0, 0, 1, @campaignCompId, NULL),
   (@option_group_id_report, 'Personal Campaign Page Report', 'contribute/pcp', 'CRM_Report_Form_Contribute_PCP', NULL, 0, NULL, 44, 'Summarizes amount raised and number of contributors for each Personal Campaign Page.', 0, 0, 1, @contributeCompId, NULL),
   (@option_group_id_report , 'Pledge Summary Report', 'pledge/summary', 'CRM_Report_Form_Pledge_Summary', NULL, 0, NULL, 45, 'Summary of pledges including amount pledged, pledge status, next payment date, balance due, total amount paid etc.', 0, 0, 1, @pledgeCompId, NULL),
-  (@option_group_id_report , 'Contribution History By Relationship Report',                   'contribute/history',              'CRM_Report_Form_Contribute_History',              NULL, 0, NULL, 46,  'List contact\\\'s donation history, grouped by year, along with contributions attributed to any of the contact\\\'s related contacts.', 0, 0, 1, @contributeCompId, NULL),
+  (@option_group_id_report , 'Contribution History By Relationship Report',                   'contribute/history',              'CRM_Report_Form_Contribute_History',              NULL, 0, NULL, 46,  'List contact\'s donation history, grouped by year, along with contributions attributed to any of the contact\'s related contacts.', 0, 0, 1, @contributeCompId, NULL),
   (@option_group_id_report,  'Mail Detail Report',                                            'mailing/detail',     'CRM_Report_Form_Mailing_Detail',          NULL, 0, NULL, 47,  'Provides reporting on Intended and Successful Deliveries, Unsubscribes and Opt-outs, Replies and Forwards.',   0, 0, 1, @mailCompId, NULL),
   (@option_group_id_report, 'Contribution and Membership Details', 'member/contributionDetail', 'CRM_Report_Form_Member_ContributionDetail', NULL, 0, NULL, 48, 'Contribution details for any type of contribution, plus associated membership information for contributions which are in payment for memberships.', 0, 0, 1, @memberCompId, NULL),
-  (@option_group_id_report, 'Price Set Line Item report', 'price/lineitem', 'CRM_Report_Form_Price_Lineitem', NULL, 0, NULL, 49, 'Price Set Line Item report', 0, 0, 1, @contributeCompId, NULL),
-  (@option_group_id_report, 'Contribution Report with Price Set detail', 'price/contributionbased', 'CRM_Report_Form_Price_Contributionbased', NULL, 0, NULL, 50, 'Contribution Report with Price Set detail', 0, 0, 1, @contributeCompId, NULL),
-  (@option_group_id_report, 'Participant Report with Price Set detail', 'price/lineitemparticipant', 'CRM_Report_Form_Price_Lineitemparticipant', NULL, 0, NULL, 51, 'Participant Report with Price Set detail', 0, 0, 1, @eventCompId, NULL),
 
   (@option_group_id_acs, 'Scheduled',  1, 'Scheduled',  NULL, 0, 1,    1, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_acs, 'Completed',  2, 'Completed',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
@@ -5419,7 +5416,6 @@ VALUES
  ('PayJunction',        'PayJunction',            NULL,1,0,'User Name','Password',NULL,NULL,'Payment_PayJunction','https://payjunction.com/quick_link',NULL,NULL,NULL,'https://www.payjunctionlabs.com/quick_link',NULL,NULL,NULL,1,1),
  ('eWAY',               'eWAY (Single Currency)', NULL,1,0,'Customer ID',NULL,NULL,NULL,'Payment_eWAY','https://www.eway.com.au/gateway_cvn/xmlpayment.asp',NULL,NULL,NULL,'https://www.eway.com.au/gateway_cvn/xmltest/testpage.asp',NULL,NULL,NULL,1,0),
  ('Payment_Express',    'DPS Payment Express',    NULL,1,0,'User ID','Key','Mac Key - pxaccess only',NULL,'Payment_PaymentExpress','https://www.paymentexpress.com/pleaseenteraurl',NULL,NULL,NULL,'https://www.paymentexpress.com/pleaseenteratesturl',NULL,NULL,NULL,4,0),
- ('ClickAndPledge',     'Click and Pledge',       NULL,1,0,'Customer ID',NULL,NULL,NULL,'Payment_ClickAndPledge','http://www.clickandpledge.com/',NULL,NULL,NULL,'http://www.clickandpledge.com/',NULL,NULL,NULL,4,0),
  ('Dummy',              'Dummy Payment Processor',NULL,1,1,'వాడుకరి పేరు',NULL,NULL,NULL,'Payment_Dummy',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,NULL),
  ('Elavon',             'Elavon Payment Processor','Elavon / Nova Virtual Merchant',1,0,'SSL Merchant ID ','SSL User ID','SSL PIN',NULL,'Payment_Elavon','https://www.myvirtualmerchant.com/VirtualMerchant/processxml.do',NULL,NULL,NULL,'https://www.myvirtualmerchant.com/VirtualMerchant/processxml.do',NULL,NULL,NULL,1,0),
  ('Realex',             'Realex Payment',         NULL,1,0,'Merchant ID', 'Password', NULL, 'Account', 'Payment_Realex', 'https://epage.payandshop.com/epage.cgi', NULL, NULL, NULL, 'https://epage.payandshop.com/epage-remote.cgi', NULL, NULL, NULL, 1, 0 ),
@@ -5734,8 +5730,8 @@ INSERT INTO civicrm_uf_group
     (8,  'shared_address',     'Contact',   		  'Shared Address'    , 0,           1,           NULL),
     (9,  'on_behalf_organization', 'Contact,Organization,Contribution,Membership',
     'On Behalf Of Organization'    , 0,           1,           NULL),
-    (10,  'contribution_batch_entry', 'Contribution', 'Contribution Batch Entry' , 0,      1,           NULL),
-    (11,  'membership_batch_entry', 'Membership', 'Membership Batch Entry' , 0,      1,           NULL),
+    (10,  'contribution_batch_entry', 'Contribution', 'Contribution Bulk Entry' , 0,      1,           NULL),
+    (11,  'membership_batch_entry', 'Membership', 'Membership Bulk Entry' , 0,      1,           NULL),
     (12, 'event_registration', 'Individual, Contact', 'Your Registration Info',        0,      0,           NULL);
 
 INSERT INTO civicrm_uf_join
@@ -5758,11 +5754,11 @@ VALUES
 INSERT INTO civicrm_uf_field
        ( uf_group_id, field_name,              is_required, is_reserved, weight, visibility,                  in_selector, is_searchable, location_type_id, label,                                         		field_type,    help_post, phone_type_id ) VALUES
        (  1,           'first_name',            1,           0,           1,      'User and User Admin Only', 0,           0,             NULL,             'మొదటి పేరు',            		'Individual',  NULL,  NULL),
-       (  1,           'last_name',             1,           0,           2,      'User and User Admin Only', 0,           0,             NULL,             'ఇంటి పేరు',             		'Individual',  'First and last name will be shared with other visitors to the site.',  NULL),
+       (  1,           'last_name',             1,           0,           2,      'User and User Admin Only', 0,           0,             NULL,             'ఇంటి పేరు',             		'Individual',  NULL,  NULL),
        (  1,           'street_address',        0,           0,           3,      'User and User Admin Only',  0,           0,             1,                'Street Address (Home)', 		'Contact',     NULL,  NULL),
        (  1,           'city',                  0,           0,           4,      'User and User Admin Only',  0,           0,             1,                'City (Home)',           		'Contact',     NULL,  NULL),
        (  1,           'postal_code',           0,           0,           5,      'User and User Admin Only',  0,           0,             1,                'Postal Code (Home)',    		'Contact',     NULL,  NULL),
-       (  1,           'country',               0,           0,           6,      'User and User Admin Only', 0,           0,             1,                'Country (Home)',        		'Contact',     'Your state/province and country of residence will be shared with others so folks can find others in their community.',  NULL),
+       (  1,           'country',               0,           0,           6,      'User and User Admin Only', 0,           0,             1,                'Country (Home)',        		'Contact',     NULL,  NULL),
        (  1,           'state_province',        0,           0,           7,      'User and User Admin Only', 0,           0,             1,                'State (Home)',          		'Contact',     NULL,  NULL),
        (  2,           'first_name',            1,           0,           1,      'User and User Admin Only',  0,           0,             NULL,             'మొదటి పేరు',            		'Individual',  NULL,  NULL),
        (  2,           'last_name',             1,           0,           2,      'User and User Admin Only',  0,           0,             NULL,             'ఇంటి పేరు',             		'Individual',  NULL,  NULL),
@@ -18490,7 +18486,7 @@ INSERT INTO civicrm_setting
   ( domain_id, contact_id, is_domain, group_name, name, value )
 VALUES
   ( @domainID, NULL, 1, 'CiviCRM Preferences', 'contact_view_options', 's:28:"123456789101113";' ),
-  ( @domainID, NULL, 1, 'CiviCRM Preferences', 'contact_edit_options', 's:25:"1234567891011";' ),
+  ( @domainID, NULL, 1, 'CiviCRM Preferences', 'contact_edit_options', 's:22:"12345678911";' ),
   ( @domainID, NULL, 1, 'CiviCRM Preferences', 'advanced_search_options', 's:46:"123456789101112131516171819";' ),
   ( @domainID, NULL, 1, 'CiviCRM Preferences', 'user_dashboard_options', 's:15:"1234578";' ),
   ( @domainID, NULL, 1, 'CiviCRM Preferences', 'address_options', 's:23:"123456891011";' ),
@@ -18538,7 +18534,8 @@ VALUES
   ( @domainID, NULL, 1, 'Directory Preferences', 'extensionsDir'      , NULL ),
   ( @domainID, NULL, 1, 'URL Preferences', 'userFrameworkResourceURL' , NULL ),
   ( @domainID, NULL, 1, 'URL Preferences', 'imageUploadURL'           , NULL ),
-  ( @domainID, NULL, 1, 'URL Preferences', 'customCSSURL'             , NULL );
+  ( @domainID, NULL, 1, 'URL Preferences', 'customCSSURL'             , NULL ),
+  ( @domainID, NULL, 1, 'URL Preferences', 'extensionsURL'            , NULL );
 
 -- mail settings 
 
@@ -18627,7 +18624,7 @@ VALUES
     ( @domainID, 'civicrm/contribute&reset=1',                              'Dashboard',              'Dashboard',              'access CiviContribute', '', @contributionlastID, '1', NULL, 1 ), 
     ( @domainID, 'civicrm/contribute/add&reset=1&action=add&context=standalone', 'New Contribution',  'New Contribution',       'access CiviContribute,edit contributions', 'AND', @contributionlastID, '1', NULL, 2 ), 
     ( @domainID, 'civicrm/contribute/search&reset=1',                       'Find Contributions',     'Find Contributions',     'access CiviContribute', '', @contributionlastID, '1', NULL, 3 ), 
-    ( @domainID, 'civicrm/batch&reset=1',                       'Batches',     'Batches',             'access CiviContribute,access CiviMember', '', @contributionlastID, '1', NULL, 4 ), 
+    ( @domainID, 'civicrm/batch&reset=1',                       'Bulk Data Entry',     'Bulk Data Entry',             'access CiviContribute,access CiviMember', '', @contributionlastID, '1', NULL, 4 ), 
     ( @domainID, 'civicrm/contribute/import&reset=1',                       'Import Contributions',   'Import Contributions',   'access CiviContribute,edit contributions', 'AND', @contributionlastID, '1', '1',  5 );
     
 INSERT INTO civicrm_navigation
@@ -18685,7 +18682,8 @@ VALUES
     ( @domainID, 'civicrm/admin/component&reset=1',                         'Headers, Footers, and Automated Messages', 'Headers, Footers, and Automated Messages', 'access CiviMail,administer CiviCRM', 'AND', @mailinglastID, '1', NULL, 5 ),
     ( @domainID, 'civicrm/admin/messageTemplates&reset=1',                  'Message Templates', 'Message Templates',                 'administer CiviCRM', '', @mailinglastID, '1', NULL, 6 ),
     ( @domainID, 'civicrm/admin/options/from_email&group=from_email_address&reset=1', 'From Email Addresses', 'From Email Addresses', 'administer CiviCRM', '', @mailinglastID, '1', 1, 7 ),
-    ( @domainID, 'civicrm/sms/send?reset=1', 'New SMS', 'New SMS', 'administer CiviCRM', NULL, @mailinglastID, '1', 1, 8 );
+    ( @domainID, 'civicrm/sms/send?reset=1',  'New SMS', 'New SMS',	 'administer CiviCRM', NULL, @mailinglastID, '1', NULL, 8 ),
+    ( @domainID, 'civicrm/mailing/browse?reset=1&sms=1', 'Find Mass SMS', 'Find Mass SMS', 'administer CiviCRM', NULL, @mailinglastID, '1', 1, 9 );
 INSERT INTO civicrm_navigation
     ( domain_id, url, label, name, permission, permission_operator, parent_id, is_active, has_separator, weight )
 VALUES 
@@ -18698,7 +18696,7 @@ VALUES
     ( @domainID, 'civicrm/member&reset=1',                              'Dashboard',           'Dashboard',       'access CiviMember', '', @memberlastID, '1', NULL, 1 ), 
     ( @domainID, 'civicrm/member/add&reset=1&action=add&context=standalone', 'New Membership', 'New Membership',  'access CiviMember,edit memberships', 'AND', @memberlastID, '1', NULL, 2 ), 
     ( @domainID, 'civicrm/member/search&reset=1',                       'Find Memberships',    'Find Memberships','access CiviMember', '', @memberlastID, '1', NULL, 3 ), 
-    ( @domainID, 'civicrm/batch&reset=1',                       'Batches',    'Batches','access CiviMember,acess CiviContribute', '', @memberlastID, '1', NULL, 4 ), 
+    ( @domainID, 'civicrm/batch&reset=1',                       'Bulk Data Entry',    'Bulk Data Entry','access CiviMember, access CiviContribute', '', @memberlastID, '1', NULL, 4 ), 
     ( @domainID, 'civicrm/member/import&reset=1',                       'Import Memberships',  'Import Members',  'access CiviMember,edit memberships', 'AND', @memberlastID, '1', 1, 5 ),
     ( @domainID, 'civicrm/admin/price&reset=1&action=add',              'New Price Set',       'New Price Set',   'access CiviMember,administer CiviCRM', 'AND',  @memberlastID, '1', NULL, 6 ),
     ( @domainID, 'civicrm/admin/price&reset=1',                         'Manage Price Sets',   'Manage Price Sets', 'access CiviMember,administer CiviCRM', 'AND',  @memberlastID, '1', NULL, 7 );
@@ -18792,8 +18790,7 @@ VALUES
     ( @domainID, 'civicrm/admin/setting/search&reset=1',    'Search Preferences',    'Search Preferences',                'administer CiviCRM', '',   @CustomizelastID, '1', NULL, 10 ), 
     ( @domainID, 'civicrm/admin/menu&reset=1',              'Navigation Menu', 'Navigation Menu',                         'administer CiviCRM', '',   @CustomizelastID, '1', NULL, 11 ), 
     ( @domainID, 'civicrm/admin/options/wordreplacements&reset=1','Word Replacements','Word Replacements',                'administer CiviCRM', '',   @CustomizelastID, '1', NULL, 12 ),
-    ( @domainID, 'civicrm/admin/options/custom_search&reset=1&group=custom_search', 'Manage Custom Searches', 'Manage Custom Searches', 'administer CiviCRM', '', @CustomizelastID, '1', NULL, 13 ),
-    ( @domainID, 'civicrm/admin/extensions&reset=1',        'Manage Extensions', 'Manage Extensions', 'administer CiviCRM', '', @CustomizelastID, '1', NULL, 14 );
+    ( @domainID, 'civicrm/admin/options/custom_search&reset=1&group=custom_search', 'Manage Custom Searches', 'Manage Custom Searches', 'administer CiviCRM', '', @CustomizelastID, '1', NULL, 13 );
 
 INSERT INTO civicrm_navigation
     ( domain_id, url, label, name, permission, permission_operator, parent_id, is_active, has_separator, weight )
@@ -18869,21 +18866,22 @@ INSERT INTO civicrm_navigation
     ( domain_id, url, label, name, permission, permission_operator, parent_id, is_active, has_separator, weight )
 VALUES
     ( @domainID, 'civicrm/admin/setting/component&reset=1', 'Enable CiviCRM Components', 'Enable Components',                                 'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 1 ), 
-    ( @domainID, 'civicrm/admin/setting/smtp&reset=1',                  'Outbound Email (SMTP/Sendmail)', 'Outbound Email',                   'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 2 ), 
-    ( @domainID, 'civicrm/admin/paymentProcessor&reset=1',              'Payment Processors', 'Payment Processors',                           'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 3 ), 
-    ( @domainID, 'civicrm/admin/setting/mapping&reset=1',               'Mapping and Geocoding', 'Mapping and Geocoding',                     'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 4 ), 
-    ( @domainID, 'civicrm/admin/setting/misc&reset=1',                  'Undelete, Logging and ReCAPTCHA', 'Undelete, Logging and ReCAPTCHA', 'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 5 ), 
-    ( @domainID, 'civicrm/admin/setting/path&reset=1',                  'Directories',        'Directories',                                  'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 6 ), 
-    ( @domainID, 'civicrm/admin/setting/url&reset=1',                   'Resource URLs',      'Resource URLs',                                'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 7 ), 
-    ( @domainID, 'civicrm/admin/setting/updateConfigBackend&reset=1',   'Cleanup Caches and Update Paths', 'Cleanup Caches and Update Paths', 'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 8 ),
-    ( @domainID, 'civicrm/admin/setting/uf&reset=1',                    'CMS Database Integration',    'CMS Integration',                     'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 9 ), 
-    ( @domainID, 'civicrm/admin/options/safe_file_extension&group=safe_file_extension&reset=1', 'Safe File Extensions', 'Safe File Extensions','administer CiviCRM', '',@systemSettingslastID, '1', NULL, 10 ), 
-    ( @domainID, 'civicrm/admin/options?reset=1',                       'Option Groups', 'Option Groups',                                     'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 11 ), 
-    ( @domainID, 'civicrm/admin/mapping&reset=1',                       'Import/Export Mappings', 'Import/Export Mappings',                   'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 12 ), 
-    ( @domainID, 'civicrm/admin/setting/debug&reset=1',                 'Debugging and Error Handling','Debugging and Error Handling',        'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 13 ),
-    ( @domainID, 'civicrm/admin/setting/preferences/multisite&reset=1', 'Multi Site Settings', 'Multi Site Settings',                         'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 14 ),
-    ( @domainID, 'civicrm/admin/job&reset=1',                           'Scheduled Jobs', 'Scheduled Jobs',                                   'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 15 ),
-    ( @domainID, 'civicrm/admin/sms/provider?reset=1', 'SMS Providers', 'SMS Providers',                                  'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 16 );
+    ( @domainID, 'civicrm/admin/extensions&reset=1',        'Manage Extensions', 'Manage Extensions', 'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 2 ),
+    ( @domainID, 'civicrm/admin/setting/smtp&reset=1',                  'Outbound Email (SMTP/Sendmail)', 'Outbound Email',                   'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 3 ), 
+    ( @domainID, 'civicrm/admin/paymentProcessor&reset=1',              'Payment Processors', 'Payment Processors',                           'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 4 ), 
+    ( @domainID, 'civicrm/admin/setting/mapping&reset=1',               'Mapping and Geocoding', 'Mapping and Geocoding',                     'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 5 ), 
+    ( @domainID, 'civicrm/admin/setting/misc&reset=1',                  'Undelete, Logging and ReCAPTCHA', 'Undelete, Logging and ReCAPTCHA', 'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 6 ), 
+    ( @domainID, 'civicrm/admin/setting/path&reset=1',                  'Directories',        'Directories',                                  'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 7 ), 
+    ( @domainID, 'civicrm/admin/setting/url&reset=1',                   'Resource URLs',      'Resource URLs',                                'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 8 ), 
+    ( @domainID, 'civicrm/admin/setting/updateConfigBackend&reset=1',   'Cleanup Caches and Update Paths', 'Cleanup Caches and Update Paths', 'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 9 ),
+    ( @domainID, 'civicrm/admin/setting/uf&reset=1',                    'CMS Database Integration',    'CMS Integration',                     'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 10 ), 
+    ( @domainID, 'civicrm/admin/options/safe_file_extension&group=safe_file_extension&reset=1', 'Safe File Extensions', 'Safe File Extensions','administer CiviCRM', '',@systemSettingslastID, '1', NULL, 11 ), 
+    ( @domainID, 'civicrm/admin/options?reset=1',                       'Option Groups', 'Option Groups',                                     'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 12 ), 
+    ( @domainID, 'civicrm/admin/mapping&reset=1',                       'Import/Export Mappings', 'Import/Export Mappings',                   'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 13 ), 
+    ( @domainID, 'civicrm/admin/setting/debug&reset=1',                 'Debugging and Error Handling','Debugging and Error Handling',        'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 14 ),
+    ( @domainID, 'civicrm/admin/setting/preferences/multisite&reset=1', 'Multi Site Settings', 'Multi Site Settings',                         'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 15 ),
+    ( @domainID, 'civicrm/admin/job&reset=1',                           'Scheduled Jobs', 'Scheduled Jobs',                                   'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 16 ),
+    ( @domainID, 'civicrm/admin/sms/provider?reset=1', 'SMS Providers', 'SMS Providers',                                  'administer CiviCRM', '', @systemSettingslastID, '1', NULL, 17 );
 
 
 -- begin component admin menus
@@ -19447,4 +19445,4 @@ INSERT INTO civicrm_navigation
 VALUES
     ( @domainID, CONCAT('civicrm/report/instance/', @instanceID,'&reset=1'), 'Mailing Detail Report', 'Mailing Detail Report', 'administer CiviMail', 'OR', @reportlastID, '1', NULL, @instanceID+2 );
 UPDATE civicrm_report_instance SET navigation_id = LAST_INSERT_ID() WHERE id = @instanceID;
- UPDATE civicrm_domain SET version = '4.2.beta4';
+ UPDATE civicrm_domain SET version = '4.2.4';

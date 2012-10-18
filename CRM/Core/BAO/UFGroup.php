@@ -2282,13 +2282,15 @@ AND    ( entity_id IS NULL OR entity_id <= 0 )
 
     CRM_Utils_Hook::aclGroup(CRM_Core_Permission::ADMIN, NULL, 'civicrm_uf_group', $ufGroups, $ufGroups);
 
+    // Exclude Bulk Data Entry profiles - CRM-10901
+    $batchProfiles = CRM_Core_BAO_UFGroup::getBatchProfiles();
+
     foreach ($ufGroups as $id => $title) {
       $ptype = CRM_Core_BAO_UFField::getProfileType($id, FALSE, $onlyPure);
-      if (in_array($ptype, $types)) {
-        $profiles[$id] = $title;
+      if (in_array($ptype, $types) && !array_key_exists($id, $batchProfiles)) {
+        $profiles[$id] = $title;          
       }
     }
-
     return $profiles;
   }
 
@@ -2879,8 +2881,14 @@ AND    ( entity_id IS NULL OR entity_id <= 0 )
         $defaults[$fldName] = array_pop($noteDetails);
       }
       elseif (in_array($name, array(
-        'contribution_type', 'payment_instrument', 'participant_status', 'participant_role', 'membership_type'))) {
+        'contribution_type', 'payment_instrument', 'participant_status', 'participant_role'))) {
         $defaults[$fldName] = $values["{$name}_id"];
+      }
+      elseif ($name == 'membership_type') {
+        // since membership_type field is a hierselect - 
+        $defaults[$fldName][0] = 
+          CRM_Core_DAO::getFieldValue('CRM_Member_DAO_MembershipType',$values['membership_type_id'],'member_of_contact_id','id');
+        $defaults[$fldName][1] = $values['membership_type_id'];
       }
       elseif ($name == 'membership_status') {
         $defaults[$fldName] = $values['status_id'];

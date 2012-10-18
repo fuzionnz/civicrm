@@ -170,7 +170,7 @@ VALUES
     ( @domainID, 'civicrm/contribute&reset=1',                              'Dashboard',              'Dashboard',              'access CiviContribute', '', @contributionlastID, '1', NULL, 1 ), 
     ( @domainID, 'civicrm/contribute/add&reset=1&action=add&context=standalone', 'New Contribution',  'New Contribution',       'access CiviContribute,edit contributions', 'AND', @contributionlastID, '1', NULL, 2 ), 
     ( @domainID, 'civicrm/contribute/search&reset=1',                       'Find Contributions',     'Find Contributions',     'access CiviContribute', '', @contributionlastID, '1', NULL, 3 ), 
-    ( @domainID, 'civicrm/batch&reset=1',                       'Batches',     'Batches',             'access CiviContribute,access CiviMember', '', @contributionlastID, '1', NULL, 4 ), 
+    ( @domainID, 'civicrm/batch&reset=1',                       'Bulk Data Entry',     'Bulk Data Entry',             'access CiviContribute,access CiviMember', '', @contributionlastID, '1', NULL, 4 ), 
     ( @domainID, 'civicrm/contribute/import&reset=1',                       'Import Contributions',   'Import Contributions',   'access CiviContribute,edit contributions', 'AND', @contributionlastID, '1', '1',  5 );
     
 INSERT INTO civicrm_navigation
@@ -228,7 +228,8 @@ VALUES
     ( @domainID, 'civicrm/admin/component&reset=1',                         'Headers, Footers, and Automated Messages', 'Headers, Footers, and Automated Messages', 'access CiviMail,administer CiviCRM', 'AND', @mailinglastID, '1', NULL, 5 ),
     ( @domainID, 'civicrm/admin/messageTemplates&reset=1',                  'Message Templates', 'Message Templates',                 'administer CiviCRM', '', @mailinglastID, '1', NULL, 6 ),
     ( @domainID, 'civicrm/admin/options/from_email&group=from_email_address&reset=1', 'From Email Addresses', 'From Email Addresses', 'administer CiviCRM', '', @mailinglastID, '1', 1, 7 ),
-    ( @domainID, 'civicrm/sms/send?reset=1', 'New SMS', 'New SMS', 'administer CiviCRM', NULL, @mailinglastID, '1', 1, 8 );
+    ( @domainID, 'civicrm/sms/send?reset=1',  'New SMS', 'New SMS',	 'administer CiviCRM', NULL, @mailinglastID, '1', NULL, 8 ),
+    ( @domainID, 'civicrm/mailing/browse?reset=1&sms=1', 'Find Mass SMS', 'Find Mass SMS', 'administer CiviCRM', NULL, @mailinglastID, '1', 1, 9 );
 INSERT INTO civicrm_navigation
     ( domain_id, url, label, name, permission, permission_operator, parent_id, is_active, has_separator, weight )
 VALUES 
@@ -241,7 +242,7 @@ VALUES
     ( @domainID, 'civicrm/member&reset=1',                              'Dashboard',           'Dashboard',       'access CiviMember', '', @memberlastID, '1', NULL, 1 ), 
     ( @domainID, 'civicrm/member/add&reset=1&action=add&context=standalone', 'New Membership', 'New Membership',  'access CiviMember,edit memberships', 'AND', @memberlastID, '1', NULL, 2 ), 
     ( @domainID, 'civicrm/member/search&reset=1',                       'Find Memberships',    'Find Memberships','access CiviMember', '', @memberlastID, '1', NULL, 3 ), 
-    ( @domainID, 'civicrm/batch&reset=1',                       'Batches',    'Batches','access CiviMember,acess CiviContribute', '', @memberlastID, '1', NULL, 4 ), 
+    ( @domainID, 'civicrm/batch&reset=1',                       'Bulk Data Entry',    'Bulk Data Entry','access CiviMember, access CiviContribute', '', @memberlastID, '1', NULL, 4 ), 
     ( @domainID, 'civicrm/member/import&reset=1',                       'Import Memberships',  'Import Members',  'access CiviMember,edit memberships', 'AND', @memberlastID, '1', 1, 5 ),
     ( @domainID, 'civicrm/admin/price&reset=1&action=add',              'New Price Set',       'New Price Set',   'access CiviMember,administer CiviCRM', 'AND',  @memberlastID, '1', NULL, 6 ),
     ( @domainID, 'civicrm/admin/price&reset=1',                         'Manage Price Sets',   'Manage Price Sets', 'access CiviMember,administer CiviCRM', 'AND',  @memberlastID, '1', NULL, 7 );

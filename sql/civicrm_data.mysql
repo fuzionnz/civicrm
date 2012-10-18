@@ -4622,7 +4622,7 @@ VALUES
    (@option_group_id_act, 'PhoneBank',                          30, 'PhoneBank', NULL,0, 0, 29, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'WalkList',                           31, 'WalkList', NULL,0, 0, 30, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'Petition Signature',                 32, 'Petition', NULL,0, 0, 31, '', 0, 1, 1, @campaignCompId, NULL),
-   (@option_group_id_act, 'BULK SMS',                           34, 'BULK SMS',         NULL, 1, NULL, 34, 'BULK SMS',                                                    0, 1, 1, NULL, NULL),
+   (@option_group_id_act, 'Mass SMS',                           34, 'Mass SMS',         NULL, 1, NULL, 34, 'Mass SMS',                                                    0, 1, 1, NULL, NULL),
 
 -- Activity Types for CiviCampaign CiviCase
    (@option_group_id_act, 'Change Custom Data',                 33, 'Change Custom Data', NULL,0, 0, 33, '', 0, 1, 1, @caseCompId, NULL),
@@ -5730,8 +5730,8 @@ INSERT INTO civicrm_uf_group
     (8,  'shared_address',     'Contact',   		  'Shared Address'    , 0,           1,           NULL),
     (9,  'on_behalf_organization', 'Contact,Organization,Contribution,Membership',
     'On Behalf Of Organization'    , 0,           1,           NULL),
-    (10,  'contribution_batch_entry', 'Contribution', 'Contribution Batch Entry' , 0,      1,           NULL),
-    (11,  'membership_batch_entry', 'Membership', 'Membership Batch Entry' , 0,      1,           NULL),
+    (10,  'contribution_batch_entry', 'Contribution', 'Contribution Bulk Entry' , 0,      1,           NULL),
+    (11,  'membership_batch_entry', 'Membership', 'Membership Bulk Entry' , 0,      1,           NULL),
     (12, 'event_registration', 'Individual, Contact', 'Your Registration Info',        0,      0,           NULL);
 
 INSERT INTO civicrm_uf_join
@@ -18624,7 +18624,7 @@ VALUES
     ( @domainID, 'civicrm/contribute&reset=1',                              'Dashboard',              'Dashboard',              'access CiviContribute', '', @contributionlastID, '1', NULL, 1 ), 
     ( @domainID, 'civicrm/contribute/add&reset=1&action=add&context=standalone', 'New Contribution',  'New Contribution',       'access CiviContribute,edit contributions', 'AND', @contributionlastID, '1', NULL, 2 ), 
     ( @domainID, 'civicrm/contribute/search&reset=1',                       'Find Contributions',     'Find Contributions',     'access CiviContribute', '', @contributionlastID, '1', NULL, 3 ), 
-    ( @domainID, 'civicrm/batch&reset=1',                       'Batches',     'Batches',             'access CiviContribute,access CiviMember', '', @contributionlastID, '1', NULL, 4 ), 
+    ( @domainID, 'civicrm/batch&reset=1',                       'Bulk Data Entry',     'Bulk Data Entry',             'access CiviContribute,access CiviMember', '', @contributionlastID, '1', NULL, 4 ), 
     ( @domainID, 'civicrm/contribute/import&reset=1',                       'Import Contributions',   'Import Contributions',   'access CiviContribute,edit contributions', 'AND', @contributionlastID, '1', '1',  5 );
     
 INSERT INTO civicrm_navigation
@@ -18682,7 +18682,8 @@ VALUES
     ( @domainID, 'civicrm/admin/component&reset=1',                         'Headers, Footers, and Automated Messages', 'Headers, Footers, and Automated Messages', 'access CiviMail,administer CiviCRM', 'AND', @mailinglastID, '1', NULL, 5 ),
     ( @domainID, 'civicrm/admin/messageTemplates&reset=1',                  'Message Templates', 'Message Templates',                 'administer CiviCRM', '', @mailinglastID, '1', NULL, 6 ),
     ( @domainID, 'civicrm/admin/options/from_email&group=from_email_address&reset=1', 'From Email Addresses', 'From Email Addresses', 'administer CiviCRM', '', @mailinglastID, '1', 1, 7 ),
-    ( @domainID, 'civicrm/sms/send?reset=1', 'New SMS', 'New SMS', 'administer CiviCRM', NULL, @mailinglastID, '1', 1, 8 );
+    ( @domainID, 'civicrm/sms/send?reset=1',  'New SMS', 'New SMS',	 'administer CiviCRM', NULL, @mailinglastID, '1', NULL, 8 ),
+    ( @domainID, 'civicrm/mailing/browse?reset=1&sms=1', 'Find Mass SMS', 'Find Mass SMS', 'administer CiviCRM', NULL, @mailinglastID, '1', 1, 9 );
 INSERT INTO civicrm_navigation
     ( domain_id, url, label, name, permission, permission_operator, parent_id, is_active, has_separator, weight )
 VALUES 
@@ -18695,7 +18696,7 @@ VALUES
     ( @domainID, 'civicrm/member&reset=1',                              'Dashboard',           'Dashboard',       'access CiviMember', '', @memberlastID, '1', NULL, 1 ), 
     ( @domainID, 'civicrm/member/add&reset=1&action=add&context=standalone', 'New Membership', 'New Membership',  'access CiviMember,edit memberships', 'AND', @memberlastID, '1', NULL, 2 ), 
     ( @domainID, 'civicrm/member/search&reset=1',                       'Find Memberships',    'Find Memberships','access CiviMember', '', @memberlastID, '1', NULL, 3 ), 
-    ( @domainID, 'civicrm/batch&reset=1',                       'Batches',    'Batches','access CiviMember,acess CiviContribute', '', @memberlastID, '1', NULL, 4 ), 
+    ( @domainID, 'civicrm/batch&reset=1',                       'Bulk Data Entry',    'Bulk Data Entry','access CiviMember, access CiviContribute', '', @memberlastID, '1', NULL, 4 ), 
     ( @domainID, 'civicrm/member/import&reset=1',                       'Import Memberships',  'Import Members',  'access CiviMember,edit memberships', 'AND', @memberlastID, '1', 1, 5 ),
     ( @domainID, 'civicrm/admin/price&reset=1&action=add',              'New Price Set',       'New Price Set',   'access CiviMember,administer CiviCRM', 'AND',  @memberlastID, '1', NULL, 6 ),
     ( @domainID, 'civicrm/admin/price&reset=1',                         'Manage Price Sets',   'Manage Price Sets', 'access CiviMember,administer CiviCRM', 'AND',  @memberlastID, '1', NULL, 7 );
@@ -19444,4 +19445,4 @@ INSERT INTO civicrm_navigation
 VALUES
     ( @domainID, CONCAT('civicrm/report/instance/', @instanceID,'&reset=1'), 'Mailing Detail Report', 'Mailing Detail Report', 'administer CiviMail', 'OR', @reportlastID, '1', NULL, @instanceID+2 );
 UPDATE civicrm_report_instance SET navigation_id = LAST_INSERT_ID() WHERE id = @instanceID;
- UPDATE civicrm_domain SET version = '4.2.2';
+ UPDATE civicrm_domain SET version = '4.2.4';

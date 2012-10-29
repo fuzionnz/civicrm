@@ -155,12 +155,12 @@ class CRM_Report_Form_Contact_LoggingSummary extends CRM_Logging_ReportSummary {
 
     foreach ($rows as $key => &$row) {
       if (!isset($isDeleted[$row['log_civicrm_entity_altered_contact_id']])) {
-        $isDeleted[$row['log_civicrm_entity_altered_contact_id']] = 
+        $isDeleted[$row['log_civicrm_entity_altered_contact_id']] =
           CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $row['log_civicrm_entity_altered_contact_id'], 'is_deleted') !== '0';
       }
 
       if (!$isDeleted[$row['log_civicrm_entity_altered_contact_id']]) {
-        $row['log_civicrm_entity_altered_contact_link'] = 
+        $row['log_civicrm_entity_altered_contact_link'] =
           CRM_Utils_System::url('civicrm/contact/view', 'reset=1&cid=' . $row['log_civicrm_entity_altered_contact_id']);
         $row['log_civicrm_entity_altered_contact_hover'] = ts("Go to contact summary");
         $entity = $this->getEntityValue($row['log_civicrm_entity_id'], $row['log_civicrm_entity_log_type']);
@@ -174,7 +174,7 @@ class CRM_Report_Form_Contact_LoggingSummary extends CRM_Logging_ReportSummary {
         $row['log_civicrm_entity_log_action'] = ts('Delete (to trash)');
       }
 
-      if ('Contact' == CRM_Utils_Array::value('log_type', $this->_logTables[$row['log_civicrm_entity_log_type']]) && 
+      if ('Contact' == CRM_Utils_Array::value('log_type', $this->_logTables[$row['log_civicrm_entity_log_type']]) &&
           $row['log_civicrm_entity_log_action'] == 'Insert' ) {
         $row['log_civicrm_entity_log_action'] = ts('Update');
       }
@@ -220,11 +220,10 @@ class CRM_Report_Form_Contact_LoggingSummary extends CRM_Logging_ReportSummary {
 
     $this->_from = "
 FROM `{$this->loggingDB}`.$entity entity_log_civireport
-INNER JOIN civicrm_temp_civireport_logsummary temp 
-        ON (entity_log_civireport.{$detail['fk']} = temp.contact_id)
-INNER JOIN civicrm_contact modified_contact_civireport 
+
+INNER JOIN civicrm_contact modified_contact_civireport
         ON (entity_log_civireport.{$detail['fk']} = modified_contact_civireport.id {$clause})
-LEFT  JOIN civicrm_contact altered_by_contact_civireport 
+LEFT  JOIN civicrm_contact altered_by_contact_civireport
         ON (entity_log_civireport.log_user_id = altered_by_contact_civireport.id)";
   }
 }

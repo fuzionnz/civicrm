@@ -89,8 +89,12 @@
                       <a href='/civicrm/contact/view?reset=1&cid={$element.contact_ref_id}'>
                   {/if}
                   {strip}
-                  {if $entity && ($element.field_type == 'Text' || $element.field_type =='TextArea' )}
-                    <div data-action="create" class="crm-editable crmf-custom_{$field_id} crm-editable-enabled">
+                  {if $entity && $element.field_type == 'Text'}
+                    <div data-action="create" class="crm-editable crmf-custom_{$field_id}">
+                      {$element.field_value}
+                    </div>
+                  {elseif $entity && $element.field_type =='TextArea' }
+                    <div data-action="create" class="crm-editable edit_area crmf-custom_{$field_id}" data-type='textarea' data-rows=4 data-columns=50>
                       {$element.field_value}
                     </div>
                   {elseif $element.field_type =='Radio' && $entity}

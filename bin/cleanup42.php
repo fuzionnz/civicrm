@@ -26,55 +26,44 @@
 */
 
 /**
- * Perform an upgrade without using the web-frontend
- */
-class CRM_Upgrade_Headless {
+ * A PHP script which deletes extraneous civicrm_membership_payment rows
+ * in order to correct the condition where a contribution row is linked to > 1 membership.
+  */
 
-  /**
-   * Perform an upgrade without using the web-frontend
-   *
-   * @return array, with keys:
-   *   - message: string, HTML-ish blob
-   * @throws Exception
-   */
-  function run($enablePrint = TRUE) {
-    // lets get around the time limit issue if possible for upgrades
-    if (!ini_get('safe_mode')) {
-      set_time_limit(0);
-    }
+function initialize() {
+  session_start();
+  if (!function_exists('drush_get_context')) {
+    require_once '../civicrm.config.php';
+  }
 
-    $upgrade = new CRM_Upgrade_Form();
-    list($currentVer, $latestVer) = $upgrade->getUpgradeVersions();
+  // hack to make code think its an upgrade mode, and not do lot of initialization which breaks the code due to new 4.2 schema
+  $_GET['q'] = 'civicrm/upgrade/cleanup42';
 
-    if ($error = $upgrade->checkUpgradeableVersion($currentVer, $latestVer)) {
-      throw new Exception($error);
-    }
-
-    // CRM-11156
-    $preUpgradeMessage = NULL;
-    $upgrade->setPreUpgradeMessage($preUpgradeMessage, $currentVer, $latestVer);
-
-    $postUpgradeMessageFile = CRM_Utils_File::tempnam('civicrm-post-upgrade');
-    $queueRunner = new CRM_Queue_Runner(array(
-        'title' => ts('CiviCRM Upgrade Tasks'),
-        'queue' => CRM_Upgrade_Form::buildQueue($currentVer, $latestVer, $postUpgradeMessageFile),
-      ));
-    $queueResult = $queueRunner->runAll();
-    if ($queueResult !== TRUE) {
-      $errorMessage = CRM_Core_Error::formatTextException($queueResult['exception']);
-      CRM_Core_Error::debug_log_message($errorMessage);
-      if ($enablePrint) {
-        print($errorMessage);
-      }
-      throw $queueResult['exception']; // FIXME test
-    }
-
-    CRM_Upgrade_Form::doFinish();
-
-    return array(
-      'latestVer' => $latestVer,
-      'message' => file_get_contents($postUpgradeMessageFile),
-    );
+  require_once 'CRM/Core/Config.php';
+  $config = CRM_Core_Config::singleton();
+  if (php_sapi_name() != "cli") {
+    // this does not return on failure
+    CRM_Utils_System::authenticateScript(TRUE);
   }
 }
 
+function run() {
+  initialize();
+
+  $fh   = fopen('php://output', 'w');
+  $rows = CRM_Upgrade_Incremental_php_FourTwo::deleteInvalidPairs();
+
+  if ( !empty($rows)) {
+    echo "The following records have been processed. If action = Un-linked, that membership has been disconnected from the contribution record.\n";
+    echo "Contact ID, ContributionID, Contribution Status, MembershipID, Membership Type, Start Date, End Date, Membership Status, Action \n";
+  }
+  else {
+    echo "Could not find any records to process.\n";
+  }
+
+  foreach ( $rows as $row ) {
+    fputcsv($fh, $row);
+  }
+}
+
+run();

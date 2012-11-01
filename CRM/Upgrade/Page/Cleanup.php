@@ -24,57 +24,25 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 */
+class CRM_Upgrade_Page_Cleanup  extends CRM_Core_Page {
+  public function cleanup425() {
+    $rows     = CRM_Upgrade_Incremental_php_FourTwo::deleteInvalidPairs();
+    $template = CRM_Core_Smarty::singleton();
 
-/**
- * Perform an upgrade without using the web-frontend
- */
-class CRM_Upgrade_Headless {
+    $columnHeaders = array("Contact ID", "ContributionID", "Contribution Status", "MembershipID", 
+                           "Membership Type", "Start Date", "End Date", "Membership Status", "Action");
+    $template->assign('columnHeaders', $columnHeaders);
+    $template->assign('rows', $rows);
 
-  /**
-   * Perform an upgrade without using the web-frontend
-   *
-   * @return array, with keys:
-   *   - message: string, HTML-ish blob
-   * @throws Exception
-   */
-  function run($enablePrint = TRUE) {
-    // lets get around the time limit issue if possible for upgrades
-    if (!ini_get('safe_mode')) {
-      set_time_limit(0);
-    }
+    $preMessage = !empty($rows) ? ts('The following records have been processed. Membership records with action = Un-linked have been disconnected from the listed contribution record:') : ts('Could not find any records to process.');
+    $template->assign('preMessage', $preMessage);
 
-    $upgrade = new CRM_Upgrade_Form();
-    list($currentVer, $latestVer) = $upgrade->getUpgradeVersions();
+    $postMessage =  ts('You can <a href="%1">click here</a> to try running the 4.2 upgrade script again. <a href="%2" target="_blank">(Review upgrade documentation)</a>',
+                    array(1 => CRM_Utils_System::url('civicrm/upgrade', 'reset=1'),
+                          2 => 'http://wiki.civicrm.org/confluence/display/CRMDOC/Installation+and+Upgrades'));
+    $template->assign('postMessage', $postMessage);
 
-    if ($error = $upgrade->checkUpgradeableVersion($currentVer, $latestVer)) {
-      throw new Exception($error);
-    }
-
-    // CRM-11156
-    $preUpgradeMessage = NULL;
-    $upgrade->setPreUpgradeMessage($preUpgradeMessage, $currentVer, $latestVer);
-
-    $postUpgradeMessageFile = CRM_Utils_File::tempnam('civicrm-post-upgrade');
-    $queueRunner = new CRM_Queue_Runner(array(
-        'title' => ts('CiviCRM Upgrade Tasks'),
-        'queue' => CRM_Upgrade_Form::buildQueue($currentVer, $latestVer, $postUpgradeMessageFile),
-      ));
-    $queueResult = $queueRunner->runAll();
-    if ($queueResult !== TRUE) {
-      $errorMessage = CRM_Core_Error::formatTextException($queueResult['exception']);
-      CRM_Core_Error::debug_log_message($errorMessage);
-      if ($enablePrint) {
-        print($errorMessage);
-      }
-      throw $queueResult['exception']; // FIXME test
-    }
-
-    CRM_Upgrade_Form::doFinish();
-
-    return array(
-      'latestVer' => $latestVer,
-      'message' => file_get_contents($postUpgradeMessageFile),
-    );
+    $content = $template->fetch('CRM/common/upgradeCleanup.tpl');
+    echo CRM_Utils_System::theme('page', $content, TRUE, FALSE, FALSE, TRUE);
   }
 }
-

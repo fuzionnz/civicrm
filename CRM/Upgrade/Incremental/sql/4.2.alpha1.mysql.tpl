@@ -193,17 +193,6 @@ INSERT INTO
 VALUES
    (@option_group_id_act, {localize}'BULK SMS'{/localize}, @max_wt, 'BULK SMS', NULL, 1, NULL, @max_wt, {localize}'BULK SMS'{/localize}, 0, 1, 1, NULL, NULL);
 
-ALTER TABLE `civicrm_mailing_recipients` ADD `phone_id` int(10) unsigned DEFAULT NULL;
-
-ALTER TABLE `civicrm_mailing_recipients` ADD CONSTRAINT `FK_civicrm_mailing_recipients_phone_id` FOREIGN KEY (`phone_id`) REFERENCES `civicrm_phone` (`id`) ON DELETE CASCADE;
-
-ALTER TABLE `civicrm_mailing_event_queue` ADD `phone_id` int(10) unsigned DEFAULT NULL;
-
-ALTER TABLE `civicrm_mailing_event_queue` ADD CONSTRAINT `FK_civicrm_mailing_event_queue_phone_id` FOREIGN KEY (`phone_id`) REFERENCES `civicrm_phone` (`id`) ON DELETE CASCADE;
-
-ALTER TABLE `civicrm_mailing_event_queue` CHANGE `email_id` `email_id` int(10) unsigned DEFAULT NULL;
-ALTER TABLE `civicrm_mailing_recipients` CHANGE `email_id` `email_id` int(10) unsigned DEFAULT NULL;
-
 -- CRM-9982
 ALTER TABLE `civicrm_contribution_page` ADD COLUMN is_confirm_enabled tinyint(4) DEFAULT '1';
 

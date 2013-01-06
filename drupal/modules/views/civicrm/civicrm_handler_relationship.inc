@@ -82,7 +82,6 @@ class civicrm_handler_relationship extends views_handler_relationship {
     $label = !empty($this->definition['label']) ? $this->definition['label'] : $this->definition['title'];
     $options['label'] = array('default' => $label, 'translatable' => TRUE);
     $options['relationship_type'] = array('default' => 0);
-    $options['relationship_state'] = array('default' => 1);
     return $options;
   }
 
@@ -105,13 +104,6 @@ class civicrm_handler_relationship extends views_handler_relationship {
       '#options' => self::$_relationshipType,
       '#description' => t('Use this drop down to limit this relatioship to a specific type of CiviCRM relationship'),
       '#default_value' => $this->options['relationship_type'],
-    );
-
-    $form['relationship_state'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Limit results only to active relationships?'),
-      '#default_value' => $this->options['relationship_state'],
-      '#description' => t('Exclude relationships that are inactive.')
     );
   }
 
@@ -156,20 +148,15 @@ class civicrm_handler_relationship extends views_handler_relationship {
 
     // Add a join condition to the on clause to narrow down the relationship type shown
     if (isset($this->options['relationship_type']) && $this->options['relationship_type']) {
-      $this->query->table_queue[$this->table_alias]['join']->extra[] = array(
+      $extraTable = !empty($def['left_table']) ? $def['left_table'] : $this->table;
+      $extra[] = array(
         'value' => $this->options['relationship_type'],
         'numeric' => TRUE,
+        'table' => $extraTable,
         'field' => 'relationship_type_id',
         'operator' => '=',
       );
-    }
-    if (isset($this->options['relationship_state']) && $this->options['relationship_state']) {
-      $this->query->table_queue[$this->table_alias]['join']->extra[] = array(
-        'value' => 1,
-        'numeric' => TRUE,
-        'field' => 'is_active',
-        'operator' => '=',
-      );
+      $join->extra = $extra;
     }
 
     // use a short alias for this:

@@ -55,17 +55,25 @@ class CRM_Core_Page_AJAX {
       CRM_Core_Error::fatal(ts('Invalid className: %1', array(1 => $className)));
     }
 
+    $fnName = NULL;
+    if (isset($_REQUEST['fn_name'])) {
+      $fnName = CRM_Utils_Type::escape($_REQUEST['fn_name'], 'String');
+    }
+
+    if (!self::checkAuthz($type, $className, $fnName)) {
+      CRM_Utils_System::civiExit();
+    }
+
     if (!$type) {
       $wrapper = new CRM_Utils_Wrapper();
       $wrapper->run($className);
     }
     else {
-      if ( $type == 'method' ) {
-        $execute = "{$className}();";
-        eval($execute);
+      if ($type == 'method') {
+        call_user_func(array($className, $fnName));
       }
       else {
-        eval("\$page = new {$className}();");
+        $page = new $className;
         $page->run();
       }
     }
@@ -93,6 +101,37 @@ class CRM_Core_Page_AJAX {
       
     CRM_Utils_System::civiExit();
   }
+  
+  /**
+   * Determine whether the request is for a valid class/method name.
+   *
+   * @param string $type 'method'|'class'|''
+   * @param string $className 'Class_Name'
+   * @param string $fnName method name
+   */
+  static function checkAuthz($type, $className, $fnName = null) {
+    switch ($type) {
+      case 'method':
+        if (!preg_match('/^CRM_[a-zA-Z0-9]+_Page_AJAX$/', $className)) {
+          return FALSE;
+        }
+        if (!preg_match('/^[a-zA-Z0-9]+$/', $fnName)) {
+          return FALSE;
+        }
 
+        // ensure that function exists
+       return method_exists($className, $fnName);
+
+      case 'page':
+      case 'class':
+      case '':
+        if (!preg_match('/^CRM_[a-zA-Z0-9]+_(Page|Form)_Inline_[a-zA-Z0-9]+$/', $className)) {
+          return FALSE;
+        }
+        return class_exists($className);
+      default:
+        return FALSE;
+    }
+  }
 }
 

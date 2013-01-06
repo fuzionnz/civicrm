@@ -189,6 +189,7 @@ FROM civicrm_pcp_block block
 LEFT JOIN civicrm_pcp pcp ON pcp.pcp_block_id = block.id
 WHERE block.is_active = 1
 {$clause}
+GROUP BY block.id
 ORDER BY target_entity_type, target_entity_id
 ";
     $pcpBlockDao = CRM_Core_DAO::executeQuery($query);
@@ -604,7 +605,7 @@ WHERE pcp.id = %1 AND cc.contribution_status_id =1 AND cc.is_test = 0";
     switch (ucfirst($config->userFramework)) {
       case 'Joomla':
         $loginUrl = str_replace('administrator/', '', $loginUrl);
-        $loginUrl .= 'index.php?option=com_user&view=login';
+        $loginUrl .= 'index.php?option=com_users&view=login';
         break;
 
       case 'Drupal':

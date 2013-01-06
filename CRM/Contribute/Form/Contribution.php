@@ -149,9 +149,8 @@ class CRM_Contribute_Form_Contribution extends CRM_Core_Form {
   public $_compId;
 
   /*
-     * Store the line items if price set used.
-     */
-
+   * Store the line items if price set used.
+   */
   public $_lineItems;
 
   protected $_formType;
@@ -468,6 +467,7 @@ WHERE  contribution_id = {$this->_id}
       $lineItem = CRM_Price_BAO_LineItem::getLineItems($this->_id, 'contribution',1);
       empty($lineItem) ? null :$this->_lineItems[] =  $lineItem;
     }
+
     $this->assign('lineItem', empty($this->_lineItems) ? FALSE : $this->_lineItems);
   }
 
@@ -1070,8 +1070,7 @@ WHERE  contribution_id = {$this->_id}
    * @access public
    * @static
    */
-  static
-  function formRule($fields, $files, $self) {
+  static function formRule($fields, $files, $self) {
     $errors = array();
 
     //check if contact is selected in standalone mode
@@ -1124,14 +1123,27 @@ WHERE  contribution_id = {$this->_id}
    * @return None
    */
   public function postProcess() {
+    $session = CRM_Core_Session::singleton();
     if ($this->_action & CRM_Core_Action::DELETE) {
       CRM_Contribute_BAO_Contribution::deleteContribution($this->_id);
+      $session->replaceUserContext(CRM_Utils_System::url('civicrm/contact/view',
+        "reset=1&cid={$this->_contactID}&selectedChild=contribute"
+      ));
       return;
     }
 
     // get the submitted form values.
     $submittedValues = $this->controller->exportValues($this->_name);
-
+    if (CRM_Utils_Array::value('price_set_id', $submittedValues) && $this->_action & CRM_Core_Action::UPDATE ) {
+      $line  = CRM_Price_BAO_LineItem::getLineItems($this->_id, 'contribution');
+      $lineID = key($line);
+      $priceSetId = CRM_Core_DAO::getFieldValue('CRM_Price_DAO_Field', CRM_Utils_Array::value('price_field_id', $line[$lineID]), 'price_set_id');
+      $quickConfig = CRM_Core_DAO::getFieldValue('CRM_Price_DAO_Set', $priceSetId, 'is_quick_config');
+      if ($quickConfig) {
+        CRM_Price_BAO_LineItem::deleteLineItems($this->_id, 'civicrm_contribution');
+      }
+    }
+    
     // process price set and get total amount and line items.
     $lineItem = array();
     $priceSetId = $pId = NULL;
@@ -1157,17 +1169,17 @@ WHERE  contribution_id = {$this->_id}
         $entityTable = 'participant';
         $entityID = $pId;
         $participantParams = array(
-                                   'fee_amount' => $submittedValues['total_amount'],
-                                   'id'         => $entityID);
+          'fee_amount' => $submittedValues['total_amount'],
+          'id'         => $entityID);
         CRM_Event_BAO_Participant::add($participantParams);
       } else {
         $entityTable = 'contribution';
         $entityID = $this->_id;
       }
 
-      $lineItems         = CRM_Price_BAO_LineItem::getLineItems($entityID, $entityTable);
-      $itemId            = key($lineItems);
-      $fieldType         = NULL;
+      $lineItems = CRM_Price_BAO_LineItem::getLineItems($entityID, $entityTable);
+      $itemId    = key($lineItems);
+      $fieldType = NULL;
       if ($itemId && CRM_Utils_Array::value('price_field_id', $lineItems[$itemId])) {
         $fieldType = CRM_Core_DAO::getFieldValue('CRM_Price_DAO_Field', $lineItems[$itemId]['price_field_id'], 'html_type');
       }
@@ -1197,7 +1209,6 @@ WHERE  contribution_id = {$this->_id}
     }
 
     $config = CRM_Core_Config::singleton();
-    $session = CRM_Core_Session::singleton();
 
     //Credit Card Contribution.
     if ($this->_mode) {

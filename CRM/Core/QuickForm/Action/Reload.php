@@ -26,79 +26,48 @@
 */
 
 /**
+ * Define the reload action. Reload the page but do not do any validation.
+ * This help with actions where we might want hooks to process some data
+ * but not validate all the fields. Was incorporated to improve the discount
+ * module integration.
  *
  * @package CRM
  * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-class CRM_Report_Form_Price_Lineitem extends CRM_Report_Form_Extended {
-  protected $_addressField = FALSE;
+class CRM_Core_QuickForm_Action_Reload extends CRM_Core_QuickForm_Action {
 
-  protected $_emailField = FALSE;
-
-  protected $_summary = NULL;
-
-  protected $_customGroupExtends = array(
-    'Contribution',
-  );
-
-  protected $_baseTable = 'civicrm_line_item';
-
-  protected $_aclTable = 'civicrm_contact'; 
-  
-  function __construct() {
-    $this->_columns = $this->getContactColumns() + 
-    + $this->getEventColumns() 
-    + $this->getParticipantColumns()
-    + $this->getContributionColumns()
-    + $this->getPriceFieldColumns() + 
-    + $this->getPriceFieldValueColumns()      
-    + $this->getLineItemColumns();
-    
-    parent::__construct();
+  /**
+   * class constructor
+   *
+   * @param object $stateMachine reference to state machine object
+   *
+   * @return object
+   * @access public
+   */
+  function __construct(&$stateMachine) {
+    parent::__construct($stateMachine);
   }
 
-  function preProcess() {
-    parent::preProcess();
-  }
+  /**
+   * Processes the request.
+   *
+   * @param  object    $page       CRM_Core_Form the current form-page
+   * @param  string    $actionName Current action name, as one Action object can serve multiple actions
+   *
+   * @return void
+   * @access public
+   */
+  function perform(&$page, $actionName) {
+    // save the form values and validation status to the session
+    $page->isFormBuilt() or $page->buildForm();
 
-  function select() {
-    parent::select();
-  }
-  /*
-    * select from clauses to use (from those advertised using
-    * $this->getAvailableJoins())
-    */
-  function fromClauses() {
-    return array(
-      'priceFieldValue_from_lineItem',
-      'priceField_from_lineItem',
-      'participant_from_lineItem',
-      'contribution_from_lineItem',
-      'contact_from_contribution',
-      'event_from_participant',
-    );
-  }
+    $pageName = $page->getAttribute('name');
+    $data = &$page->controller->container();
+    $data['values'][$pageName] = $page->exportValues();
 
-  function groupBy() {
-    parent::groupBy();
-  }
-
-  function orderBy() {
-    parent::orderBy();
-  }
-
-  function statistics(&$rows) {
-    return parent::statistics($rows);
-  }
-
-  function postProcess() {
-    parent::postProcess();
-  }
-
-  function alterDisplay(&$rows) {
-    parent::alterDisplay($rows);
+    return $page->handle('display');
   }
 }
 

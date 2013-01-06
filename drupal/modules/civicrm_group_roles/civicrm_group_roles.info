@@ -2,5 +2,5 @@ name = CiviGroup Roles Sync
 description = Sync Drupal Roles to CiviCRM Groups.
 package = CiviCRM
 core = 6.x
-version = 4.2.0
+version = 4.2.7
 dependencies[] = civicrm

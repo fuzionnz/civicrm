@@ -64,7 +64,7 @@
  * Implements of hook_views_data().
  * Run hook_views_data for active CiviCRM components
  */
-function civicrm_views_data() {
+function civicrm_views_data_alter(&$data) {
 
   if (!civicrm_initialize()) {
     return;
@@ -81,7 +81,6 @@ function civicrm_views_data() {
   // Get list of enabled CiviCRM components
   $enabled = CRM_Core_Component::getEnabledComponents();
 
-  $data = array();
   // Load Core CiviCRM data
   _civicrm_core_data($data, $enabled);
 

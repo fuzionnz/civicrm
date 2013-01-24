@@ -105,7 +105,7 @@
 	            <br /><span class="description">{ts}Actual amount given by contributor.{/ts}</span>
 	    </td>
         </tr>
-	    {if $buildRecurBlock && !$ppID}
+	    {if $buildRecurBlock}
 	    <tr id='recurringPaymentBlock' class='hiddenElement'>
 	       <td></td>		
 	       <td>

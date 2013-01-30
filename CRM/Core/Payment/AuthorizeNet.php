@@ -294,7 +294,7 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
 
     $arbXML = $template->fetch('CRM/Contribute/Form/Contribution/AuthorizeNetARB.tpl');
     // submit to authorize.net
-dpm($arbXML);
+
     $submit = curl_init($this->_paymentProcessor['url_recur']);
     if (!$submit) {
       return self::error(9002, 'Could not initiate connection to payment gateway');

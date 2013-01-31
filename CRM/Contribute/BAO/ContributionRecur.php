@@ -385,24 +385,24 @@ SELECT rec.id                   as recur_id,
     if ($entity == 'recur') {
       $sql .= "
       FROM civicrm_contribution_recur rec
-LEFT JOIN civicrm_contribution       con ON ( con.contribution_recur_id = rec.id )
-LEFT  JOIN civicrm_membership_payment mp  ON ( mp.contribution_id = con.id )
+ LEFT JOIN civicrm_contribution       con ON ( con.contribution_recur_id = rec.id )
+ LEFT  JOIN civicrm_membership_payment mp  ON ( mp.contribution_id = con.id )
      WHERE rec.id = %1
   GROUP BY rec.id";
     }
     elseif ($entity == 'contribution') {
       $sql .= "
       FROM civicrm_contribution       con
-LEFT JOIN civicrm_contribution_recur rec
-LEFT  JOIN civicrm_membership_payment mp  ON ( mp.contribution_id = con.id )
+ LEFT JOIN civicrm_contribution_recur rec
+ LEFT  JOIN civicrm_membership_payment mp  ON ( mp.contribution_id = con.id )
      WHERE con.id = %1";
     }
     elseif ($entity == 'membership') {
       $sql .= "
       FROM civicrm_membership_payment mp
-INNER JOIN civicrm_membership         mem ON ( mp.membership_id = mem.id )
-INNER JOIN civicrm_contribution_recur rec ON ( mem.contribution_recur_id = rec.id )
-INNER JOIN civicrm_contribution       con ON ( con.id = mp.contribution_id )
+ INNER JOIN civicrm_membership         mem ON ( mp.membership_id = mem.id )
+ INNER JOIN civicrm_contribution_recur rec ON ( mem.contribution_recur_id = rec.id )
+ INNER JOIN civicrm_contribution       con ON ( con.id = mp.contribution_id )
      WHERE mp.membership_id = %1";
     }
     $dao = CRM_Core_DAO::executeQuery($sql, array(1 => array($entityID, 'Integer')));

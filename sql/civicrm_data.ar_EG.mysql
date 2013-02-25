@@ -4722,11 +4722,11 @@ VALUES
   (@option_group_id_ceOpt, 'العنوان'                  ,   2, 'Address', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Communication Preferences',   3, 'CommunicationPreferences', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'ملاحظات'                    ,   4, 'Notes', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_ceOpt, 'Demographics'             ,   5, 'Demographics', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_ceOpt, 'الديموغرافيات'             ,   5, 'Demographics', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Tags and Groups'          ,   6, 'TagsAndGroups', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'البريد الإلكتروني'                    ,   7, 'Email', NULL, 1, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'هاتف'                    ,   8, 'Phone', NULL, 1, NULL, 8, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_ceOpt, 'Instant Messenger'        ,   9, 'IM', NULL, 1, NULL, 9, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_ceOpt, 'المحادثات الفورية'        ,   9, 'IM', NULL, 1, NULL, 9, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Open ID'                  ,   10, 'OpenID', NULL, 1, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'موقع ويب'                  ,   11, 'Website', NULL, 1, NULL, 11, NULL, 0, 0, 1, NULL, NULL),
 
@@ -4741,7 +4741,7 @@ VALUES
   (@option_group_id_asOpt, 'الأحداث'                  ,   9, 'CiviEvent', NULL, 0, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'الحالات'                   ,  10, 'CiviCase', NULL, 0, NULL, 11, NULL, 0, 0, 1, NULL, NULL),
     (@option_group_id_asOpt, 'Grants'                                        ,  12, 'CiviGrant', NULL, 0, NULL, 14, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_asOpt, 'Demographics'            ,  13, 'demographics', NULL, 0, NULL, 15, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_asOpt, 'الديموغرافيات'            ,  13, 'demographics', NULL, 0, NULL, 15, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'التبرعات المعلنة'                 ,  15, 'CiviPledge', NULL, 0, NULL, 17, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'نوع جهة الاتصال'            ,  16, 'contactType', NULL, 0, NULL, 18, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'المجموعات'                  ,  17, 'groups', NULL, 0, NULL, 19, NULL, 0, 0, 1, NULL, NULL),
@@ -4780,8 +4780,8 @@ VALUES
   (@option_group_id_adOpt, 'المحافظة/الولاية'            ,  7, 'county'        , NULL, 0, NULL,  7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'المقاطعة / الولاية'  ,  8, 'state_province', NULL, 0, NULL,  8, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'الدولة'           ,  9, 'country'       , NULL, 0, NULL,  9, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_adOpt, 'Latitude'          , 10, 'geo_code_1'    , NULL, 0, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_adOpt, 'Longitude'         , 11, 'geo_code_2', NULL, 0, NULL, 11, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_adOpt, 'دائرة العرض'          , 10, 'geo_code_1'    , NULL, 0, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_adOpt, 'خط الطول'         , 11, 'geo_code_2', NULL, 0, NULL, 11, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'اسم العنوان'      , 12, 'address_name', NULL, 0, NULL, 12, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Street Address Parsing', 13, 'street_address_parsing', NULL, 0, NULL, 13, NULL, 0, 0, 1, NULL, NULL),
 
@@ -5096,7 +5096,7 @@ VALUES
 
 -- default batch statues
    (@option_group_id_batch_status, 'Open', 1, 'Open', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_batch_status, 'مغلق', 2, 'مغلق', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_batch_status, 'Closed', 2, 'Closed', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
 
 -- sms_api_type
    (@option_group_id_sms_api_type, 'http', 1, 'http', NULL, NULL, 0, 1, NULL, 0, 1, 1, NULL, NULL),
@@ -5777,7 +5777,7 @@ INSERT INTO civicrm_uf_field
 	     ( 7, 			     'city',				  1, 		   0, 			4, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'المدينة',  						'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'state_province', 		  1, 		   0, 			5, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'الحالة',  						'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'postal_code', 		  1, 		   0, 			6, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'الرمز البريدي',  				'Contact', 	   NULL,  NULL),
-	     ( 7, 			     'email', 				  1, 		   0, 			7, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'Primary Email',  				'Contact', 	   NULL,  NULL),
+	     ( 7, 			     'email', 				  1, 		   0, 			7, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'البريد الرئيسي',  				'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'group', 				  1, 		   0, 			8, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'المجموعات',  					'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'tag', 				  1, 		   0, 			9, 	  	'User and User Admin Only',  0, 	      0, 		     NULL, 			   'الوسوم', 						'Contact', 	   NULL,  NULL),
 	     ( 7,            'gender'  				 ,1  	      ,0  			,10  	,'User and User Admin Only' ,0  		 ,0  			,NULL,  			 'الجنس'  						,'Individual' ,NULL,  NULL),
@@ -19446,4 +19446,4 @@ INSERT INTO civicrm_navigation
 VALUES
     ( @domainID, CONCAT('civicrm/report/instance/', @instanceID,'&reset=1'), 'Mailing Detail Report', 'Mailing Detail Report', 'administer CiviMail', 'OR', @reportlastID, '1', NULL, @instanceID+2 );
 UPDATE civicrm_report_instance SET navigation_id = LAST_INSERT_ID() WHERE id = @instanceID;
- UPDATE civicrm_domain SET version = '4.2.7';
+ UPDATE civicrm_domain SET version = '4.2.8';

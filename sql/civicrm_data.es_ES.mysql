@@ -4447,7 +4447,7 @@ VALUES
    ('contact_edit_options'          , 'Editar Opción de contacto'               , 1, 1),
    ('advanced_search_options'       , 'Búsqueda Avanzada'            , 1, 1),
    ('user_dashboard_options'        , 'Opciones del Panel de Control de Usuario'             , 1, 1),
-   ('address_options'               , 'Addressing Options'                 , 1, 1),
+   ('address_options'               , 'Opciones de dirección'                 , 1, 1),
    ('group_type'                    , 'Tipo de Grupo'                         , 1, 1),
    ('grant_status'                  , 'Grant status'                       , 1, 1),
    ('grant_type'                    , 'Grant Type'                         , 1, 1),
@@ -4713,7 +4713,7 @@ VALUES
   (@option_group_id_cvOpt, 'Registro de cambios'   ,   6, 'log', NULL, 0, NULL,  6,  NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'Contribuciones',   7, 'CiviContribute', NULL, 0, NULL,  7,  NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'Miembros'  ,   8, 'CiviMember', NULL, 0, NULL,  8,  NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_cvOpt, 'Eliminar Actividad'       ,   9, 'CiviEvent', NULL, 0, NULL,  9,  NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_cvOpt, 'Eventos'       ,   9, 'CiviEvent', NULL, 0, NULL,  9,  NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'Casos'        ,  10, 'CiviCase', NULL, 0, NULL,  10, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'Subvención'       ,  11, 'CiviGrant', NULL, 0, NULL,  11, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'Cuotas'      ,  13, 'CiviPledge', NULL, 0, NULL,  13, NULL, 0, 0, 1, NULL, NULL),
@@ -4738,7 +4738,7 @@ VALUES
   (@option_group_id_asOpt, 'Cambiar Log'              ,   6, 'changeLog', NULL, 0, NULL,  7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Contribuciones'           ,   7, 'CiviContribute', NULL, 0, NULL,  8, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Miembros'             ,   8, 'CiviMember', NULL, 0, NULL,  9, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_asOpt, 'Eliminar Actividad'                  ,   9, 'CiviEvent', NULL, 0, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_asOpt, 'Eventos'                  ,   9, 'CiviEvent', NULL, 0, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Casos'                   ,  10, 'CiviCase', NULL, 0, NULL, 11, NULL, 0, 0, 1, NULL, NULL),
     (@option_group_id_asOpt, 'Grants'                                        ,  12, 'CiviGrant', NULL, 0, NULL, 14, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Demográficos'            ,  13, 'demographics', NULL, 0, NULL, 15, NULL, 0, 0, 1, NULL, NULL),
@@ -4751,7 +4751,7 @@ VALUES
   (@option_group_id_udOpt, 'Grupos'                     , 1, 'Groups', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Contribuciones'              , 2, 'CiviContribute', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Miembros'                , 3, 'CiviMember', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_udOpt, 'Eliminar Actividad'                     , 4, 'CiviEvent', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_udOpt, 'Eventos'                     , 4, 'CiviEvent', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Mis contactos / organizaciones', 5, 'Permissioned Orgs', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Cuotas'                    , 7, 'CiviPledge', NULL, 0, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Páginas de Campañas Personales'    , 8, 'PCP', NULL, 0, NULL, 8, NULL, 0, 0, 1, NULL, NULL),
@@ -4783,7 +4783,7 @@ VALUES
   (@option_group_id_adOpt, 'Latitud'          , 10, 'geo_code_1'    , NULL, 0, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Longitud'         , 11, 'geo_code_2', NULL, 0, NULL, 11, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Dirección'      , 12, 'address_name', NULL, 0, NULL, 12, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_adOpt, 'Street Address Parsing', 13, 'street_address_parsing', NULL, 0, NULL, 13, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_adOpt, 'Convirtiendo dirección de calle', 13, 'street_address_parsing', NULL, 0, NULL, 13, NULL, 0, 0, 1, NULL, NULL),
 
   (@option_group_id_gType, 'Access Control'  , 1, NULL, NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_gType, 'Mailing List'    , 2, NULL, NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
@@ -5096,7 +5096,7 @@ VALUES
 
 -- default batch statues
    (@option_group_id_batch_status, 'Open', 1, 'Open', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_batch_status, 'Cerrado', 2, 'Cerrado', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_batch_status, 'Closed', 2, 'Closed', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
 
 -- sms_api_type
    (@option_group_id_sms_api_type, 'http', 1, 'http', NULL, NULL, 0, 1, NULL, 0, 1, 1, NULL, NULL),
@@ -5378,7 +5378,7 @@ VALUES
 INSERT INTO
     civicrm_membership_status(name, label, start_event, start_event_adjust_unit, start_event_adjust_interval, end_event, end_event_adjust_unit, end_event_adjust_interval, is_current_member, is_admin, weight, is_default, is_active, is_reserved)
 VALUES
-    ('New',       'New', 'join_date', null, null,'join_date','month',3, 1, 0, 1, 0, 1, 0),
+    ('New',       'Nuevo', 'join_date', null, null,'join_date','month',3, 1, 0, 1, 0, 1, 0),
     ('Current',   'Current', 'start_date', null, null,'end_date', null, null, 1, 0, 2, 1, 1, 0),
     ('Grace',     'Grace', 'end_date', null, null,'end_date','month', 1, 1, 0, 3, 0, 1, 0),
     ('Expired',   'Expired', 'end_date', 'month', 1, null, null, null, 0, 0, 4, 0, 1, 0),
@@ -5577,7 +5577,7 @@ INSERT INTO civicrm_mailing_bounce_pattern
 
 INSERT INTO civicrm_mailing_bounce_type
         (name, description, hold_threshold)
-        VALUES ('Invalid', 'Email address is not valid', 1);
+        VALUES ('Invalid', 'La dirección de email no es válida', 1);
 
 SELECT @bounceTypeID := max(id) FROM civicrm_mailing_bounce_type WHERE name = 'Invalid';
 INSERT INTO civicrm_mailing_bounce_pattern
@@ -5725,7 +5725,7 @@ INSERT INTO civicrm_uf_group
     (3,  'participant_status', 'Participant',         'Estado del Participante', 0,           1,           NULL),
     (4,  'new_individual',     'Individual,Contact',  'Nueva persona'    , 0,           1,           NULL),
     (5,  'new_organization',   'Organization,Contact','Nueva organización'  , 0,           1,           NULL),
-    (6,  'new_household',      'Household,Contact',   'New Household'     , 0,           1,           NULL),
+    (6,  'new_household',      'Household,Contact',   'Nueva Familia'     , 0,           1,           NULL),
     (7,  'summary_overlay',    'Contact',   		  'Summary Overlay'   , 0,           1,           NULL),
     (8,  'shared_address',     'Contact',   		  'Dirección compartida'    , 0,           1,           NULL),
     (9,  'on_behalf_organization', 'Contact,Organization,Contribution,Membership',
@@ -5800,12 +5800,12 @@ INSERT INTO civicrm_uf_field
        ( 10,     'contribution_status_id',      1, 1, 3, 'User and User Admin Only', 0, 0, NULL, 'Estado', 'Contribution', NULL, NULL ),
        ( 10,     'receive_date',                1, 1, 4, 'User and User Admin Only', 0, 0, NULL, 'Recibido', 'Contribution', NULL, NULL ),
        ( 10,     'contribution_source',         0, 0, 5, 'User and User Admin Only', 0, 0, NULL, 'Origen', 'Contribution', NULL, NULL ),
-       ( 10,     'payment_instrument',          0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'Pagado por', 'Contribution', NULL, NULL ),
-       ( 10,     'check_number',                0, 0, 7, 'User and User Admin Only', 0, 0, NULL, 'Verificar Número', 'Contribution', NULL, NULL ),
+       ( 10,     'payment_instrument',          0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'Paid By', 'Contribution', NULL, NULL ),
+       ( 10,     'check_number',                0, 0, 7, 'User and User Admin Only', 0, 0, NULL, 'Check Number', 'Contribution', NULL, NULL ),
        ( 10,     'send_receipt',                0, 0, 8, 'User and User Admin Only', 0, 0, NULL, 'Send Receipt', 'Contribution', NULL, NULL ),
        ( 10,     'invoice_id',                  0, 0, 9, 'User and User Admin Only', 0, 0, NULL, 'ID de la factura', 'Contribution', NULL, NULL ),
        ( 11,     'membership_type',             1, 1, 1, 'User and User Admin Only', 0, 0, NULL, 'Tipo', 'Membership', NULL, NULL ),
-       ( 11,     'join_date',                   1, 1, 2, 'User and User Admin Only', 0, 0, NULL, 'Miembro desde', 'Membership', NULL, NULL ),
+       ( 11,     'join_date',                   1, 1, 2, 'User and User Admin Only', 0, 0, NULL, 'Member Since', 'Membership', NULL, NULL ),
        ( 11,     'membership_start_date',       0, 1, 3, 'User and User Admin Only', 0, 0, NULL, 'Fecha Inicio', 'Membership', NULL, NULL ),
        ( 11,     'membership_end_date',         0, 1, 4, 'User and User Admin Only', 0, 0, NULL, 'Fecha Final', 'Membership', NULL, NULL ),
        ( 11,     'membership_source',           0, 0, 5, 'User and User Admin Only', 0, 0, NULL, 'Origen', 'Membership', NULL, NULL ),
@@ -5814,9 +5814,9 @@ INSERT INTO civicrm_uf_field
        ( 11,     'contribution_type',           1, 1, 7, 'User and User Admin Only', 0, 0, NULL, 'Tipo de Contribución', 'Membership', NULL, NULL ),
        ( 11,     'total_amount',                1, 1, 8, 'User and User Admin Only', 0, 0, NULL, 'Cantidad', 'Membership', NULL, NULL ),
        ( 11,     'receive_date',                1, 1, 9, 'User and User Admin Only', 0, 0, NULL, 'Recibido', 'Membership', NULL, NULL ),
-       ( 11,     'payment_instrument',          0, 0, 10, 'User and User Admin Only', 0, 0, NULL, 'Pagado por', 'Membership', NULL, NULL ),
-       ( 11,     'check_number',                0, 0, 11, 'User and User Admin Only', 0, 0, NULL, 'Verificar Número', 'Membership', NULL, NULL ),
-       ( 11,     'contribution_status_id',      1, 1, 12, 'User and User Admin Only', 0, 0, NULL, 'Estado del Pago', 'Membership', NULL, NULL ),
+       ( 11,     'payment_instrument',          0, 0, 10, 'User and User Admin Only', 0, 0, NULL, 'Paid By', 'Membership', NULL, NULL ),
+       ( 11,     'check_number',                0, 0, 11, 'User and User Admin Only', 0, 0, NULL, 'Check Number', 'Membership', NULL, NULL ),
+       ( 11,     'contribution_status_id',      1, 1, 12, 'User and User Admin Only', 0, 0, NULL, 'Payment Status', 'Membership', NULL, NULL ),
        ( 12,     'email',                       1, 0, 1, 'User and User Admin Only', 0, 0, NULL, 'Dirección de correo electrónico', 'Contact', NULL, NULL);
 
 
@@ -19446,4 +19446,4 @@ INSERT INTO civicrm_navigation
 VALUES
     ( @domainID, CONCAT('civicrm/report/instance/', @instanceID,'&reset=1'), 'Mailing Detail Report', 'Mailing Detail Report', 'administer CiviMail', 'OR', @reportlastID, '1', NULL, @instanceID+2 );
 UPDATE civicrm_report_instance SET navigation_id = LAST_INSERT_ID() WHERE id = @instanceID;
- UPDATE civicrm_domain SET version = '4.2.7';
+ UPDATE civicrm_domain SET version = '4.2.8';

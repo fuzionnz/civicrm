@@ -4430,7 +4430,7 @@ INSERT INTO
    `civicrm_option_group` (`name`, `title`, `is_reserved`, `is_active`)
 VALUES
    ('preferred_communication_method', 'דרך התקשרות מועדפת'     , 1, 1),
-   ('activity_type'                 , 'סוג פעולות'                      , 1, 1),
+   ('activity_type'                 , 'סוג פעילות'                      , 1, 1),
    ('gender'                        , 'מגדר'                             , 1, 1),
    ('instant_messenger_service'     , 'Instant Messenger (IM) screen-names', 1, 1),
    ('mobile_provider'               , 'Mobile Phone Providers'             , 1, 1),
@@ -4453,7 +4453,7 @@ VALUES
    ('grant_type'                    , 'Grant Type'                         , 1, 1),
    ('honor_type'                    , 'Honor Type'                         , 1, 1),
    ('custom_search'                 , 'Custom Search'                      , 1, 1),
-   ('activity_status'               , 'סטטוס הפעולות'                    , 1, 1),
+   ('activity_status'               , 'מצב הפעילות'                    , 1, 1),
    ('case_type'                     , 'Case Type'                          , 1, 1),
    ('case_status'                   , 'Case Status'                        , 1, 1),
    ('participant_listing'           , 'Participant Listing'                , 1, 1),
@@ -4464,7 +4464,7 @@ VALUES
    ('recur_frequency_units'         , 'Recurring Frequency Units'          , 1, 1),
    ('phone_type'                    , 'סוג טלפון'                         , 1, 1),
    ('custom_data_type'              , 'Custom Data Type'                   , 1, 1),
-   ('visibility'                    , 'ACL- הרשאות קריאה'                         , 1, 1),
+   ('visibility'                    , 'מצב גילוי'                         , 1, 1),
    ('mail_protocol'                 , 'Mail Protocol'                      , 1, 1),
    ('priority'                      , 'עדיפות'                           , 1, 1),
    ('redaction_rule'                , 'Redaction Rule'                     , 1, 1),
@@ -4580,14 +4580,14 @@ INSERT INTO
    `civicrm_option_value` (`option_group_id`, `label`, `value`, `name`, `grouping`, `filter`, `is_default`, `weight`, `description`, `is_optgroup`, `is_reserved`, `is_active`, `component_id`, `visibility_id`)
 VALUES
    (@option_group_id_pcm, 'טלפון', 1, NULL, NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_pcm, 'דוא\"ל', 2, NULL, NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_pcm, 'דוא״ל', 2, NULL, NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_pcm, 'Postal Mail', 3, NULL, NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_pcm, 'מיסרון', 4, NULL, NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_pcm, 'פקס', 5, NULL, NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
 
    (@option_group_id_act, 'פגישה',                            1, 'Meeting', NULL, 0, NULL, 1, NULL,                       				                                                0, 1, 1, NULL, NULL),
    (@option_group_id_act, 'שיחת טלפון',                         2, 'Phone Call',          NULL, 0, NULL, 2, NULL,                                                          				0, 1, 1, NULL, NULL),
-   (@option_group_id_act, 'דוא\"ל',                              3, 'Email',               NULL, 1, NULL, 3, 'Email sent.',                                                          0, 1, 1, NULL, NULL),
+   (@option_group_id_act, 'דוא״ל',                              3, 'Email',               NULL, 1, NULL, 3, 'Email sent.',                                                          0, 1, 1, NULL, NULL),
    (@option_group_id_act, 'Text Message (SMS)',                 4, 'SMS',                 NULL, 1, NULL, 4, 'Text message (SMS) sent.',                                             0, 1, 1, NULL, NULL),
    (@option_group_id_act, 'Event Registration',                 5, 'Event Registration',  NULL, 1, NULL, 5, 'Online or offline event registration.',                                0, 1, 1, @eventCompId, NULL),
    (@option_group_id_act, 'תשלום',                       6, 'Contribution',        NULL, 1, NULL, 6, 'Online or offline contribution.',                                      0, 1, 1, @contributeCompId, NULL),
@@ -4617,7 +4617,7 @@ VALUES
    (@option_group_id_act, 'Add Client To Case',                 27, 'Add Client To Case', NULL,0, 0, 26, '', 0, 1, 1, @caseCompId, NULL),
 
 -- Activity Types for CiviCampaign
-   (@option_group_id_act, 'Survey',                             28, 'Survey', NULL,0, 0, 27, '', 0, 1, 1, @campaignCompId, NULL),
+   (@option_group_id_act, 'סקר',                             28, 'Survey', NULL,0, 0, 27, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'Canvass',                            29, 'Canvass', NULL,0, 0, 28, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'PhoneBank',                          30, 'PhoneBank', NULL,0, 0, 29, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'WalkList',                           31, 'WalkList', NULL,0, 0, 30, '', 0, 1, 1, @campaignCompId, NULL),
@@ -4681,7 +4681,7 @@ VALUES
   (@option_group_id_pi, 'EFT',          5, 'EFT',         NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
 
   (@option_group_id_cs, 'Completed'  , 1, 'Completed'  , NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_cs, 'ממתין'    , 2, 'Pending'    , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cs, 'בהמתנה'    , 2, 'Pending'    , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_cs, 'Cancelled'  , 3, 'Cancelled'  , NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_cs, 'Failed'     , 4, 'Failed'     , NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_cs, 'In Progress', 5, 'In Progress', NULL, 0, NULL, 5, NULL, 0, 1, 1, NULL, NULL),
@@ -4705,12 +4705,12 @@ VALUES
 
 -- note that these are not ts'ed since they are used for logic in most cases and not display
 -- they are used for display only in the prefernces field settings
-  (@option_group_id_cvOpt, 'פעולות'   ,   1, 'activity', NULL, 0, NULL,  1,  NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_cvOpt, 'פעילויות'   ,   1, 'activity', NULL, 0, NULL,  1,  NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'קשרים',   2, 'rel', NULL, 0, NULL,  2,  NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'קבוצות'       ,   3, 'group', NULL, 0, NULL,  3,  NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'הערות'        ,   4, 'note', NULL, 0, NULL,  4,  NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'תגיות'         ,   5, 'tag', NULL, 0, NULL,  5,  NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_cvOpt, 'שנה לוג'   ,   6, 'log', NULL, 0, NULL,  6,  NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_cvOpt, 'יומן שינויים'   ,   6, 'log', NULL, 0, NULL,  6,  NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'תשלומים',   7, 'CiviContribute', NULL, 0, NULL,  7,  NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'חברות'  ,   8, 'CiviMember', NULL, 0, NULL,  8,  NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'אירועים'       ,   9, 'CiviEvent', NULL, 0, NULL,  9,  NULL, 0, 0, 1, NULL, NULL),
@@ -4718,21 +4718,21 @@ VALUES
   (@option_group_id_cvOpt, 'Grants'       ,  11, 'CiviGrant', NULL, 0, NULL,  11, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'התחייבויות לתרומה'      ,  13, 'CiviPledge', NULL, 0, NULL,  13, NULL, 0, 0, 1, NULL, NULL),
 
-  (@option_group_id_ceOpt, 'מידע מותאם'              ,   1, 'CustomData', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_ceOpt, 'נתונים מותאמים'              ,   1, 'CustomData', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'כתובת'                  ,   2, 'Address', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Communication Preferences',   3, 'CommunicationPreferences', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'הערות'                    ,   4, 'Notes', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Demographics'             ,   5, 'Demographics', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Tags and Groups'          ,   6, 'TagsAndGroups', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_ceOpt, 'דוא\"ל'                    ,   7, 'Email', NULL, 1, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_ceOpt, 'דוא״ל'                    ,   7, 'Email', NULL, 1, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'טלפון'                    ,   8, 'Phone', NULL, 1, NULL, 8, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_ceOpt, 'Instant Messenger'        ,   9, 'IM', NULL, 1, NULL, 9, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_ceOpt, 'תכנית מסרים מידיים (IM)'        ,   9, 'IM', NULL, 1, NULL, 9, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Open ID'                  ,   10, 'OpenID', NULL, 1, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'אתר אינטרנט'                  ,   11, 'Website', NULL, 1, NULL, 11, NULL, 0, 0, 1, NULL, NULL),
 
   (@option_group_id_asOpt, 'שדות כתובת'          ,   1, 'location', NULL, 0, NULL,  1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Custom Fields'           ,   2, 'custom', NULL, 0, NULL,  2, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_asOpt, 'פעולות'              ,   3, 'activity', NULL, 0, NULL,  4, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_asOpt, 'פעילויות'              ,   3, 'activity', NULL, 0, NULL,  4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'קשרים'           ,   4, 'relationship', NULL, 0, NULL,  5, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'הערות'                   ,   5, 'notes', NULL, 0, NULL,  6, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Change Log'              ,   6, 'changeLog', NULL, 0, NULL,  7, NULL, 0, 0, 1, NULL, NULL),
@@ -4743,7 +4743,7 @@ VALUES
     (@option_group_id_asOpt, 'Grants'                                        ,  12, 'CiviGrant', NULL, 0, NULL, 14, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Demographics'            ,  13, 'demographics', NULL, 0, NULL, 15, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'התחייבויות לתרומה'                 ,  15, 'CiviPledge', NULL, 0, NULL, 17, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_asOpt, 'סוג הפרט'            ,  16, 'contactType', NULL, 0, NULL, 18, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_asOpt, 'סוג איש הקשר'            ,  16, 'contactType', NULL, 0, NULL, 18, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'קבוצות'                  ,  17, 'groups', NULL, 0, NULL, 19, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'תגיות'                    ,  18, 'tags', NULL, 0, NULL, 20, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Mailing'                 ,  19, 'CiviMail', NULL, 0, NULL, 21, NULL, 0, 0, 1, NULL, NULL),
@@ -4761,34 +4761,34 @@ VALUES
   (@option_group_id_acsOpt, 'טלפון'           , 3, 'phone'         , NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_acsOpt, 'כתובת'  , 4, 'street_address', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_acsOpt, 'עיר'            , 5, 'city'          , NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_acsOpt, 'מדינה\\מחוז'  , 6, 'state_province', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_acsOpt, 'ארץ'         , 7, 'country'       , NULL, 0, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acsOpt, 'מדינה/מחוז'  , 6, 'state_province', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acsOpt, 'מדינה'         , 7, 'country'       , NULL, 0, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
 
   (@option_group_id_acConRef, 'כתובת דואר אלקטרוני'   , 2, 'email'         , NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_acConRef, 'טלפון'           , 3, 'phone'         , NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_acConRef, 'כתובת'  , 4, 'street_address', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_acConRef, 'עיר'            , 5, 'city'          , NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_acConRef, 'מדינה\\מחוז'  , 6, 'state_province', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_acConRef, 'ארץ'         , 7, 'country'       , NULL, 0, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acConRef, 'מדינה/מחוז'  , 6, 'state_province', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acConRef, 'מדינה'         , 7, 'country'       , NULL, 0, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
 
   (@option_group_id_adOpt, 'כתובת'    ,  1, 'street_address', NULL, 0, NULL,  1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_adOpt, 'Addt\'l Address 1'  ,  2, 'supplemental_address_1', NULL, 0, NULL,  2, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_adOpt, 'Addt\'l Address 2'  ,  3, 'supplemental_address_2', NULL, 0, NULL,  3, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_adOpt, 'כתובת נוספת 1'  ,  2, 'supplemental_address_1', NULL, 0, NULL,  2, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_adOpt, 'כתובת נוספת 2'  ,  3, 'supplemental_address_2', NULL, 0, NULL,  3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'עיר'              ,  4, 'city'          , NULL, 0, NULL,  4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'מיקוד' ,  5, 'postal_code'   , NULL, 0, NULL,  5, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_adOpt, 'תוספת למיקוד',  6, 'postal_code_suffix', NULL, 0, NULL,  6, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_adOpt, 'סיומת למיקוד',  6, 'postal_code_suffix', NULL, 0, NULL,  6, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'מחוז'            ,  7, 'county'        , NULL, 0, NULL,  7, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_adOpt, 'מדינה/מחוז'  ,  8, 'state_province', NULL, 0, NULL,  8, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_adOpt, 'ארץ'           ,  9, 'country'       , NULL, 0, NULL,  9, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_adOpt, 'Latitude'          , 10, 'geo_code_1'    , NULL, 0, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_adOpt, 'Longitude'         , 11, 'geo_code_2', NULL, 0, NULL, 11, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_adOpt, 'מדינה / מחוז'  ,  8, 'state_province', NULL, 0, NULL,  8, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_adOpt, 'מדינה'           ,  9, 'country'       , NULL, 0, NULL,  9, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_adOpt, 'אורך'          , 10, 'geo_code_1'    , NULL, 0, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_adOpt, 'רוחב'         , 11, 'geo_code_2', NULL, 0, NULL, 11, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'שם כתובת'      , 12, 'address_name', NULL, 0, NULL, 12, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Street Address Parsing', 13, 'street_address_parsing', NULL, 0, NULL, 13, NULL, 0, 0, 1, NULL, NULL),
 
   (@option_group_id_gType, 'Access Control'  , 1, NULL, NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_gType, 'Mailing List'    , 2, NULL, NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
 
-  (@option_group_id_grantSt, 'ממתין',  1, 'Pending',  NULL, 0, 1,    1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_grantSt, 'בהמתנה',  1, 'Pending',  NULL, 0, 1,    1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_grantSt, 'Granted',  2, 'Granted',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_grantSt, 'Rejected', 3, 'Rejected', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_honorTyp, 'In Honor of'        , 1, 'In Honor of'       , NULL, 0, 1,    1, NULL, 0, 1, 1, NULL, NULL),
@@ -4808,7 +4808,7 @@ VALUES
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_MultipleValues'       ,12, 'CRM_Contact_Form_Search_Custom_MultipleValues', NULL, 0, NULL, 12, 'Custom Group Multiple Values Listing', 0, 0, 1, NULL, NULL),
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_ContribSYBNT'         ,13, 'CRM_Contact_Form_Search_Custom_ContribSYBNT', NULL, 0, NULL, 13, 'Contributions made in Year X and not Year Y', 0, 0, 1, NULL, NULL),
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_TagContributions'     ,14, 'CRM_Contact_Form_Search_Custom_TagContributions', NULL, 0, NULL, 14, 'Find Contribution Amounts by Tag', 0, 0, 1, NULL, NULL),
-  (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_FullText'             ,15, 'CRM_Contact_Form_Search_Custom_FullText', NULL, 0, NULL, 15, 'חיפוש טקסט-מלא', 0, 0, 1, NULL, NULL),
+  (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_FullText'             ,15, 'CRM_Contact_Form_Search_Custom_FullText', NULL, 0, NULL, 15, 'חיפוש טקסט מלא', 0, 0, 1, NULL, NULL),
 
 -- report templates
   (@option_group_id_report , 'Constituent Report (Summary)',            'contact/summary',                'CRM_Report_Form_Contact_Summary',                NULL, 0, NULL, 1,  'Provides a list of address and telephone information for constituent records in your system.', 0, 0, 1, NULL, NULL),
@@ -5145,7 +5145,7 @@ VALUES
   (@option_group_id_mail_approval_status, 'None' , 3, 'None', NULL, 0, 0, 3, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
 
 -- custom group objects
-  (@option_group_id_cgeo, 'Survey', 'Survey', 'civicrm_survey', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL, NULL),
+  (@option_group_id_cgeo, 'סקר', 'Survey', 'civicrm_survey', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL, NULL),
   (@option_group_id_cgeo, 'תיקים',  'Case', 'civicrm_case',     NULL, 0, NULL, 2, 'CRM_Case_PseudoConstant::caseType;', 0, 0, 1, NULL, NULL, NULL);
 
 -- CRM-6138
@@ -5370,7 +5370,7 @@ INSERT INTO
 VALUES
     (@option_group_id_medium, 'In Person',  1, 'in_person', NULL, 0,  0, 1, NULL, 0, 1, 1),
     (@option_group_id_medium, 'טלפון',  2, 'phone', NULL, 0,  1, 2, NULL, 0, 1, 1),
-    (@option_group_id_medium, 'דוא\"ל',  3, 'email', NULL, 0,  0, 3, NULL, 0, 1, 1),
+    (@option_group_id_medium, 'דוא״ל',  3, 'email', NULL, 0,  0, 3, NULL, 0, 1, 1),
     (@option_group_id_medium, 'פקס',  4, 'fax', NULL, 0,  0, 4, NULL, 0, 1, 1),
     (@option_group_id_medium, 'Letter Mail',  5, 'letter_mail', NULL, 0,  0, 5, NULL, 0, 1, 1);
 
@@ -5382,7 +5382,7 @@ VALUES
     ('Current',   'Current', 'start_date', null, null,'end_date', null, null, 1, 0, 2, 1, 1, 0),
     ('Grace',     'Grace', 'end_date', null, null,'end_date','month', 1, 1, 0, 3, 0, 1, 0),
     ('Expired',   'Expired', 'end_date', 'month', 1, null, null, null, 0, 0, 4, 0, 1, 0),
-    ('Pending',   'ממתין', 'join_date', null, null,'join_date',null,null, 0, 0, 5, 0, 1, 1),
+    ('Pending',   'בהמתנה', 'join_date', null, null,'join_date',null,null, 0, 0, 5, 0, 1, 1),
     ('Cancelled', 'Cancelled', 'join_date', null, null,'join_date',null,null, 0, 0, 6, 0, 1, 0),
     ('Deceased',  'Deceased', null, null, null, null, null, null, 0, 1, 7, 0, 1, 1);
 
@@ -5408,10 +5408,10 @@ INSERT INTO `civicrm_payment_processor_type`
  (name, title, description, is_active, is_default, user_name_label, password_label, signature_label, subject_label, class_name, url_site_default, url_api_default, url_recur_default, url_button_default, url_site_test_default, url_api_test_default, url_recur_test_default, url_button_test_default, billing_mode, is_recur )
 VALUES
  ('PayPal_Standard',    'PayPal - Website Payments Standard', NULL,1,0,'Merchant Account Email',NULL,NULL,NULL,'Payment_PayPalImpl','https://www.paypal.com/',NULL,'https://www.paypal.com/',NULL,'https://www.sandbox.paypal.com/',NULL,'https://www.sandbox.paypal.com/',NULL,4,1),
- ('PayPal',             'PayPal - Website Payments Pro',      NULL,1,0,'שם משתמש','סיסמא','חתימה',NULL,'Payment_PayPalImpl','https://www.paypal.com/','https://api-3t.paypal.com/','https://www.paypal.com/','https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif','https://www.sandbox.paypal.com/','https://api-3t.sandbox.paypal.com/','https://www.sandbox.paypal.com/','https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif',3, 1 ),
- ('PayPal_Express',     'PayPal - Express',       NULL,1,0,'שם משתמש','סיסמא','חתימה',NULL,'Payment_PayPalImpl','https://www.paypal.com/','https://api-3t.paypal.com/',NULL,'https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif','https://www.sandbox.paypal.com/','https://api-3t.sandbox.paypal.com/',NULL,'https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif',2,NULL),
+ ('PayPal',             'PayPal - Website Payments Pro',      NULL,1,0,'שם משתמש','ססמה','חתימה',NULL,'Payment_PayPalImpl','https://www.paypal.com/','https://api-3t.paypal.com/','https://www.paypal.com/','https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif','https://www.sandbox.paypal.com/','https://api-3t.sandbox.paypal.com/','https://www.sandbox.paypal.com/','https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif',3, 1 ),
+ ('PayPal_Express',     'PayPal - Express',       NULL,1,0,'שם משתמש','ססמה','חתימה',NULL,'Payment_PayPalImpl','https://www.paypal.com/','https://api-3t.paypal.com/',NULL,'https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif','https://www.sandbox.paypal.com/','https://api-3t.sandbox.paypal.com/',NULL,'https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif',2,NULL),
  ('Google_Checkout',    'Google Checkout',        NULL,1,0,'Merchant ID','Key',NULL,NULL,'Payment_Google','https://checkout.google.com/',NULL,'https://checkout.google.com/','https://checkout.google.com/buttons/checkout.gif?merchant_id=YOURMERCHANTIDHERE&w=160&h=43&style=white&variant=text&loc=en_US','https://sandbox.google.com/checkout/',NULL,'https://sandbox.google.com/checkout/','https://sandbox.google.com/checkout/buttons/checkout.gif?merchant_id=YOURMERCHANTIDHERE&w=160&h=43&style=white&variant=text&loc=en_US',4,1),
- ('Moneris',            'Moneris',                NULL,1,0,'שם משתמש','סיסמא','Store ID',NULL,'Payment_Moneris','https://www3.moneris.com/',NULL,NULL,NULL,'https://esqa.moneris.com/',NULL,NULL,NULL,1,1),
+ ('Moneris',            'Moneris',                NULL,1,0,'שם משתמש','ססמה','Store ID',NULL,'Payment_Moneris','https://www3.moneris.com/',NULL,NULL,NULL,'https://esqa.moneris.com/',NULL,NULL,NULL,1,1),
  ('AuthNet',            'Authorize.Net',          NULL,1,0,'API Login','Payment Key','MD5 Hash',NULL,'Payment_AuthorizeNet','https://secure.authorize.net/gateway/transact.dll',NULL,'https://api.authorize.net/xml/v1/request.api',NULL,'https://test.authorize.net/gateway/transact.dll',NULL,'https://apitest.authorize.net/xml/v1/request.api',NULL,1,1),
  ('PayJunction',        'PayJunction',            NULL,1,0,'User Name','Password',NULL,NULL,'Payment_PayJunction','https://payjunction.com/quick_link',NULL,NULL,NULL,'https://www.payjunctionlabs.com/quick_link',NULL,NULL,NULL,1,1),
  ('eWAY',               'eWAY (Single Currency)', NULL,1,0,'Customer ID',NULL,NULL,NULL,'Payment_eWAY','https://www.eway.com.au/gateway_cvn/xmlpayment.asp',NULL,NULL,NULL,'https://www.eway.com.au/gateway_cvn/xmltest/testpage.asp',NULL,NULL,NULL,1,0),
@@ -5767,7 +5767,7 @@ INSERT INTO civicrm_uf_field
        ( 4,           'first_name',            1,           0,           1,      'User and User Admin Only',  0,           0,             NULL,             'שם פרטי',            		'Individual',  NULL,  NULL),
        ( 4,           'last_name',             1,           0,           2,      'User and User Admin Only',  0,           0,             NULL,             'שם משפחה',             		'Individual',  NULL,  NULL),
        ( 4,           'email',                 0,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'כתובת דואר אלקטרוני',         		'Contact',     NULL,  NULL),
-       ( 5,           'organization_name',     1,           0,           2,      'User and User Admin Only',  0,           0,             NULL,             'שם אירגון',     		'Organization',NULL,  NULL),
+       ( 5,           'organization_name',     1,           0,           2,      'User and User Admin Only',  0,           0,             NULL,             'שם ארגון',     		'Organization',NULL,  NULL),
        ( 5,           'email',                 0,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'כתובת דואר אלקטרוני',         		'Contact',     NULL,  NULL),
        ( 6,           'household_name',        1,           0,           2,      'User and User Admin Only',  0,           0,             NULL,             'שם משק בית',        		'Household',   NULL,  NULL),
        ( 6,           'email',                 0,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'כתובת דואר אלקטרוני',         		'Contact',     NULL,  NULL),
@@ -5775,7 +5775,7 @@ INSERT INTO civicrm_uf_field
 	     ( 7,           'phone' 				 ,1  	      ,0 			,2 	,'User and User Admin Only' ,0 		 	 ,0 			,1 				  ,'Home Mobile' 					,'Contact' 	  ,NULL, 2 ),
 	     ( 7, 			     'street_address', 		  1, 		   0, 			3, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'Primary Address',		'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'city',				  1, 		   0, 			4, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'עיר',  						'Contact', 	   NULL,  NULL),
-	     ( 7, 			     'state_province', 		  1, 		   0, 			5, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'מדינה / פרובינציה / איזור',  						'Contact', 	   NULL,  NULL),
+	     ( 7, 			     'state_province', 		  1, 		   0, 			5, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'פרובינציה / איזור',  						'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'postal_code', 		  1, 		   0, 			6, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'מיקוד',  				'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'email', 				  1, 		   0, 			7, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'אימייל ראשי',  				'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'group', 				  1, 		   0, 			8, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'קבוצות',  					'Contact', 	   NULL,  NULL),
@@ -5787,20 +5787,20 @@ INSERT INTO civicrm_uf_field
        (  8,           'postal_code',           0,           0,           3,      'User and User Admin Only',  0,           0,             1,                'Postal Code (Home)',    		'Contact',     NULL,  NULL),
        (  8,           'country',               0,           0,           4,      'User and User Admin Only', 0,           0,             1,                'Country (Home)',        		'Contact',     NULL,  NULL),
        (  8,           'state_province',        0,           0,           5,      'User and User Admin Only', 0,           0,             1,                'State (Home)',          		'Contact',     NULL,  NULL),
-       (  9,           'organization_name',     1,           0,           1,      'User and User Admin Only',  0,           0,             NULL,             'שם אירגון',              'Organization',NULL,  NULL),
+       (  9,           'organization_name',     1,           0,           1,      'User and User Admin Only',  0,           0,             NULL,             'שם ארגון',              'Organization',NULL,  NULL),
        (  9,           'phone',                 1,           0,           2,      'User and User Admin Only',  0,           0,             3,             'Phone (Main) ',                  'Contact',    NULL,   1),
        (  9,           'email',                 1,           0,           3,      'User and User Admin Only',  0,           0,             3,             'Email (Main) ',                  'Contact',    NULL,   NULL),
        (  9,           'street_address',        1,           0,           4,      'User and User Admin Only',  0,           0,             3,             'כתובת',                 'Contact',    NULL,   NULL),
        (  9,           'city',                  1,           0,           5,      'User and User Admin Only',  0,           0,             3,             'עיר',                           'Contact',    NULL,   NULL),
        (  9,           'postal_code',           1,           0,           6,      'User and User Admin Only',  0,           0,             3,             'מיקוד',                    'Contact',    NULL,   NULL),
-       (  9,           'country',               1,           0,           7,      'User and User Admin Only',  0,           0,             3,             'ארץ',                        'Contact',    NULL,   NULL),
-       (  9,           'state_province',        1,           0,           8,      'User and User Admin Only',  0,           0,             3,             'מדינה/מחוז',               'Contact',    NULL,   NULL),
+       (  9,           'country',               1,           0,           7,      'User and User Admin Only',  0,           0,             3,             'מדינה',                        'Contact',    NULL,   NULL),
+       (  9,           'state_province',        1,           0,           8,      'User and User Admin Only',  0,           0,             3,             'מדינה / מחוז',               'Contact',    NULL,   NULL),
        ( 10,     'contribution_type',           1, 1, 1, 'User and User Admin Only', 0, 0, NULL, 'סוג', 'Contribution', NULL, NULL ),
        ( 10,     'total_amount',                1, 1, 2, 'User and User Admin Only', 0, 0, NULL, 'סכום', 'Contribution', NULL, NULL ),
-       ( 10,     'contribution_status_id',      1, 1, 3, 'User and User Admin Only', 0, 0, NULL, 'סטטוס', 'Contribution', NULL, NULL ),
+       ( 10,     'contribution_status_id',      1, 1, 3, 'User and User Admin Only', 0, 0, NULL, 'מצב', 'Contribution', NULL, NULL ),
        ( 10,     'receive_date',                1, 1, 4, 'User and User Admin Only', 0, 0, NULL, 'Received', 'Contribution', NULL, NULL ),
        ( 10,     'contribution_source',         0, 0, 5, 'User and User Admin Only', 0, 0, NULL, 'מקור', 'Contribution', NULL, NULL ),
-       ( 10,     'payment_instrument',          0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'שולם על ידי', 'Contribution', NULL, NULL ),
+       ( 10,     'payment_instrument',          0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'Paid By', 'Contribution', NULL, NULL ),
        ( 10,     'check_number',                0, 0, 7, 'User and User Admin Only', 0, 0, NULL, 'Check Number', 'Contribution', NULL, NULL ),
        ( 10,     'send_receipt',                0, 0, 8, 'User and User Admin Only', 0, 0, NULL, 'Send Receipt', 'Contribution', NULL, NULL ),
        ( 10,     'invoice_id',                  0, 0, 9, 'User and User Admin Only', 0, 0, NULL, 'Invoice ID', 'Contribution', NULL, NULL ),
@@ -5814,7 +5814,7 @@ INSERT INTO civicrm_uf_field
        ( 11,     'contribution_type',           1, 1, 7, 'User and User Admin Only', 0, 0, NULL, 'סוג תרומה', 'Membership', NULL, NULL ),
        ( 11,     'total_amount',                1, 1, 8, 'User and User Admin Only', 0, 0, NULL, 'סכום', 'Membership', NULL, NULL ),
        ( 11,     'receive_date',                1, 1, 9, 'User and User Admin Only', 0, 0, NULL, 'Received', 'Membership', NULL, NULL ),
-       ( 11,     'payment_instrument',          0, 0, 10, 'User and User Admin Only', 0, 0, NULL, 'שולם על ידי', 'Membership', NULL, NULL ),
+       ( 11,     'payment_instrument',          0, 0, 10, 'User and User Admin Only', 0, 0, NULL, 'Paid By', 'Membership', NULL, NULL ),
        ( 11,     'check_number',                0, 0, 11, 'User and User Admin Only', 0, 0, NULL, 'Check Number', 'Membership', NULL, NULL ),
        ( 11,     'contribution_status_id',      1, 1, 12, 'User and User Admin Only', 0, 0, NULL, 'Payment Status', 'Membership', NULL, NULL ),
        ( 12,     'email',                       1, 0, 1, 'User and User Admin Only', 0, 0, NULL, 'כתובת דואר אלקטרוני', 'Contact', NULL, NULL);
@@ -5851,7 +5851,7 @@ INSERT INTO `civicrm_contact_type`
  VALUES
   ( 1, 'Individual'  , 'אדם'  , NULL, NULL, 1, 1),
   ( 2, 'Household'   , 'משק בית'   , NULL, NULL, 1, 1),
-  ( 3, 'Organization', 'אירגון', NULL, NULL, 1, 1);
+  ( 3, 'Organization', 'ארגון', NULL, NULL, 1, 1);
 
 -- +--------------------------------------------------------------------+
 -- | CiviCRM version 4.2                                                |
@@ -18547,7 +18547,7 @@ INSERT INTO civicrm_mail_settings (domain_id, name, is_default, domain) VALUES (
 INSERT INTO `civicrm_dashboard` 
     ( `domain_id`, `label`, `url`, `permission`, `permission_operator`, `column_no`, `is_minimized`, `is_active`, `weight`, `fullscreen_url`, `is_fullscreen`, `is_reserved`) 
     VALUES 
-    ( @domainID, 'פעולות', 'civicrm/dashlet/activity&reset=1&snippet=5', 'access CiviCRM', NULL, 0, 0, 1, 1, 'civicrm/dashlet/activity&reset=1&snippet=5&context=dashletFullscreen', 1, 1),
+    ( @domainID, 'פעילויות', 'civicrm/dashlet/activity&reset=1&snippet=5', 'access CiviCRM', NULL, 0, 0, 1, 1, 'civicrm/dashlet/activity&reset=1&snippet=5&context=dashletFullscreen', 1, 1),
     ( @domainID, 'My Cases', 'civicrm/dashlet/myCases&reset=1&snippet=5', 'access my cases and activities', NULL , 0, 0, 1, 2, 'civicrm/dashlet/myCases&reset=1&snippet=5&context=dashletFullscreen', 1, 1),
     ( @domainID, 'All Cases', 'civicrm/dashlet/allCases&reset=1&snippet=5', 'access all cases and activities', NULL , 0, 0, 1, 3, 'civicrm/dashlet/allCases&reset=1&snippet=5&context=dashletFullscreen', 1, 1),
     ( @domainID, 'Case Dashboard Dashlet', 'civicrm/dashlet/casedashboard&reset=1&snippet=5', 'access CiviCase', NULL , 0, 0, 1, 4, 'civicrm/dashlet/casedashboard&reset=1&snippet=5&context=dashletFullscreen', 1, 1);
@@ -19446,4 +19446,4 @@ INSERT INTO civicrm_navigation
 VALUES
     ( @domainID, CONCAT('civicrm/report/instance/', @instanceID,'&reset=1'), 'Mailing Detail Report', 'Mailing Detail Report', 'administer CiviMail', 'OR', @reportlastID, '1', NULL, @instanceID+2 );
 UPDATE civicrm_report_instance SET navigation_id = LAST_INSERT_ID() WHERE id = @instanceID;
- UPDATE civicrm_domain SET version = '4.2.7';
+ UPDATE civicrm_domain SET version = '4.2.8';

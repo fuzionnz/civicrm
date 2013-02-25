@@ -4367,15 +4367,15 @@ SELECT @domainID := id FROM civicrm_domain where name = 'Default Domain Name';
 -- field is used mainly as an ID, and display_name will be shown to the user, but
 -- we have not yet finished modifying all places where the 'name' is shown.
 INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active, is_default ) VALUES( 'Doma', 'Doma', 'HOME', 'Place of residence', 0, 1, 1 );
-INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Work', 'Work', 'WORK', 'Work location', 0, 1 );
-INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Main', 'Main', NULL, 'Main office location', 0, 1 );
-INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Jiný', 'Jiný', NULL, 'Other location', 0, 1 );
+INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Pracovní', 'Pracovní', 'WORK', 'Umístění práce', 0, 1 );
+INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Hlavní', 'Hlavní', NULL, 'Umístění sídla', 0, 1 );
+INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Jiný', 'Jiný', NULL, 'Pobočky', 0, 1 );
 -- the following location must stay with the untranslated Billing name, CRM-2064
-INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Billing',  'Billing', NULL, 'Billing Address location', 1, 1 );
+INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Billing',  'Fakturace', NULL, 'Fakturační adresa', 1, 1 );
 
 -- Sample relationship types
 INSERT INTO civicrm_relationship_type( name_a_b,label_a_b, name_b_a,label_b_a, description, contact_type_a, contact_type_b, is_reserved )
-    VALUES( 'Child of', 'Child of', 'Parent of', 'Parent of', 'Parent/child relationship.', 'Individual', 'Individual', 0 ),
+    VALUES( 'Child of', 'Potomek', 'Parent of', 'Rodič', 'Rodič/potomek vztah', 'Individual', 'Individual', 0 ),
           ( 'Spouse of', 'Spouse of', 'Spouse of', 'Spouse of', 'Spousal relationship.', 'Individual', 'Individual', 0 ),
           ( 'Sibling of', 'Sibling of', 'Sibling of', 'Sibling of', 'Sibling relationship.', 'Individual','Individual', 0 ),
           ( 'Employee of', 'Employee of', 'Employer of', 'Employer of', 'Employment relationship.','Individual','Organization', 1 ),
@@ -4393,11 +4393,11 @@ INSERT INTO civicrm_relationship_type( name_a_b,label_a_b, name_b_a,label_b_a, d
 -- Sample Tags
 INSERT INTO civicrm_tag( name, description, parent_id,used_for )
     VALUES
-    ( 'Non-profit', 'Any not-for-profit organization.', NULL,'civicrm_contact'),
-    ( 'Company', 'For-profit organization.', NULL,'civicrm_contact'),
-    ( 'Government Entity', 'Any governmental entity.', NULL,'civicrm_contact'),
-    ( 'Major Donor', 'High-value supporter of our organization.', NULL,'civicrm_contact'),
-    ( 'Volunteer', 'Active volunteers.', NULL,'civicrm_contact' );
+    ( 'Neziskovka', 'Jakékoliv neziskovky.', NULL,'civicrm_contact'),
+    ( 'Firma', 'Firma', NULL,'civicrm_contact'),
+    ( 'Úřad', 'Jakíkoliv úřady', NULL,'civicrm_contact'),
+    ( 'Donátor', 'VIP', NULL,'civicrm_contact'),
+    ( 'Dobrovolník', 'Aktibní dobrovolníci.', NULL,'civicrm_contact' );
 
 
 -- sample CiviCRM mailing components
@@ -4462,7 +4462,7 @@ VALUES
    ('mapping_type'                  , 'Mapping Type'                       , 1, 1),
    ('wysiwyg_editor'                , 'WYSIWYG Editor'                     , 1, 1),
    ('recur_frequency_units'         , 'Recurring Frequency Units'          , 1, 1),
-   ('phone_type'                    , 'Phone Type'                         , 1, 1),
+   ('phone_type'                    , 'Typ telefonu'                         , 1, 1),
    ('custom_data_type'              , 'Custom Data Type'                   , 1, 1),
    ('visibility'                    , 'Viditelnost'                         , 1, 1),
    ('mail_protocol'                 , 'Mail Protocol'                      , 1, 1),
@@ -4610,15 +4610,15 @@ VALUES
    (@option_group_id_act, 'Assign Case Role',                   20, 'Assign Case Role', NULL,0, 0, 20, '', 0, 0, 1, @caseCompId, NULL),
    (@option_group_id_act, 'Remove Case Role',                   21, 'Remove Case Role', NULL,0, 0, 21, '', 0, 0, 1, @caseCompId, NULL),
    (@option_group_id_act, 'Print PDF Letter',                   22, 'Print PDF Letter',    NULL, 0, NULL, 22, 'Print PDF Letter.',                                                  0, 1, 1, NULL, NULL),
-   (@option_group_id_act, 'Merge Case',                         23, 'Merge Case', NULL, 0,  NULL, 23, '', 0, 1, 1, @caseCompId, NULL ),
-   (@option_group_id_act, 'Reassigned Case',                    24, 'Reassigned Case', NULL, 0,  NULL, 24, '', 0, 1, 1, @caseCompId, NULL ),
-   (@option_group_id_act, 'Link Cases',                         25, 'Link Cases', NULL, 0,  NULL, 25, '', 0, 1, 1, @caseCompId, NULL ),
-   (@option_group_id_act, 'Change Case Tags',                   26, 'Change Case Tags', NULL,0, 0, 26, '', 0, 1, 1, @caseCompId, NULL),
+   (@option_group_id_act, 'Porovnat případ',                         23, 'Merge Case', NULL, 0,  NULL, 23, '', 0, 1, 1, @caseCompId, NULL ),
+   (@option_group_id_act, 'Změnit přidělení případu',                    24, 'Reassigned Case', NULL, 0,  NULL, 24, '', 0, 1, 1, @caseCompId, NULL ),
+   (@option_group_id_act, 'Připojitt případ',                         25, 'Link Cases', NULL, 0,  NULL, 25, '', 0, 1, 1, @caseCompId, NULL ),
+   (@option_group_id_act, 'Změtit štítek případu',                   26, 'Change Case Tags', NULL,0, 0, 26, '', 0, 1, 1, @caseCompId, NULL),
    (@option_group_id_act, 'Add Client To Case',                 27, 'Add Client To Case', NULL,0, 0, 26, '', 0, 1, 1, @caseCompId, NULL),
 
 -- Activity Types for CiviCampaign
-   (@option_group_id_act, 'Survey',                             28, 'Survey', NULL,0, 0, 27, '', 0, 1, 1, @campaignCompId, NULL),
-   (@option_group_id_act, 'Canvass',                            29, 'Canvass', NULL,0, 0, 28, '', 0, 1, 1, @campaignCompId, NULL),
+   (@option_group_id_act, 'Přehled',                             28, 'Survey', NULL,0, 0, 27, '', 0, 1, 1, @campaignCompId, NULL),
+   (@option_group_id_act, 'Kampaň',                            29, 'Canvass', NULL,0, 0, 28, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'PhoneBank',                          30, 'PhoneBank', NULL,0, 0, 29, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'WalkList',                           31, 'WalkList', NULL,0, 0, 30, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'Petition Signature',                 32, 'Petition', NULL,0, 0, 31, '', 0, 1, 1, @campaignCompId, NULL),
@@ -4637,9 +4637,9 @@ VALUES
 
    (@option_group_id_act, 'Reminder Sent',      		      40, 'Reminder Sent', NULL, 1, 0, 40, '', 0, 1, 1, NULL, NULL),
 
-   (@option_group_id_gender, 'Female',      1, 'Female',      NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_gender, 'Male',        2, 'Male',        NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_gender, 'Transgender', 3, 'Transgender', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_gender, 'Žena',      1, 'Female',      NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_gender, 'Muž',        2, 'Male',        NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_gender, 'Trans', 3, 'Transgender', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
 
    (@option_group_id_IMProvider, 'Yahoo', 1, 'Yahoo', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_IMProvider, 'MSN',   2, 'Msn',   NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
@@ -4652,13 +4652,13 @@ VALUES
    (@option_group_id_mobileProvider, 'Verizon' , 2, 'Verizon' , NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_mobileProvider, 'Cingular', 3, 'Cingular', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
 
-   (@option_group_id_prefix, 'Mrs.', 1, 'Mrs.', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_prefix, 'Ms.',  2, 'Ms.',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_prefix, 'Mr.',  3, 'Mr.',  NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_prefix, 'Paní', 1, 'Mrs.', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_prefix, 'Slečna',  2, 'Ms.',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_prefix, 'Pan',  3, 'Mr.',  NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_prefix, 'Dr.',  4, 'Dr.',  NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
 
-   (@option_group_id_suffix, 'Jr.',  1, 'Jr.', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_suffix, 'Sr.',  2, 'Sr.', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_suffix, 'ml.',  1, 'Jr.', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_suffix, 'st.',  2, 'Sr.', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_suffix, 'II',  3, 'II',  NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_suffix, 'III', 4, 'III', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_suffix, 'IV',  5, 'IV',  NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
@@ -4667,40 +4667,40 @@ VALUES
    (@option_group_id_suffix, 'VII', 8, 'VII', NULL, 0, NULL, 8, NULL, 0, 0, 1, NULL, NULL),
 
    (@option_group_id_aclRole, 'Administrator',  1, 'Admin', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_aclRole, 'Authenticated',  2, 'Auth' , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+   (@option_group_id_aclRole, 'Atorizováno',  2, 'Auth' , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
 
    (@option_group_id_acc, 'Visa'      ,  1, 'Visa'      , NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_acc, 'MasterCard',  2, 'MasterCard', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_acc, 'Amex'      ,  3, 'Amex'      , NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_acc, 'Discover'  ,  4, 'Discover'  , NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
 
-  (@option_group_id_pi, 'Credit Card',  1, 'Credit Card', NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_pi, 'Debit Card',   2, 'Debit Card',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_pi, 'Cash',         3, 'Cash',        NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_pi, 'Check',        4, 'Check',       NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pi, 'Kreditní karta',  1, 'Credit Card', NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pi, 'Debetní karta',   2, 'Debit Card',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pi, 'Hotovost',         3, 'Cash',        NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pi, 'Šek',        4, 'Check',       NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_pi, 'EFT',          5, 'EFT',         NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
 
-  (@option_group_id_cs, 'Completed'  , 1, 'Completed'  , NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cs, 'Dokončeno'  , 1, 'Completed'  , NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_cs, 'Čeká'    , 2, 'Pending'    , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_cs, 'Cancelled'  , 3, 'Cancelled'  , NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_cs, 'Failed'     , 4, 'Failed'     , NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_cs, 'In Progress', 5, 'In Progress', NULL, 0, NULL, 5, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_cs, 'Overdue'    , 6, 'Overdue'    , NULL, 0, NULL, 6, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cs, 'Zrušeno'  , 3, 'Cancelled'  , NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cs, 'Nedopadlo to dobře'     , 4, 'Failed'     , NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cs, 'Rozpracováno', 5, 'In Progress', NULL, 0, NULL, 5, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cs, 'Zpožděno'    , 6, 'Overdue'    , NULL, 0, NULL, 6, NULL, 0, 1, 1, NULL, NULL),
 
-  (@option_group_id_pcp, 'Waiting Review', 1, 'Waiting Review', NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_pcp, 'Approved'      , 2, 'Approved'      , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_pcp, 'Not Approved'  , 3, 'Not Approved'  , NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pcp, 'Čekání na kontrolu', 1, 'Waiting Review', NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pcp, 'Potvrzeno'      , 2, 'Approved'      , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pcp, 'Nepotvrzeno'  , 3, 'Not Approved'  , NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
 
-  (@option_group_id_pRole, 'Attendee',  1, 'Attendee',  NULL, 1, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_pRole, 'Volunteer', 2, 'Volunteer', NULL, 1, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pRole, 'Účastník',  1, 'Attendee',  NULL, 1, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pRole, 'Dobrovolník', 2, 'Volunteer', NULL, 1, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_pRole, 'Host',      3, 'Host',      NULL, 1, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_pRole, 'Speaker',   4, 'Speaker',   NULL, 1, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pRole, 'Řečník',   4, 'Speaker',   NULL, 1, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
 
-  (@option_group_id_etype, 'Conference', 1, 'Conference',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_etype, 'Exhibition', 2, 'Exhibition',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_etype, 'Konference', 1, 'Conference',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_etype, 'Výstava', 2, 'Exhibition',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_etype, 'Fundraiser', 3, 'Fundraiser',  NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_etype, 'Schůzka',    4, 'Meeting',     NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_etype, 'Performance',5, 'Performance', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_etype, 'Výkon',5, 'Performance', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_etype, 'Workshop',   6, 'Workshop',    NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
 
 -- note that these are not ts'ed since they are used for logic in most cases and not display
@@ -4720,10 +4720,10 @@ VALUES
 
   (@option_group_id_ceOpt, 'Uživatelská data'              ,   1, 'CustomData', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Adresa'                  ,   2, 'Address', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_ceOpt, 'Communication Preferences',   3, 'CommunicationPreferences', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_ceOpt, 'Preferovaná komunikace',   3, 'CommunicationPreferences', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Poznámky'                    ,   4, 'Notes', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Demografie'             ,   5, 'Demographics', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_ceOpt, 'Tags and Groups'          ,   6, 'TagsAndGroups', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_ceOpt, 'Štítky a Skupiny'          ,   6, 'TagsAndGroups', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Email'                    ,   7, 'Email', NULL, 1, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Telefon'                    ,   8, 'Phone', NULL, 1, NULL, 8, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Instatní messenger'        ,   9, 'IM', NULL, 1, NULL, 9, NULL, 0, 0, 1, NULL, NULL),
@@ -4735,7 +4735,7 @@ VALUES
   (@option_group_id_asOpt, 'Činnosti'              ,   3, 'activity', NULL, 0, NULL,  4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Vztahy'           ,   4, 'relationship', NULL, 0, NULL,  5, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Poznámky'                   ,   5, 'notes', NULL, 0, NULL,  6, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_asOpt, 'Change Log'              ,   6, 'changeLog', NULL, 0, NULL,  7, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_asOpt, 'Změna Log'              ,   6, 'changeLog', NULL, 0, NULL,  7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Příspěvky'           ,   7, 'CiviContribute', NULL, 0, NULL,  8, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Členství'             ,   8, 'CiviMember', NULL, 0, NULL,  9, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Události'                  ,   9, 'CiviEvent', NULL, 0, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
@@ -4752,7 +4752,7 @@ VALUES
   (@option_group_id_udOpt, 'Příspěvky'              , 2, 'CiviContribute', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Členství'                , 3, 'CiviMember', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Události'                     , 4, 'CiviEvent', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_udOpt, 'My Contacts / Organizations', 5, 'Permissioned Orgs', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_udOpt, 'Moje Kontakty/Organizace', 5, 'Permissioned Orgs', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Závazky'                    , 7, 'CiviPledge', NULL, 0, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Osobní stránky kampaně'    , 8, 'PCP', NULL, 0, NULL, 8, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Assigned Activities'        , 9, 'Assigned Activities', NULL, 0, NULL, 9, NULL, 0, 0, 1, NULL, NULL),
@@ -4789,14 +4789,14 @@ VALUES
   (@option_group_id_gType, 'Mailing List'    , 2, NULL, NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
 
   (@option_group_id_grantSt, 'Čeká',  1, 'Pending',  NULL, 0, 1,    1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_grantSt, 'Granted',  2, 'Granted',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_grantSt, 'Rejected', 3, 'Rejected', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_grantSt, 'Poskytnuto',  2, 'Granted',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_grantSt, 'Reklamováno', 3, 'Rejected', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_honorTyp, 'In Honor of'        , 1, 'In Honor of'       , NULL, 0, 1,    1, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_honorTyp, 'In Memory of'       , 2, 'In Memory of'      , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
 
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_Sample'               , 1, 'CRM_Contact_Form_Search_Custom_Sample'      , NULL, 0, NULL, 1, 'Household Name and State', 0, 0, 1, NULL, NULL),
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_ContributionAggregate', 2, 'CRM_Contact_Form_Search_Custom_ContributionAggregate', NULL, 0, NULL, 2, 'Contribution Aggregate', 0, 0, 1, NULL, NULL),
-  (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_Basic'                , 3, 'CRM_Contact_Form_Search_Custom_Basic'       , NULL, 0, NULL, 3, 'Basic Search', 0, 0, 1, NULL, NULL),
+  (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_Basic'                , 3, 'CRM_Contact_Form_Search_Custom_Basic'       , NULL, 0, NULL, 3, 'Základní hledání', 0, 0, 1, NULL, NULL),
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_Group'                , 4, 'CRM_Contact_Form_Search_Custom_Group'       , NULL, 0, NULL, 4, 'Include / Exclude Search', 0, 0, 1, NULL, NULL),
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_PostalMailing'        , 5, 'CRM_Contact_Form_Search_Custom_PostalMailing', NULL, 0, NULL, 5, 'Postal Mailing', 0, 0, 1, NULL, NULL),
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_Proximity'            , 6, 'CRM_Contact_Form_Search_Custom_Proximity', NULL, 0, NULL, 6, 'Proximity Search', 0, 0, 1, NULL, NULL),
@@ -4860,20 +4860,20 @@ VALUES
   (@option_group_id_report,  'Mail Detail Report',                                            'mailing/detail',     'CRM_Report_Form_Mailing_Detail',          NULL, 0, NULL, 47,  'Provides reporting on Intended and Successful Deliveries, Unsubscribes and Opt-outs, Replies and Forwards.',   0, 0, 1, @mailCompId, NULL),
   (@option_group_id_report, 'Contribution and Membership Details', 'member/contributionDetail', 'CRM_Report_Form_Member_ContributionDetail', NULL, 0, NULL, 48, 'Contribution details for any type of contribution, plus associated membership information for contributions which are in payment for memberships.', 0, 0, 1, @memberCompId, NULL),
 
-  (@option_group_id_acs, 'Scheduled',  1, 'Scheduled',  NULL, 0, 1,    1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_acs, 'Completed',  2, 'Completed',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_acs, 'Cancelled',  3, 'Cancelled',  NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_acs, 'Left Message', 4, 'Left Message', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_acs, 'Unreachable', 5, 'Unreachable', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_acs, 'Not Required',  6, 'Not Required',  NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acs, 'Naplánováno',  1, 'Scheduled',  NULL, 0, 1,    1, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_acs, 'Dokončeno',  2, 'Completed',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_acs, 'Zrušeno',  3, 'Cancelled',  NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_acs, 'Zanechán vzkaz', 4, 'Left Message', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acs, 'Nezastižitelný', 5, 'Unreachable', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acs, 'Nepožadováno',  6, 'Not Required',  NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
 
-  (@option_group_id_cas, 'Ongoing' , 1, 'Open'  ,  'Opened', 0, 1,    1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_cas, 'Resolved', 2, 'Closed',  'Closed', 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_cas, 'Urgent'  , 3, 'Urgent',  'Opened', 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cas, 'Nastávající' , 1, 'Open'  ,  'Opened', 0, 1,    1, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cas, 'Vyřešeno', 2, 'Closed',  'Closed', 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cas, 'Urgentní'  , 3, 'Urgent',  'Opened', 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
 
-  (@option_group_id_pl, 'Name Only'     , 1, 'Name Only'      ,  NULL, 0, 0, 1, 'CRM_Event_Page_ParticipantListing_Name', 0, 1, 1, NULL, NULL),
-  (@option_group_id_pl, 'Name and Email', 2, 'Name and Email' ,  NULL, 0, 0, 2, 'CRM_Event_Page_ParticipantListing_NameAndEmail', 0, 1, 1, NULL, NULL),
-  (@option_group_id_pl, 'Name, Status and Register Date' , 3, 'Name, Status and Register Date',  NULL, 0, 0, 3, 'CRM_Event_Page_ParticipantListing_NameStatusAndDate', 0, 1, 1, NULL, NULL),
+  (@option_group_id_pl, 'Pouze jméno'     , 1, 'Name Only'      ,  NULL, 0, 0, 1, 'CRM_Event_Page_ParticipantListing_Name', 0, 1, 1, NULL, NULL),
+  (@option_group_id_pl, 'Jméno a email', 2, 'Name and Email' ,  NULL, 0, 0, 2, 'CRM_Event_Page_ParticipantListing_NameAndEmail', 0, 1, 1, NULL, NULL),
+  (@option_group_id_pl, 'Jméno, status a datum registrace' , 3, 'Name, Status and Register Date',  NULL, 0, 0, 3, 'CRM_Event_Page_ParticipantListing_NameStatusAndDate', 0, 1, 1, NULL, NULL),
 
   (@option_group_id_sfe, 'jpg'      ,  1, NULL   ,  NULL, 0, 0,  1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_sfe, 'jpeg'     ,  2, NULL   ,  NULL, 0, 0,  2, NULL, 0, 0, 1, NULL, NULL),
@@ -4910,17 +4910,17 @@ VALUES
   (@option_group_id_mt, 'Export Grant',       13, 'Export Grant',        NULL, 0, 0,   13, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_mt, 'Export Activity',    14, 'Export Activity',     NULL, 0, 0,   14, NULL, 0, 1, 1, NULL, NULL),
 
-  (@option_group_id_fu, 'day'    , 'day'  ,    'day',  NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_fu, 'week'   , 'week' ,   'week',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_fu, 'month'  , 'month',  'month',  NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_fu, 'year'   , 'year' ,   'year',  NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_fu, 'den'    , 'day'  ,    'day',  NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_fu, 'týden'   , 'week' ,   'week',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_fu, 'měsíc'  , 'month',  'month',  NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_fu, 'rok'   , 'year' ,   'year',  NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
 
 -- phone types.
   (@option_group_id_pht, 'Telefon' ,        1, 'Phone'      , NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_pht, 'Mobile',        2, 'Mobile'     , NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pht, 'Mobil',        2, 'Mobile'     , NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_pht, 'Fax'   ,        3, 'Fax'        , NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_pht, 'Pager' ,        4, 'Pager'      , NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_pht, 'Voicemail' ,    5, 'Voicemail'  , NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pht, 'Záznamník' ,    5, 'Voicemail'  , NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
 
 -- custom data types.
   (@option_group_id_cdt, 'Participant Role',       '1', 'ParticipantRole',      NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL ),
@@ -4938,9 +4938,9 @@ VALUES
   (@option_group_id_mp, 'Localdir', 4, 'Localdir', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL ),
 
 -- priority
-  (@option_group_id_priority, 'Urgent', 1, 'Urgent', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_priority, 'Normal', 2, 'Normal', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_priority, 'Low',    3, 'Low',    NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_priority, 'Urgentní', 1, 'Urgent', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_priority, 'Normální', 2, 'Normal', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_priority, 'Nízký',    3, 'Low',    NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
 
 -- redaction rule
   (@option_group_id_rr, 'Vancouver', 'city_', NULL, NULL, 0, NULL, 1, NULL, 0, 0, 0, NULL, NULL),
@@ -4987,7 +4987,7 @@ VALUES
    (@option_group_id_currency, 'USD ($)',      'USD',     'USD',       NULL, 0, 1, 1, NULL, 0, 0, 1, NULL, NULL),
 
 -- event name badges
-  (@option_group_id_eventBadge,  'Name Only'     , 1, 'CRM_Event_Badge_Simple'  ,  NULL, 0, 0, 1, 'Simple Event Name Badge', 0, 1, 1, NULL, NULL),
+  (@option_group_id_eventBadge,  'Pouze jméno'     , 1, 'CRM_Event_Badge_Simple'  ,  NULL, 0, 0, 1, 'Simple Event Name Badge', 0, 1, 1, NULL, NULL),
   (@option_group_id_eventBadge,  'Name Tent'     , 2, 'CRM_Event_Badge_NameTent',  NULL, 0, 0, 2, 'Name Tent', 0, 1, 1, NULL, NULL),
   (@option_group_id_eventBadge , 'With Logo'     , 3, 'CRM_Event_Badge_Logo'    ,  NULL, 0, 0, 3, 'You can set your own background image',                               0, 1, 1, NULL, NULL ),
   (@option_group_id_eventBadge , '5395 with Logo', 4, 'CRM_Event_Badge_Logo5395',  NULL, 0, 0, 4, 'Avery 5395 compatible labels with logo (4 up by 2, 59.2mm x 85.7mm)', 0, 1, 1, NULL, NULL ),
@@ -5003,9 +5003,9 @@ VALUES
 
 -- Campaign Status
   (@option_group_id_campaignStatus, 'Planned', 1, 'Planned',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_campaignStatus, 'In Progress', 2, 'In Progress',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_campaignStatus, 'Completed', 3, 'Completed',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_campaignStatus, 'Cancelled', 4, 'Cancelled',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_campaignStatus, 'Rozpracováno', 2, 'In Progress',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_campaignStatus, 'Dokončeno', 3, 'Completed',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_campaignStatus, 'Zrušeno', 4, 'Cancelled',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
 
 -- Engagement Level
   (@option_group_id_engagement_index, '1', 1, '1',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL ),
@@ -5095,8 +5095,8 @@ VALUES
    (@option_group_id_batch_type, 'Členství', 2, 'Členství', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
 
 -- default batch statues
-   (@option_group_id_batch_status, 'Open', 1, 'Open', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_batch_status, 'Closed', 2, 'Closed', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_batch_status, 'Otevřený', 1, 'Otevřený', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_batch_status, 'Uzavřený', 2, 'Uzavřený', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
 
 -- sms_api_type
    (@option_group_id_sms_api_type, 'http', 1, 'http', NULL, NULL, 0, 1, NULL, 0, 1, 1, NULL, NULL),
@@ -5140,12 +5140,12 @@ VALUES
   (@option_group_id_grantTyp, 'Impunity'           , 4, 'Impunity'          , NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, @domainID, NULL),
 
 -- Mail Approval Status Preferences
-  (@option_group_id_mail_approval_status, 'Approved' , 1, 'Approved', NULL, 0, 1, 1, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
-  (@option_group_id_mail_approval_status, 'Rejected' , 2, 'Rejected', NULL, 0, 0, 2, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
+  (@option_group_id_mail_approval_status, 'Potvrzeno' , 1, 'Approved', NULL, 0, 1, 1, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
+  (@option_group_id_mail_approval_status, 'Reklamováno' , 2, 'Rejected', NULL, 0, 0, 2, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
   (@option_group_id_mail_approval_status, 'None' , 3, 'None', NULL, 0, 0, 3, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
 
 -- custom group objects
-  (@option_group_id_cgeo, 'Survey', 'Survey', 'civicrm_survey', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL, NULL),
+  (@option_group_id_cgeo, 'Přehled', 'Survey', 'civicrm_survey', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL, NULL),
   (@option_group_id_cgeo, 'Případy',  'Case', 'civicrm_case',     NULL, 0, NULL, 2, 'CRM_Case_PseudoConstant::caseType;', 0, 0, 1, NULL, NULL, NULL);
 
 -- CRM-6138
@@ -5383,7 +5383,7 @@ VALUES
     ('Grace',     'Grace', 'end_date', null, null,'end_date','month', 1, 1, 0, 3, 0, 1, 0),
     ('Expired',   'Expired', 'end_date', 'month', 1, null, null, null, 0, 0, 4, 0, 1, 0),
     ('Pending',   'Čeká', 'join_date', null, null,'join_date',null,null, 0, 0, 5, 0, 1, 1),
-    ('Cancelled', 'Cancelled', 'join_date', null, null,'join_date',null,null, 0, 0, 6, 0, 1, 0),
+    ('Cancelled', 'Zrušeno', 'join_date', null, null,'join_date',null,null, 0, 0, 6, 0, 1, 0),
     ('Deceased',  'Deceased', null, null, null, null, null, null, 0, 1, 7, 0, 1, 1);
 
 
@@ -5755,11 +5755,11 @@ INSERT INTO civicrm_uf_field
        ( uf_group_id, field_name,              is_required, is_reserved, weight, visibility,                  in_selector, is_searchable, location_type_id, label,                                         		field_type,    help_post, phone_type_id ) VALUES
        (  1,           'first_name',            1,           0,           1,      'User and User Admin Only', 0,           0,             NULL,             'Jméno',            		'Individual',  NULL,  NULL),
        (  1,           'last_name',             1,           0,           2,      'User and User Admin Only', 0,           0,             NULL,             'Příjmení',             		'Individual',  NULL,  NULL),
-       (  1,           'street_address',        0,           0,           3,      'User and User Admin Only',  0,           0,             1,                'Street Address (Home)', 		'Contact',     NULL,  NULL),
-       (  1,           'city',                  0,           0,           4,      'User and User Admin Only',  0,           0,             1,                'City (Home)',           		'Contact',     NULL,  NULL),
-       (  1,           'postal_code',           0,           0,           5,      'User and User Admin Only',  0,           0,             1,                'Postal Code (Home)',    		'Contact',     NULL,  NULL),
-       (  1,           'country',               0,           0,           6,      'User and User Admin Only', 0,           0,             1,                'Country (Home)',        		'Contact',     NULL,  NULL),
-       (  1,           'state_province',        0,           0,           7,      'User and User Admin Only', 0,           0,             1,                'State (Home)',          		'Contact',     NULL,  NULL),
+       (  1,           'street_address',        0,           0,           3,      'User and User Admin Only',  0,           0,             1,                'Ulice bydliště', 		'Contact',     NULL,  NULL),
+       (  1,           'city',                  0,           0,           4,      'User and User Admin Only',  0,           0,             1,                'Město bydliště',           		'Contact',     NULL,  NULL),
+       (  1,           'postal_code',           0,           0,           5,      'User and User Admin Only',  0,           0,             1,                'PSČ bydliště',    		'Contact',     NULL,  NULL),
+       (  1,           'country',               0,           0,           6,      'User and User Admin Only', 0,           0,             1,                'Země bydliště',        		'Contact',     NULL,  NULL),
+       (  1,           'state_province',        0,           0,           7,      'User and User Admin Only', 0,           0,             1,                'Stát bydliště',          		'Contact',     NULL,  NULL),
        (  2,           'first_name',            1,           0,           1,      'User and User Admin Only',  0,           0,             NULL,             'Jméno',            		'Individual',  NULL,  NULL),
        (  2,           'last_name',             1,           0,           2,      'User and User Admin Only',  0,           0,             NULL,             'Příjmení',             		'Individual',  NULL,  NULL),
        ( 2,           'email',                 1,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'E-mailová adresa',         		'Contact',     NULL,  NULL),
@@ -5771,8 +5771,8 @@ INSERT INTO civicrm_uf_field
        ( 5,           'email',                 0,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'E-mailová adresa',         		'Contact',     NULL,  NULL),
        ( 6,           'household_name',        1,           0,           2,      'User and User Admin Only',  0,           0,             NULL,             'Jméno domácnosti',        		'Household',   NULL,  NULL),
        ( 6,           'email',                 0,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'E-mailová adresa',         		'Contact',     NULL,  NULL),
-	     ( 7,           'phone' 				 ,1  	      ,0 			,1 	,'User and User Admin Only' ,0 		 	 ,0 			,1 				  ,'Home Phone' 					,'Contact' 	  ,NULL,  1 ),
-	     ( 7,           'phone' 				 ,1  	      ,0 			,2 	,'User and User Admin Only' ,0 		 	 ,0 			,1 				  ,'Home Mobile' 					,'Contact' 	  ,NULL, 2 ),
+	     ( 7,           'phone' 				 ,1  	      ,0 			,1 	,'User and User Admin Only' ,0 		 	 ,0 			,1 				  ,'Telefon domů' 					,'Contact' 	  ,NULL,  1 ),
+	     ( 7,           'phone' 				 ,1  	      ,0 			,2 	,'User and User Admin Only' ,0 		 	 ,0 			,1 				  ,'Mobil domů' 					,'Contact' 	  ,NULL, 2 ),
 	     ( 7, 			     'street_address', 		  1, 		   0, 			3, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'Primary Address',		'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'city',				  1, 		   0, 			4, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'Obec',  						'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'state_province', 		  1, 		   0, 			5, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'Stát',  						'Contact', 	   NULL,  NULL),
@@ -5782,14 +5782,14 @@ INSERT INTO civicrm_uf_field
 	     ( 7, 			     'tag', 				  1, 		   0, 			9, 	  	'User and User Admin Only',  0, 	      0, 		     NULL, 			   'Štítky', 						'Contact', 	   NULL,  NULL),
 	     ( 7,            'gender'  				 ,1  	      ,0  			,10  	,'User and User Admin Only' ,0  		 ,0  			,NULL,  			 'Pohlaví'  						,'Individual' ,NULL,  NULL),
 	     ( 7,            'birth_date' 			 ,1  	      ,0 			,11 	,'User and User Admin Only' ,0 		 	 ,0 			,NULL, 			  'Date of Birth' 			    ,'Individual' ,NULL,  NULL),
-	     (  8,           'street_address',        1,           1,           1,      'User and User Admin Only',  0,           0,             1,                'Street Address (Home)', 		'Contact',     NULL,  NULL),
-       (  8,           'city',                  1,           1,           2,      'User and User Admin Only',  0,           0,             1,                'City (Home)',           		'Contact',     NULL,  NULL),
-       (  8,           'postal_code',           0,           0,           3,      'User and User Admin Only',  0,           0,             1,                'Postal Code (Home)',    		'Contact',     NULL,  NULL),
-       (  8,           'country',               0,           0,           4,      'User and User Admin Only', 0,           0,             1,                'Country (Home)',        		'Contact',     NULL,  NULL),
-       (  8,           'state_province',        0,           0,           5,      'User and User Admin Only', 0,           0,             1,                'State (Home)',          		'Contact',     NULL,  NULL),
+	     (  8,           'street_address',        1,           1,           1,      'User and User Admin Only',  0,           0,             1,                'Ulice bydliště', 		'Contact',     NULL,  NULL),
+       (  8,           'city',                  1,           1,           2,      'User and User Admin Only',  0,           0,             1,                'Město bydliště',           		'Contact',     NULL,  NULL),
+       (  8,           'postal_code',           0,           0,           3,      'User and User Admin Only',  0,           0,             1,                'PSČ bydliště',    		'Contact',     NULL,  NULL),
+       (  8,           'country',               0,           0,           4,      'User and User Admin Only', 0,           0,             1,                'Země bydliště',        		'Contact',     NULL,  NULL),
+       (  8,           'state_province',        0,           0,           5,      'User and User Admin Only', 0,           0,             1,                'Stát bydliště',          		'Contact',     NULL,  NULL),
        (  9,           'organization_name',     1,           0,           1,      'User and User Admin Only',  0,           0,             NULL,             'Název organizace',              'Organization',NULL,  NULL),
-       (  9,           'phone',                 1,           0,           2,      'User and User Admin Only',  0,           0,             3,             'Phone (Main) ',                  'Contact',    NULL,   1),
-       (  9,           'email',                 1,           0,           3,      'User and User Admin Only',  0,           0,             3,             'Email (Main) ',                  'Contact',    NULL,   NULL),
+       (  9,           'phone',                 1,           0,           2,      'User and User Admin Only',  0,           0,             3,             'Telefon (hlavné)',                  'Contact',    NULL,   1),
+       (  9,           'email',                 1,           0,           3,      'User and User Admin Only',  0,           0,             3,             'Email (hlavní) ',                  'Contact',    NULL,   NULL),
        (  9,           'street_address',        1,           0,           4,      'User and User Admin Only',  0,           0,             3,             'Ulice',                 'Contact',    NULL,   NULL),
        (  9,           'city',                  1,           0,           5,      'User and User Admin Only',  0,           0,             3,             'Obec',                           'Contact',    NULL,   NULL),
        (  9,           'postal_code',           1,           0,           6,      'User and User Admin Only',  0,           0,             3,             'PSČ',                    'Contact',    NULL,   NULL),
@@ -5825,14 +5825,14 @@ INSERT INTO civicrm_participant_status_type
   (1,  'Registered',                          'Registered',                          'Positive', 1,           1,         1,          1,      1            ),
   (2,  'Attended',                            'Attended',                            'Positive', 0,           1,         1,          2,      2            ),
   (3,  'No-show',                             'No-show',                             'Negative', 0,           1,         0,          3,      2            ),
-  (4,  'Cancelled',                           'Cancelled',                           'Negative', 1,           1,         0,          4,      2            ),
+  (4,  'Cancelled',                           'Zrušeno',                           'Negative', 1,           1,         0,          4,      2            ),
   (5,  'Pending from pay later',              'Pending from pay later',              'Pending',  1,           1,         1,          5,      2            ),
   (6,  'Pending from incomplete transaction', 'Pending from incomplete transaction', 'Pending',  1,           1,         0,          6,      2            ),
   (7,  'On waitlist',                         'On waitlist',                         'Waiting',  1,           0,         0,          7,      2            ),
   (8,  'Awaiting approval',                   'Awaiting approval',                   'Waiting',  1,           0,         1,          8,      2            ),
   (9,  'Pending from waitlist',               'Pending from waitlist',               'Pending',  1,           0,         1,          9,      2            ),
   (10, 'Pending from approval',               'Pending from approval',               'Pending',  1,           0,         1,          10,     2            ),
-  (11, 'Rejected',                            'Rejected',                            'Negative', 1,           0,         0,          11,     2            ),
+  (11, 'Rejected',                            'Reklamováno',                            'Negative', 1,           0,         0,          11,     2            ),
   (12, 'Expired',                             'Expired',                             'Negative', 1,           1,         0,          12,     2            ),
   (13, 'Pending in cart',                     'Pending in cart',                     'Pending',  1,           1,         0,          13,     2            );
 
@@ -19446,4 +19446,4 @@ INSERT INTO civicrm_navigation
 VALUES
     ( @domainID, CONCAT('civicrm/report/instance/', @instanceID,'&reset=1'), 'Mailing Detail Report', 'Mailing Detail Report', 'administer CiviMail', 'OR', @reportlastID, '1', NULL, @instanceID+2 );
 UPDATE civicrm_report_instance SET navigation_id = LAST_INSERT_ID() WHERE id = @instanceID;
- UPDATE civicrm_domain SET version = '4.2.7';
+ UPDATE civicrm_domain SET version = '4.2.8';

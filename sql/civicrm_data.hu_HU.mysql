@@ -5771,7 +5771,7 @@ INSERT INTO civicrm_uf_field
        ( 5,           'email',                 0,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'Email cím',         		'Contact',     NULL,  NULL),
        ( 6,           'household_name',        1,           0,           2,      'User and User Admin Only',  0,           0,             NULL,             'Közismert név ',        		'Household',   NULL,  NULL),
        ( 6,           'email',                 0,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'Email cím',         		'Contact',     NULL,  NULL),
-	     ( 7,           'phone' 				 ,1  	      ,0 			,1 	,'User and User Admin Only' ,0 		 	 ,0 			,1 				  ,'Home Phone' 					,'Contact' 	  ,NULL,  1 ),
+	     ( 7,           'phone' 				 ,1  	      ,0 			,1 	,'User and User Admin Only' ,0 		 	 ,0 			,1 				  ,'Otthon telefonszám' 					,'Contact' 	  ,NULL,  1 ),
 	     ( 7,           'phone' 				 ,1  	      ,0 			,2 	,'User and User Admin Only' ,0 		 	 ,0 			,1 				  ,'Home Mobile' 					,'Contact' 	  ,NULL, 2 ),
 	     ( 7, 			     'street_address', 		  1, 		   0, 			3, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'Primary Address',		'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'city',				  1, 		   0, 			4, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'Város',  						'Contact', 	   NULL,  NULL),
@@ -5788,7 +5788,7 @@ INSERT INTO civicrm_uf_field
        (  8,           'country',               0,           0,           4,      'User and User Admin Only', 0,           0,             1,                'Country (Home)',        		'Contact',     NULL,  NULL),
        (  8,           'state_province',        0,           0,           5,      'User and User Admin Only', 0,           0,             1,                'State (Home)',          		'Contact',     NULL,  NULL),
        (  9,           'organization_name',     1,           0,           1,      'User and User Admin Only',  0,           0,             NULL,             'Szervezet neve',              'Organization',NULL,  NULL),
-       (  9,           'phone',                 1,           0,           2,      'User and User Admin Only',  0,           0,             3,             'Phone (Main) ',                  'Contact',    NULL,   1),
+       (  9,           'phone',                 1,           0,           2,      'User and User Admin Only',  0,           0,             3,             'Elsődleges telefonszám',                  'Contact',    NULL,   1),
        (  9,           'email',                 1,           0,           3,      'User and User Admin Only',  0,           0,             3,             'Email (Main) ',                  'Contact',    NULL,   NULL),
        (  9,           'street_address',        1,           0,           4,      'User and User Admin Only',  0,           0,             3,             'Utca',                 'Contact',    NULL,   NULL),
        (  9,           'city',                  1,           0,           5,      'User and User Admin Only',  0,           0,             3,             'Város',                           'Contact',    NULL,   NULL),
@@ -5800,12 +5800,12 @@ INSERT INTO civicrm_uf_field
        ( 10,     'contribution_status_id',      1, 1, 3, 'User and User Admin Only', 0, 0, NULL, 'Állapot', 'Contribution', NULL, NULL ),
        ( 10,     'receive_date',                1, 1, 4, 'User and User Admin Only', 0, 0, NULL, 'Beérkezett', 'Contribution', NULL, NULL ),
        ( 10,     'contribution_source',         0, 0, 5, 'User and User Admin Only', 0, 0, NULL, 'Forrás', 'Contribution', NULL, NULL ),
-       ( 10,     'payment_instrument',          0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'Fizetve', 'Contribution', NULL, NULL ),
+       ( 10,     'payment_instrument',          0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'Paid By', 'Contribution', NULL, NULL ),
        ( 10,     'check_number',                0, 0, 7, 'User and User Admin Only', 0, 0, NULL, 'Check Number', 'Contribution', NULL, NULL ),
        ( 10,     'send_receipt',                0, 0, 8, 'User and User Admin Only', 0, 0, NULL, 'Send Receipt', 'Contribution', NULL, NULL ),
        ( 10,     'invoice_id',                  0, 0, 9, 'User and User Admin Only', 0, 0, NULL, 'Számla azonosító', 'Contribution', NULL, NULL ),
        ( 11,     'membership_type',             1, 1, 1, 'User and User Admin Only', 0, 0, NULL, 'Típus', 'Membership', NULL, NULL ),
-       ( 11,     'join_date',                   1, 1, 2, 'User and User Admin Only', 0, 0, NULL, 'Tagság kezdete', 'Membership', NULL, NULL ),
+       ( 11,     'join_date',                   1, 1, 2, 'User and User Admin Only', 0, 0, NULL, 'Member Since', 'Membership', NULL, NULL ),
        ( 11,     'membership_start_date',       0, 1, 3, 'User and User Admin Only', 0, 0, NULL, 'Kezdete', 'Membership', NULL, NULL ),
        ( 11,     'membership_end_date',         0, 1, 4, 'User and User Admin Only', 0, 0, NULL, 'Befejezése', 'Membership', NULL, NULL ),
        ( 11,     'membership_source',           0, 0, 5, 'User and User Admin Only', 0, 0, NULL, 'Forrás', 'Membership', NULL, NULL ),
@@ -5814,9 +5814,9 @@ INSERT INTO civicrm_uf_field
        ( 11,     'contribution_type',           1, 1, 7, 'User and User Admin Only', 0, 0, NULL, 'Hozzájárulás típus', 'Membership', NULL, NULL ),
        ( 11,     'total_amount',                1, 1, 8, 'User and User Admin Only', 0, 0, NULL, 'Összeg', 'Membership', NULL, NULL ),
        ( 11,     'receive_date',                1, 1, 9, 'User and User Admin Only', 0, 0, NULL, 'Beérkezett', 'Membership', NULL, NULL ),
-       ( 11,     'payment_instrument',          0, 0, 10, 'User and User Admin Only', 0, 0, NULL, 'Fizetve', 'Membership', NULL, NULL ),
+       ( 11,     'payment_instrument',          0, 0, 10, 'User and User Admin Only', 0, 0, NULL, 'Paid By', 'Membership', NULL, NULL ),
        ( 11,     'check_number',                0, 0, 11, 'User and User Admin Only', 0, 0, NULL, 'Check Number', 'Membership', NULL, NULL ),
-       ( 11,     'contribution_status_id',      1, 1, 12, 'User and User Admin Only', 0, 0, NULL, 'Fizetési státusz', 'Membership', NULL, NULL ),
+       ( 11,     'contribution_status_id',      1, 1, 12, 'User and User Admin Only', 0, 0, NULL, 'Payment Status', 'Membership', NULL, NULL ),
        ( 12,     'email',                       1, 0, 1, 'User and User Admin Only', 0, 0, NULL, 'Email cím', 'Contact', NULL, NULL);
 
 
@@ -18548,7 +18548,7 @@ INSERT INTO `civicrm_dashboard`
     ( `domain_id`, `label`, `url`, `permission`, `permission_operator`, `column_no`, `is_minimized`, `is_active`, `weight`, `fullscreen_url`, `is_fullscreen`, `is_reserved`) 
     VALUES 
     ( @domainID, 'Tevékenységek', 'civicrm/dashlet/activity&reset=1&snippet=5', 'access CiviCRM', NULL, 0, 0, 1, 1, 'civicrm/dashlet/activity&reset=1&snippet=5&context=dashletFullscreen', 1, 1),
-    ( @domainID, 'My Cases', 'civicrm/dashlet/myCases&reset=1&snippet=5', 'access my cases and activities', NULL , 0, 0, 1, 2, 'civicrm/dashlet/myCases&reset=1&snippet=5&context=dashletFullscreen', 1, 1),
+    ( @domainID, 'Ügyeim', 'civicrm/dashlet/myCases&reset=1&snippet=5', 'access my cases and activities', NULL , 0, 0, 1, 2, 'civicrm/dashlet/myCases&reset=1&snippet=5&context=dashletFullscreen', 1, 1),
     ( @domainID, 'All Cases', 'civicrm/dashlet/allCases&reset=1&snippet=5', 'access all cases and activities', NULL , 0, 0, 1, 3, 'civicrm/dashlet/allCases&reset=1&snippet=5&context=dashletFullscreen', 1, 1),
     ( @domainID, 'Case Dashboard Dashlet', 'civicrm/dashlet/casedashboard&reset=1&snippet=5', 'access CiviCase', NULL , 0, 0, 1, 4, 'civicrm/dashlet/casedashboard&reset=1&snippet=5&context=dashletFullscreen', 1, 1);
 
@@ -19446,4 +19446,4 @@ INSERT INTO civicrm_navigation
 VALUES
     ( @domainID, CONCAT('civicrm/report/instance/', @instanceID,'&reset=1'), 'Mailing Detail Report', 'Mailing Detail Report', 'administer CiviMail', 'OR', @reportlastID, '1', NULL, @instanceID+2 );
 UPDATE civicrm_report_instance SET navigation_id = LAST_INSERT_ID() WHERE id = @instanceID;
- UPDATE civicrm_domain SET version = '4.2.7';
+ UPDATE civicrm_domain SET version = '4.2.8';

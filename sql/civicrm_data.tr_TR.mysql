@@ -4407,7 +4407,7 @@ VALUES
     ('Mailing Header','Header','Descriptive Title for this Header','Sample Header for HTML formatted content.','Sample Header for TEXT formatted content.',1,1),
     ('Mailing Footer','Footer','Descriptive Title for this Footer.','Sample Footer for HTML formatted content<br/><a href=\"{action.optOutUrl}\">Unsubscribe</a>  <br/> {domain.address}','to unsubscribe: {action.optOutUrl}\n{domain.address}',1,1),
     ('Subscribe Message','Subscribe','Subscription Confirmation Request','You have a pending subscription to the {subscribe.group} mailing list. To confirm this subscription, reply to this email or click <a href=\"{subscribe.url}\">here</a>.','You have a pending subscription to the {subscribe.group} mailing list. To confirm this subscription, reply to this email or click on this link: {subscribe.url}',1,1),
-    ('Hoşgeldiniz İletisi','Welcome','Your Subscription has been Activated','Welcome. Your subscription to the {welcome.group} mailing list has been activated.','Welcome. Your subscription to the {welcome.group} mailing list has been activated.',1,1),
+    ('Hoş Geldiniz İletisi','Welcome','Your Subscription has been Activated','Welcome. Your subscription to the {welcome.group} mailing list has been activated.','Welcome. Your subscription to the {welcome.group} mailing list has been activated.',1,1),
     ('Unsubscribe Message','Unsubscribe','Un-subscribe Confirmation','You have been un-subscribed from the following groups: {unsubscribe.group}. You can re-subscribe by mailing {action.resubscribe} or clicking <a href=\"{action.resubscribeUrl}\">here</a>.','You have been un-subscribed from the following groups: {unsubscribe.group}. You can re-subscribe by mailing {action.resubscribe} or clicking %3',1,1),
     ('Resubscribe Message','Resubscribe','Re-subscribe Confirmation','You have been re-subscribed to the following groups: {resubscribe.group}. You can un-subscribe by mailing {action.unsubscribe} or clicking <a href=\"{action.unsubscribeUrl}\">here</a>.','You have been re-subscribed to the following groups: {resubscribe.group}. You can un-subscribe by mailing {action.unsubscribe} or clicking {action.unsubscribeUrl}',1,1),
     ('Opt-out Message','OptOut','Opt-out Confirmation','Your email address has been removed from {domain.name} mailing lists.','Your email address has been removed from {domain.name} mailing lists.',1,1),
@@ -4419,10 +4419,10 @@ VALUES
 INSERT INTO
    civicrm_contribution_type(name, is_reserved, is_active, is_deductible)
 VALUES
-  ( 'Donation'             , 0, 1, 1 ),
+  ( 'Bağış'             , 0, 1, 1 ),
   ( 'Member Dues'          , 0, 1, 1 ),
   ( 'Campaign Contribution', 0, 1, 0 ),
-  ( 'Event Fee'            , 0, 1, 0 );
+  ( 'Etkinlik ücreti'            , 0, 1, 0 );
 
 -- option groups and values for 'preferred communication methods' , 'activity types', 'gender', etc.
 
@@ -4430,7 +4430,7 @@ INSERT INTO
    `civicrm_option_group` (`name`, `title`, `is_reserved`, `is_active`)
 VALUES
    ('preferred_communication_method', 'Tercih Edilen İletişim Yöntemi'     , 1, 1),
-   ('activity_type'                 , 'Etkinlik Türü'                      , 1, 1),
+   ('activity_type'                 , 'İşlem Türü'                      , 1, 1),
    ('gender'                        , 'Cinsiyet'                             , 1, 1),
    ('instant_messenger_service'     , 'Instant Messenger (IM) screen-names', 1, 1),
    ('mobile_provider'               , 'Mobile Phone Providers'             , 1, 1),
@@ -4453,7 +4453,7 @@ VALUES
    ('grant_type'                    , 'Grant Type'                         , 1, 1),
    ('honor_type'                    , 'Honor Type'                         , 1, 1),
    ('custom_search'                 , 'Gelişmiş Arama'                      , 1, 1),
-   ('activity_status'               , 'Etkinlik Durumu'                    , 1, 1),
+   ('activity_status'               , 'İşlem Durumu'                    , 1, 1),
    ('case_type'                     , 'Case Type'                          , 1, 1),
    ('case_status'                   , 'Case Status'                        , 1, 1),
    ('participant_listing'           , 'Participant Listing'                , 1, 1),
@@ -4486,7 +4486,7 @@ VALUES
    ('mail_approval_status'          , 'CiviMail Approval Status'           , 1, 1),
    ('engagement_index'              , 'Engagement Index'                   , 1, 1),
    ('cg_extend_objects'             , 'Objects a custom group extends to'  , 1, 1),
-   ('paper_size'                    , 'Paper Size'                         , 1, 1),
+   ('paper_size'                    , 'Kağıt boyutu'                         , 1, 1),
    ('pdf_format'                    , 'PDF Page Format'                    , 1, 1),
    ('label_format'                  , 'Mailing Label Format'               , 1, 1),
    ('activity_contacts'             , 'Activity Contacts'                  , 1, 1),
@@ -4587,9 +4587,9 @@ VALUES
 
    (@option_group_id_act, 'Toplantı',                            1, 'Meeting', NULL, 0, NULL, 1, NULL,                       				                                                0, 1, 1, NULL, NULL),
    (@option_group_id_act, 'Telefon Görüşmesi',                         2, 'Phone Call',          NULL, 0, NULL, 2, NULL,                                                          				0, 1, 1, NULL, NULL),
-   (@option_group_id_act, 'E-posta',                              3, 'Email',               NULL, 1, NULL, 3, 'Email sent.',                                                          0, 1, 1, NULL, NULL),
-   (@option_group_id_act, 'Text Message (SMS)',                 4, 'SMS',                 NULL, 1, NULL, 4, 'Text message (SMS) sent.',                                             0, 1, 1, NULL, NULL),
-   (@option_group_id_act, 'Event Registration',                 5, 'Event Registration',  NULL, 1, NULL, 5, 'Online or offline event registration.',                                0, 1, 1, @eventCompId, NULL),
+   (@option_group_id_act, 'E-posta',                              3, 'Email',               NULL, 1, NULL, 3, 'E-posta gönderildi.',                                                          0, 1, 1, NULL, NULL),
+   (@option_group_id_act, 'Kısa mesaj (SMS)',                 4, 'SMS',                 NULL, 1, NULL, 4, 'Kısa mesaj (SMS) gönderildi.',                                             0, 1, 1, NULL, NULL),
+   (@option_group_id_act, 'Etkinlik kaydı',                 5, 'Event Registration',  NULL, 1, NULL, 5, 'Online or offline event registration.',                                0, 1, 1, @eventCompId, NULL),
    (@option_group_id_act, 'Bağış',                       6, 'Contribution',        NULL, 1, NULL, 6, 'Online or offline contribution.',                                      0, 1, 1, @contributeCompId, NULL),
    (@option_group_id_act, 'Membership Signup',                  7, 'Membership Signup',   NULL, 1, NULL, 7, 'Online or offline membership signup.',                                 0, 1, 1, @memberCompId, NULL),
    (@option_group_id_act, 'Membership Renewal',                 8, 'Membership Renewal',  NULL, 1, NULL, 8, 'Online or offline membership renewal.',                                0, 1, 1, @memberCompId, NULL),
@@ -4617,7 +4617,7 @@ VALUES
    (@option_group_id_act, 'Add Client To Case',                 27, 'Add Client To Case', NULL,0, 0, 26, '', 0, 1, 1, @caseCompId, NULL),
 
 -- Activity Types for CiviCampaign
-   (@option_group_id_act, 'Survey',                             28, 'Survey', NULL,0, 0, 27, '', 0, 1, 1, @campaignCompId, NULL),
+   (@option_group_id_act, 'Anket',                             28, 'Survey', NULL,0, 0, 27, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'Canvass',                            29, 'Canvass', NULL,0, 0, 28, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'PhoneBank',                          30, 'PhoneBank', NULL,0, 0, 29, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'WalkList',                           31, 'WalkList', NULL,0, 0, 30, '', 0, 1, 1, @campaignCompId, NULL),
@@ -4637,8 +4637,8 @@ VALUES
 
    (@option_group_id_act, 'Reminder Sent',      		      40, 'Reminder Sent', NULL, 1, 0, 40, '', 0, 1, 1, NULL, NULL),
 
-   (@option_group_id_gender, 'Female',      1, 'Female',      NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_gender, 'Male',        2, 'Male',        NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_gender, 'Kadın',      1, 'Female',      NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_gender, 'Erkek',        2, 'Male',        NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_gender, 'Transgender', 3, 'Transgender', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
 
    (@option_group_id_IMProvider, 'Yahoo', 1, 'Yahoo', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
@@ -4674,38 +4674,38 @@ VALUES
    (@option_group_id_acc, 'Amex'      ,  3, 'Amex'      , NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_acc, 'Discover'  ,  4, 'Discover'  , NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
 
-  (@option_group_id_pi, 'Credit Card',  1, 'Credit Card', NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_pi, 'Debit Card',   2, 'Debit Card',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_pi, 'Cash',         3, 'Cash',        NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_pi, 'Check',        4, 'Check',       NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_pi, 'EFT',          5, 'EFT',         NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pi, 'Kredi kartı',  1, 'Credit Card', NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pi, 'Ön ödemeli kart',   2, 'Debit Card',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pi, 'Nakit',         3, 'Cash',        NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pi, 'Çek',        4, 'Check',       NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pi, 'Havale/EFT',          5, 'EFT',         NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
 
-  (@option_group_id_cs, 'Completed'  , 1, 'Completed'  , NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_cs, 'Bekleyen'    , 2, 'Pending'    , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_cs, 'Cancelled'  , 3, 'Cancelled'  , NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_cs, 'Failed'     , 4, 'Failed'     , NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_cs, 'In Progress', 5, 'In Progress', NULL, 0, NULL, 5, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cs, 'Tamamlandı'  , 1, 'Completed'  , NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cs, 'Beklemede'    , 2, 'Pending'    , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cs, 'İptal edildi'  , 3, 'Cancelled'  , NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cs, 'Başarısız oldu'     , 4, 'Failed'     , NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cs, 'Sürüyor', 5, 'In Progress', NULL, 0, NULL, 5, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_cs, 'Overdue'    , 6, 'Overdue'    , NULL, 0, NULL, 6, NULL, 0, 1, 1, NULL, NULL),
 
-  (@option_group_id_pcp, 'Waiting Review', 1, 'Waiting Review', NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_pcp, 'Approved'      , 2, 'Approved'      , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_pcp, 'Not Approved'  , 3, 'Not Approved'  , NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pcp, 'İnceleme bekliyor', 1, 'Waiting Review', NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pcp, 'Onaylandı'      , 2, 'Approved'      , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pcp, 'Onaylanmadı'  , 3, 'Not Approved'  , NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
 
-  (@option_group_id_pRole, 'Attendee',  1, 'Attendee',  NULL, 1, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pRole, 'Katılımcı',  1, 'Attendee',  NULL, 1, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_pRole, 'Volunteer', 2, 'Volunteer', NULL, 1, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_pRole, 'Host',      3, 'Host',      NULL, 1, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_pRole, 'Speaker',   4, 'Speaker',   NULL, 1, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pRole, 'Ev sahibi',      3, 'Host',      NULL, 1, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pRole, 'Konuşmacı',   4, 'Speaker',   NULL, 1, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
 
-  (@option_group_id_etype, 'Conference', 1, 'Conference',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_etype, 'Exhibition', 2, 'Exhibition',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_etype, 'Konferans', 1, 'Conference',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_etype, 'Sergi', 2, 'Exhibition',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_etype, 'Fundraiser', 3, 'Fundraiser',  NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_etype, 'Toplantı',    4, 'Meeting',     NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_etype, 'Performance',5, 'Performance', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_etype, 'Workshop',   6, 'Workshop',    NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_etype, 'Atöyle',   6, 'Workshop',    NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
 
 -- note that these are not ts'ed since they are used for logic in most cases and not display
 -- they are used for display only in the prefernces field settings
-  (@option_group_id_cvOpt, 'Etkinlikler'   ,   1, 'activity', NULL, 0, NULL,  1,  NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_cvOpt, 'İşlemler'   ,   1, 'activity', NULL, 0, NULL,  1,  NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'İlişkiler',   2, 'rel', NULL, 0, NULL,  2,  NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'Gruplar'       ,   3, 'group', NULL, 0, NULL,  3,  NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_cvOpt, 'Notlar'        ,   4, 'note', NULL, 0, NULL,  4,  NULL, 0, 0, 1, NULL, NULL),
@@ -4720,10 +4720,10 @@ VALUES
 
   (@option_group_id_ceOpt, 'Özel Veri'              ,   1, 'CustomData', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Adres'                  ,   2, 'Address', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_ceOpt, 'Communication Preferences',   3, 'CommunicationPreferences', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_ceOpt, 'İletişim Tercihleri',   3, 'CommunicationPreferences', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Notlar'                    ,   4, 'Notes', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Demografi'             ,   5, 'Demographics', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_ceOpt, 'Tags and Groups'          ,   6, 'TagsAndGroups', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_ceOpt, 'Etiketler ve Gruplar'          ,   6, 'TagsAndGroups', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'E-posta'                    ,   7, 'Email', NULL, 1, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Telefon'                    ,   8, 'Phone', NULL, 1, NULL, 8, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'IM'        ,   9, 'IM', NULL, 1, NULL, 9, NULL, 0, 0, 1, NULL, NULL),
@@ -4732,10 +4732,10 @@ VALUES
 
   (@option_group_id_asOpt, 'Adres Alanları'          ,   1, 'location', NULL, 0, NULL,  1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Özel Alanlar'           ,   2, 'custom', NULL, 0, NULL,  2, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_asOpt, 'Etkinlikler'              ,   3, 'activity', NULL, 0, NULL,  4, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_asOpt, 'İşlemler'              ,   3, 'activity', NULL, 0, NULL,  4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'İlişkiler'           ,   4, 'relationship', NULL, 0, NULL,  5, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Notlar'                   ,   5, 'notes', NULL, 0, NULL,  6, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_asOpt, 'Change Log'              ,   6, 'changeLog', NULL, 0, NULL,  7, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_asOpt, 'Değiştir Log'              ,   6, 'changeLog', NULL, 0, NULL,  7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Yardımlar'           ,   7, 'CiviContribute', NULL, 0, NULL,  8, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Üyelikler'             ,   8, 'CiviMember', NULL, 0, NULL,  9, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Etkinlikler'                  ,   9, 'CiviEvent', NULL, 0, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
@@ -4757,24 +4757,24 @@ VALUES
   (@option_group_id_udOpt, 'Kişisel Kampanya Sayfaları'    , 8, 'PCP', NULL, 0, NULL, 8, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Assigned Activities'        , 9, 'Assigned Activities', NULL, 0, NULL, 9, NULL, 0, 0, 1, NULL, NULL),
 
-  (@option_group_id_acsOpt, 'Eposta Adresi'   , 2, 'email'         , NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acsOpt, 'E-posta Adresi'   , 2, 'email'         , NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_acsOpt, 'Telefon'           , 3, 'phone'         , NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_acsOpt, 'Sokak Adresi'  , 4, 'street_address', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_acsOpt, 'Şehir'            , 5, 'city'          , NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_acsOpt, 'İl / Eyalet'  , 6, 'state_province', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acsOpt, 'İlçe'            , 5, 'city'          , NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acsOpt, 'İl/Eyalet'  , 6, 'state_province', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_acsOpt, 'Ülke'         , 7, 'country'       , NULL, 0, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
 
-  (@option_group_id_acConRef, 'Eposta Adresi'   , 2, 'email'         , NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acConRef, 'E-posta Adresi'   , 2, 'email'         , NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_acConRef, 'Telefon'           , 3, 'phone'         , NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_acConRef, 'Sokak Adresi'  , 4, 'street_address', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_acConRef, 'Şehir'            , 5, 'city'          , NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_acConRef, 'İl / Eyalet'  , 6, 'state_province', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acConRef, 'İlçe'            , 5, 'city'          , NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acConRef, 'İl/Eyalet'  , 6, 'state_province', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_acConRef, 'Ülke'         , 7, 'country'       , NULL, 0, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
 
   (@option_group_id_adOpt, 'Sokak Adresi'    ,  1, 'street_address', NULL, 0, NULL,  1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Ek Adres 1'  ,  2, 'supplemental_address_1', NULL, 0, NULL,  2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Ek Adres 2'  ,  3, 'supplemental_address_2', NULL, 0, NULL,  3, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_adOpt, 'Şehir'              ,  4, 'city'          , NULL, 0, NULL,  4, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_adOpt, 'İlçe'              ,  4, 'city'          , NULL, 0, NULL,  4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Posta Kodu' ,  5, 'postal_code'   , NULL, 0, NULL,  5, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Posta Kodu Eki',  6, 'postal_code_suffix', NULL, 0, NULL,  6, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Coğrafi Bölge'            ,  7, 'county'        , NULL, 0, NULL,  7, NULL, 0, 0, 1, NULL, NULL),
@@ -4788,7 +4788,7 @@ VALUES
   (@option_group_id_gType, 'Access Control'  , 1, NULL, NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_gType, 'Mailing List'    , 2, NULL, NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
 
-  (@option_group_id_grantSt, 'Bekleyen',  1, 'Pending',  NULL, 0, 1,    1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_grantSt, 'Beklemede',  1, 'Pending',  NULL, 0, 1,    1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_grantSt, 'Granted',  2, 'Granted',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_grantSt, 'Rejected', 3, 'Rejected', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_honorTyp, 'In Honor of'        , 1, 'In Honor of'       , NULL, 0, 1,    1, NULL, 0, 1, 1, NULL, NULL),
@@ -4861,8 +4861,8 @@ VALUES
   (@option_group_id_report, 'Contribution and Membership Details', 'member/contributionDetail', 'CRM_Report_Form_Member_ContributionDetail', NULL, 0, NULL, 48, 'Contribution details for any type of contribution, plus associated membership information for contributions which are in payment for memberships.', 0, 0, 1, @memberCompId, NULL),
 
   (@option_group_id_acs, 'Scheduled',  1, 'Scheduled',  NULL, 0, 1,    1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_acs, 'Completed',  2, 'Completed',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_acs, 'Cancelled',  3, 'Cancelled',  NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_acs, 'Tamamlandı',  2, 'Completed',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_acs, 'İptal edildi',  3, 'Cancelled',  NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_acs, 'Left Message', 4, 'Left Message', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_acs, 'Unreachable', 5, 'Unreachable', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_acs, 'Not Required',  6, 'Not Required',  NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
@@ -4911,7 +4911,7 @@ VALUES
   (@option_group_id_mt, 'Export Activity',    14, 'Export Activity',     NULL, 0, 0,   14, NULL, 0, 1, 1, NULL, NULL),
 
   (@option_group_id_fu, 'gün'    , 'day'  ,    'day',  NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_fu, 'week'   , 'week' ,   'week',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_fu, 'hafta'   , 'week' ,   'week',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_fu, 'ay'  , 'month',  'month',  NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_fu, 'yıl'   , 'year' ,   'year',  NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
 
@@ -5003,9 +5003,9 @@ VALUES
 
 -- Campaign Status
   (@option_group_id_campaignStatus, 'Planned', 1, 'Planned',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_campaignStatus, 'In Progress', 2, 'In Progress',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_campaignStatus, 'Completed', 3, 'Completed',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_campaignStatus, 'Cancelled', 4, 'Cancelled',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_campaignStatus, 'Sürüyor', 2, 'In Progress',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_campaignStatus, 'Tamamlandı', 3, 'Completed',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_campaignStatus, 'İptal edildi', 4, 'Cancelled',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
 
 -- Engagement Level
   (@option_group_id_engagement_index, '1', 1, '1',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL ),
@@ -5140,12 +5140,12 @@ VALUES
   (@option_group_id_grantTyp, 'Impunity'           , 4, 'Impunity'          , NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, @domainID, NULL),
 
 -- Mail Approval Status Preferences
-  (@option_group_id_mail_approval_status, 'Approved' , 1, 'Approved', NULL, 0, 1, 1, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
+  (@option_group_id_mail_approval_status, 'Onaylandı' , 1, 'Approved', NULL, 0, 1, 1, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
   (@option_group_id_mail_approval_status, 'Rejected' , 2, 'Rejected', NULL, 0, 0, 2, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
   (@option_group_id_mail_approval_status, 'None' , 3, 'None', NULL, 0, 0, 3, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
 
 -- custom group objects
-  (@option_group_id_cgeo, 'Survey', 'Survey', 'civicrm_survey', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL, NULL),
+  (@option_group_id_cgeo, 'Anket', 'Survey', 'civicrm_survey', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL, NULL),
   (@option_group_id_cgeo, 'Vakalar',  'Case', 'civicrm_case',     NULL, 0, NULL, 2, 'CRM_Case_PseudoConstant::caseType;', 0, 0, 1, NULL, NULL, NULL);
 
 -- CRM-6138
@@ -5382,8 +5382,8 @@ VALUES
     ('Current',   'Current', 'start_date', null, null,'end_date', null, null, 1, 0, 2, 1, 1, 0),
     ('Grace',     'Grace', 'end_date', null, null,'end_date','month', 1, 1, 0, 3, 0, 1, 0),
     ('Expired',   'Expired', 'end_date', 'month', 1, null, null, null, 0, 0, 4, 0, 1, 0),
-    ('Pending',   'Bekleyen', 'join_date', null, null,'join_date',null,null, 0, 0, 5, 0, 1, 1),
-    ('Cancelled', 'Cancelled', 'join_date', null, null,'join_date',null,null, 0, 0, 6, 0, 1, 0),
+    ('Pending',   'Beklemede', 'join_date', null, null,'join_date',null,null, 0, 0, 5, 0, 1, 1),
+    ('Cancelled', 'İptal edildi', 'join_date', null, null,'join_date',null,null, 0, 0, 6, 0, 1, 0),
     ('Deceased',  'Deceased', null, null, null, null, null, null, 0, 1, 7, 0, 1, 1);
 
 
@@ -5408,10 +5408,10 @@ INSERT INTO `civicrm_payment_processor_type`
  (name, title, description, is_active, is_default, user_name_label, password_label, signature_label, subject_label, class_name, url_site_default, url_api_default, url_recur_default, url_button_default, url_site_test_default, url_api_test_default, url_recur_test_default, url_button_test_default, billing_mode, is_recur )
 VALUES
  ('PayPal_Standard',    'PayPal - Website Payments Standard', NULL,1,0,'Merchant Account Email',NULL,NULL,NULL,'Payment_PayPalImpl','https://www.paypal.com/',NULL,'https://www.paypal.com/',NULL,'https://www.sandbox.paypal.com/',NULL,'https://www.sandbox.paypal.com/',NULL,4,1),
- ('PayPal',             'PayPal - Website Payments Pro',      NULL,1,0,'Kullanıcı Adı','Parol','İmza',NULL,'Payment_PayPalImpl','https://www.paypal.com/','https://api-3t.paypal.com/','https://www.paypal.com/','https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif','https://www.sandbox.paypal.com/','https://api-3t.sandbox.paypal.com/','https://www.sandbox.paypal.com/','https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif',3, 1 ),
- ('PayPal_Express',     'PayPal - Express',       NULL,1,0,'Kullanıcı Adı','Parol','İmza',NULL,'Payment_PayPalImpl','https://www.paypal.com/','https://api-3t.paypal.com/',NULL,'https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif','https://www.sandbox.paypal.com/','https://api-3t.sandbox.paypal.com/',NULL,'https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif',2,NULL),
+ ('PayPal',             'PayPal - Website Payments Pro',      NULL,1,0,'Kullanıcı Adı','Parola','İmza',NULL,'Payment_PayPalImpl','https://www.paypal.com/','https://api-3t.paypal.com/','https://www.paypal.com/','https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif','https://www.sandbox.paypal.com/','https://api-3t.sandbox.paypal.com/','https://www.sandbox.paypal.com/','https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif',3, 1 ),
+ ('PayPal_Express',     'PayPal - Express',       NULL,1,0,'Kullanıcı Adı','Parola','İmza',NULL,'Payment_PayPalImpl','https://www.paypal.com/','https://api-3t.paypal.com/',NULL,'https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif','https://www.sandbox.paypal.com/','https://api-3t.sandbox.paypal.com/',NULL,'https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif',2,NULL),
  ('Google_Checkout',    'Google Checkout',        NULL,1,0,'Merchant ID','Key',NULL,NULL,'Payment_Google','https://checkout.google.com/',NULL,'https://checkout.google.com/','https://checkout.google.com/buttons/checkout.gif?merchant_id=YOURMERCHANTIDHERE&w=160&h=43&style=white&variant=text&loc=en_US','https://sandbox.google.com/checkout/',NULL,'https://sandbox.google.com/checkout/','https://sandbox.google.com/checkout/buttons/checkout.gif?merchant_id=YOURMERCHANTIDHERE&w=160&h=43&style=white&variant=text&loc=en_US',4,1),
- ('Moneris',            'Moneris',                NULL,1,0,'Kullanıcı Adı','Parol','Store ID',NULL,'Payment_Moneris','https://www3.moneris.com/',NULL,NULL,NULL,'https://esqa.moneris.com/',NULL,NULL,NULL,1,1),
+ ('Moneris',            'Moneris',                NULL,1,0,'Kullanıcı Adı','Parola','Store ID',NULL,'Payment_Moneris','https://www3.moneris.com/',NULL,NULL,NULL,'https://esqa.moneris.com/',NULL,NULL,NULL,1,1),
  ('AuthNet',            'Authorize.Net',          NULL,1,0,'API Login','Payment Key','MD5 Hash',NULL,'Payment_AuthorizeNet','https://secure.authorize.net/gateway/transact.dll',NULL,'https://api.authorize.net/xml/v1/request.api',NULL,'https://test.authorize.net/gateway/transact.dll',NULL,'https://apitest.authorize.net/xml/v1/request.api',NULL,1,1),
  ('PayJunction',        'PayJunction',            NULL,1,0,'User Name','Password',NULL,NULL,'Payment_PayJunction','https://payjunction.com/quick_link',NULL,NULL,NULL,'https://www.payjunctionlabs.com/quick_link',NULL,NULL,NULL,1,1),
  ('eWAY',               'eWAY (Single Currency)', NULL,1,0,'Customer ID',NULL,NULL,NULL,'Payment_eWAY','https://www.eway.com.au/gateway_cvn/xmlpayment.asp',NULL,NULL,NULL,'https://www.eway.com.au/gateway_cvn/xmltest/testpage.asp',NULL,NULL,NULL,1,0),
@@ -5732,7 +5732,7 @@ INSERT INTO civicrm_uf_group
     'On Behalf Of Organization'    , 0,           1,           NULL),
     (10,  'contribution_batch_entry', 'Contribution', 'Contribution Bulk Entry' , 0,      1,           NULL),
     (11,  'membership_batch_entry', 'Membership', 'Membership Bulk Entry' , 0,      1,           NULL),
-    (12, 'event_registration', 'Individual, Contact', 'Your Registration Info',        0,      0,           NULL);
+    (12, 'event_registration', 'Individual, Contact', 'Kayıt Bilgileriniz',        0,      0,           NULL);
 
 INSERT INTO civicrm_uf_join
    (is_active,module,entity_table,entity_id,weight,uf_group_id)
@@ -5762,20 +5762,20 @@ INSERT INTO civicrm_uf_field
        (  1,           'state_province',        0,           0,           7,      'User and User Admin Only', 0,           0,             1,                'State (Home)',          		'Contact',     NULL,  NULL),
        (  2,           'first_name',            1,           0,           1,      'User and User Admin Only',  0,           0,             NULL,             'İlk Ad',            		'Individual',  NULL,  NULL),
        (  2,           'last_name',             1,           0,           2,      'User and User Admin Only',  0,           0,             NULL,             'Soyadı',             		'Individual',  NULL,  NULL),
-       ( 2,           'email',                 1,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'Eposta Adresi',         		'Contact',     NULL,  NULL),
+       ( 2,           'email',                 1,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'E-posta Adresi',         		'Contact',     NULL,  NULL),
        ( 3,           'participant_status', 1,           1,           1,      'User and User Admin Only',  0,           0,             NULL,             'Katılımcı Durumu',    		'Participant', NULL,  NULL),
        ( 4,           'first_name',            1,           0,           1,      'User and User Admin Only',  0,           0,             NULL,             'İlk Ad',            		'Individual',  NULL,  NULL),
        ( 4,           'last_name',             1,           0,           2,      'User and User Admin Only',  0,           0,             NULL,             'Soyadı',             		'Individual',  NULL,  NULL),
-       ( 4,           'email',                 0,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'Eposta Adresi',         		'Contact',     NULL,  NULL),
-       ( 5,           'organization_name',     1,           0,           2,      'User and User Admin Only',  0,           0,             NULL,             'Kuruluşun Adı',     		'Organization',NULL,  NULL),
-       ( 5,           'email',                 0,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'Eposta Adresi',         		'Contact',     NULL,  NULL),
+       ( 4,           'email',                 0,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'E-posta Adresi',         		'Contact',     NULL,  NULL),
+       ( 5,           'organization_name',     1,           0,           2,      'User and User Admin Only',  0,           0,             NULL,             'Kuruluş Adı',     		'Organization',NULL,  NULL),
+       ( 5,           'email',                 0,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'E-posta Adresi',         		'Contact',     NULL,  NULL),
        ( 6,           'household_name',        1,           0,           2,      'User and User Admin Only',  0,           0,             NULL,             'Hane Adı',        		'Household',   NULL,  NULL),
-       ( 6,           'email',                 0,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'Eposta Adresi',         		'Contact',     NULL,  NULL),
+       ( 6,           'email',                 0,           0,           3,      'User and User Admin Only',  0,           0,             NULL,             'E-posta Adresi',         		'Contact',     NULL,  NULL),
 	     ( 7,           'phone' 				 ,1  	      ,0 			,1 	,'User and User Admin Only' ,0 		 	 ,0 			,1 				  ,'Home Phone' 					,'Contact' 	  ,NULL,  1 ),
 	     ( 7,           'phone' 				 ,1  	      ,0 			,2 	,'User and User Admin Only' ,0 		 	 ,0 			,1 				  ,'Home Mobile' 					,'Contact' 	  ,NULL, 2 ),
 	     ( 7, 			     'street_address', 		  1, 		   0, 			3, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'Primary Address',		'Contact', 	   NULL,  NULL),
-	     ( 7, 			     'city',				  1, 		   0, 			4, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'Şehir',  						'Contact', 	   NULL,  NULL),
-	     ( 7, 			     'state_province', 		  1, 		   0, 			5, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'İl / Eyalet',  						'Contact', 	   NULL,  NULL),
+	     ( 7, 			     'city',				  1, 		   0, 			4, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'İlçe',  						'Contact', 	   NULL,  NULL),
+	     ( 7, 			     'state_province', 		  1, 		   0, 			5, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'Eyalet',  						'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'postal_code', 		  1, 		   0, 			6, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'Posta Kodu',  				'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'email', 				  1, 		   0, 			7, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'Birincil E-posta',  				'Contact', 	   NULL,  NULL),
 	     ( 7, 			     'group', 				  1, 		   0, 			8, 	  	'User and User Admin Only',  0, 		  0, 			 NULL, 			   'Gruplar',  					'Contact', 	   NULL,  NULL),
@@ -5787,11 +5787,11 @@ INSERT INTO civicrm_uf_field
        (  8,           'postal_code',           0,           0,           3,      'User and User Admin Only',  0,           0,             1,                'Postal Code (Home)',    		'Contact',     NULL,  NULL),
        (  8,           'country',               0,           0,           4,      'User and User Admin Only', 0,           0,             1,                'Country (Home)',        		'Contact',     NULL,  NULL),
        (  8,           'state_province',        0,           0,           5,      'User and User Admin Only', 0,           0,             1,                'State (Home)',          		'Contact',     NULL,  NULL),
-       (  9,           'organization_name',     1,           0,           1,      'User and User Admin Only',  0,           0,             NULL,             'Kuruluşun Adı',              'Organization',NULL,  NULL),
+       (  9,           'organization_name',     1,           0,           1,      'User and User Admin Only',  0,           0,             NULL,             'Kuruluş Adı',              'Organization',NULL,  NULL),
        (  9,           'phone',                 1,           0,           2,      'User and User Admin Only',  0,           0,             3,             'Phone (Main) ',                  'Contact',    NULL,   1),
        (  9,           'email',                 1,           0,           3,      'User and User Admin Only',  0,           0,             3,             'Email (Main) ',                  'Contact',    NULL,   NULL),
        (  9,           'street_address',        1,           0,           4,      'User and User Admin Only',  0,           0,             3,             'Sokak Adresi',                 'Contact',    NULL,   NULL),
-       (  9,           'city',                  1,           0,           5,      'User and User Admin Only',  0,           0,             3,             'Şehir',                           'Contact',    NULL,   NULL),
+       (  9,           'city',                  1,           0,           5,      'User and User Admin Only',  0,           0,             3,             'İlçe',                           'Contact',    NULL,   NULL),
        (  9,           'postal_code',           1,           0,           6,      'User and User Admin Only',  0,           0,             3,             'Posta Kodu',                    'Contact',    NULL,   NULL),
        (  9,           'country',               1,           0,           7,      'User and User Admin Only',  0,           0,             3,             'Ülke',                        'Contact',    NULL,   NULL),
        (  9,           'state_province',        1,           0,           8,      'User and User Admin Only',  0,           0,             3,             'İl / Eyalet',               'Contact',    NULL,   NULL),
@@ -5800,12 +5800,12 @@ INSERT INTO civicrm_uf_field
        ( 10,     'contribution_status_id',      1, 1, 3, 'User and User Admin Only', 0, 0, NULL, 'Durum', 'Contribution', NULL, NULL ),
        ( 10,     'receive_date',                1, 1, 4, 'User and User Admin Only', 0, 0, NULL, 'Alındı', 'Contribution', NULL, NULL ),
        ( 10,     'contribution_source',         0, 0, 5, 'User and User Admin Only', 0, 0, NULL, 'Kaynak', 'Contribution', NULL, NULL ),
-       ( 10,     'payment_instrument',          0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'Ödeme Yapan', 'Contribution', NULL, NULL ),
-       ( 10,     'check_number',                0, 0, 7, 'User and User Admin Only', 0, 0, NULL, 'Numarayı Kontrol Et', 'Contribution', NULL, NULL ),
+       ( 10,     'payment_instrument',          0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'Paid By', 'Contribution', NULL, NULL ),
+       ( 10,     'check_number',                0, 0, 7, 'User and User Admin Only', 0, 0, NULL, 'Check Number', 'Contribution', NULL, NULL ),
        ( 10,     'send_receipt',                0, 0, 8, 'User and User Admin Only', 0, 0, NULL, 'Send Receipt', 'Contribution', NULL, NULL ),
        ( 10,     'invoice_id',                  0, 0, 9, 'User and User Admin Only', 0, 0, NULL, 'Fatura No', 'Contribution', NULL, NULL ),
        ( 11,     'membership_type',             1, 1, 1, 'User and User Admin Only', 0, 0, NULL, 'Tür', 'Membership', NULL, NULL ),
-       ( 11,     'join_date',                   1, 1, 2, 'User and User Admin Only', 0, 0, NULL, 'Den Beri Üye', 'Membership', NULL, NULL ),
+       ( 11,     'join_date',                   1, 1, 2, 'User and User Admin Only', 0, 0, NULL, 'Member Since', 'Membership', NULL, NULL ),
        ( 11,     'membership_start_date',       0, 1, 3, 'User and User Admin Only', 0, 0, NULL, 'Başlangıç Tarihi', 'Membership', NULL, NULL ),
        ( 11,     'membership_end_date',         0, 1, 4, 'User and User Admin Only', 0, 0, NULL, 'Bitiş Tarihi', 'Membership', NULL, NULL ),
        ( 11,     'membership_source',           0, 0, 5, 'User and User Admin Only', 0, 0, NULL, 'Kaynak', 'Membership', NULL, NULL ),
@@ -5814,10 +5814,10 @@ INSERT INTO civicrm_uf_field
        ( 11,     'contribution_type',           1, 1, 7, 'User and User Admin Only', 0, 0, NULL, 'Bağış Türü', 'Membership', NULL, NULL ),
        ( 11,     'total_amount',                1, 1, 8, 'User and User Admin Only', 0, 0, NULL, 'Miktar', 'Membership', NULL, NULL ),
        ( 11,     'receive_date',                1, 1, 9, 'User and User Admin Only', 0, 0, NULL, 'Alındı', 'Membership', NULL, NULL ),
-       ( 11,     'payment_instrument',          0, 0, 10, 'User and User Admin Only', 0, 0, NULL, 'Ödeme Yapan', 'Membership', NULL, NULL ),
-       ( 11,     'check_number',                0, 0, 11, 'User and User Admin Only', 0, 0, NULL, 'Numarayı Kontrol Et', 'Membership', NULL, NULL ),
-       ( 11,     'contribution_status_id',      1, 1, 12, 'User and User Admin Only', 0, 0, NULL, 'Ödeme Durumu', 'Membership', NULL, NULL ),
-       ( 12,     'email',                       1, 0, 1, 'User and User Admin Only', 0, 0, NULL, 'Eposta Adresi', 'Contact', NULL, NULL);
+       ( 11,     'payment_instrument',          0, 0, 10, 'User and User Admin Only', 0, 0, NULL, 'Paid By', 'Membership', NULL, NULL ),
+       ( 11,     'check_number',                0, 0, 11, 'User and User Admin Only', 0, 0, NULL, 'Check Number', 'Membership', NULL, NULL ),
+       ( 11,     'contribution_status_id',      1, 1, 12, 'User and User Admin Only', 0, 0, NULL, 'Payment Status', 'Membership', NULL, NULL ),
+       ( 12,     'email',                       1, 0, 1, 'User and User Admin Only', 0, 0, NULL, 'E-posta Adresi', 'Contact', NULL, NULL);
 
 
 INSERT INTO civicrm_participant_status_type
@@ -5825,7 +5825,7 @@ INSERT INTO civicrm_participant_status_type
   (1,  'Registered',                          'Registered',                          'Positive', 1,           1,         1,          1,      1            ),
   (2,  'Attended',                            'Attended',                            'Positive', 0,           1,         1,          2,      2            ),
   (3,  'No-show',                             'No-show',                             'Negative', 0,           1,         0,          3,      2            ),
-  (4,  'Cancelled',                           'Cancelled',                           'Negative', 1,           1,         0,          4,      2            ),
+  (4,  'Cancelled',                           'İptal edildi',                           'Negative', 1,           1,         0,          4,      2            ),
   (5,  'Pending from pay later',              'Pending from pay later',              'Pending',  1,           1,         1,          5,      2            ),
   (6,  'Pending from incomplete transaction', 'Pending from incomplete transaction', 'Pending',  1,           1,         0,          6,      2            ),
   (7,  'On waitlist',                         'On waitlist',                         'Waiting',  1,           0,         0,          7,      2            ),
@@ -18547,8 +18547,8 @@ INSERT INTO civicrm_mail_settings (domain_id, name, is_default, domain) VALUES (
 INSERT INTO `civicrm_dashboard` 
     ( `domain_id`, `label`, `url`, `permission`, `permission_operator`, `column_no`, `is_minimized`, `is_active`, `weight`, `fullscreen_url`, `is_fullscreen`, `is_reserved`) 
     VALUES 
-    ( @domainID, 'Etkinlikler', 'civicrm/dashlet/activity&reset=1&snippet=5', 'access CiviCRM', NULL, 0, 0, 1, 1, 'civicrm/dashlet/activity&reset=1&snippet=5&context=dashletFullscreen', 1, 1),
-    ( @domainID, 'Olaylarım', 'civicrm/dashlet/myCases&reset=1&snippet=5', 'access my cases and activities', NULL , 0, 0, 1, 2, 'civicrm/dashlet/myCases&reset=1&snippet=5&context=dashletFullscreen', 1, 1),
+    ( @domainID, 'İşlemler', 'civicrm/dashlet/activity&reset=1&snippet=5', 'access CiviCRM', NULL, 0, 0, 1, 1, 'civicrm/dashlet/activity&reset=1&snippet=5&context=dashletFullscreen', 1, 1),
+    ( @domainID, 'Vakalarım', 'civicrm/dashlet/myCases&reset=1&snippet=5', 'access my cases and activities', NULL , 0, 0, 1, 2, 'civicrm/dashlet/myCases&reset=1&snippet=5&context=dashletFullscreen', 1, 1),
     ( @domainID, 'All Cases', 'civicrm/dashlet/allCases&reset=1&snippet=5', 'access all cases and activities', NULL , 0, 0, 1, 3, 'civicrm/dashlet/allCases&reset=1&snippet=5&context=dashletFullscreen', 1, 1),
     ( @domainID, 'Case Dashboard Dashlet', 'civicrm/dashlet/casedashboard&reset=1&snippet=5', 'access CiviCase', NULL , 0, 0, 1, 4, 'civicrm/dashlet/casedashboard&reset=1&snippet=5&context=dashletFullscreen', 1, 1);
 
@@ -19446,4 +19446,4 @@ INSERT INTO civicrm_navigation
 VALUES
     ( @domainID, CONCAT('civicrm/report/instance/', @instanceID,'&reset=1'), 'Mailing Detail Report', 'Mailing Detail Report', 'administer CiviMail', 'OR', @reportlastID, '1', NULL, @instanceID+2 );
 UPDATE civicrm_report_instance SET navigation_id = LAST_INSERT_ID() WHERE id = @instanceID;
- UPDATE civicrm_domain SET version = '4.2.7';
+ UPDATE civicrm_domain SET version = '4.2.8';

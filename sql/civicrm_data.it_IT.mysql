@@ -4375,8 +4375,8 @@ INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, 
 
 -- Sample relationship types
 INSERT INTO civicrm_relationship_type( name_a_b,label_a_b, name_b_a,label_b_a, description, contact_type_a, contact_type_b, is_reserved )
-    VALUES( 'Child of', 'Child of', 'Parent of', 'Parent of', 'Parent/child relationship.', 'Individual', 'Individual', 0 ),
-          ( 'Spouse of', 'Spouse of', 'Spouse of', 'Spouse of', 'Spousal relationship.', 'Individual', 'Individual', 0 ),
+    VALUES( 'Child of', 'Figlio/a di', 'Parent of', 'Genitore di', 'Parent/child relationship.', 'Individual', 'Individual', 0 ),
+          ( 'Spouse of', 'Sposato/a con', 'Spouse of', 'Sposato/a con', 'Spousal relationship.', 'Individual', 'Individual', 0 ),
           ( 'Sibling of', 'Sibling of', 'Sibling of', 'Sibling of', 'Sibling relationship.', 'Individual','Individual', 0 ),
           ( 'Employee of', 'Employee of', 'Employer of', 'Employer of', 'Employment relationship.','Individual','Organization', 1 ),
           ( 'Volunteer for', 'Volunteer for', 'Volunteer is', 'Volunteer is', 'Volunteer relationship.','Individual','Organization', 0 ),
@@ -5096,7 +5096,7 @@ VALUES
 
 -- default batch statues
    (@option_group_id_batch_status, 'Open', 1, 'Open', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_batch_status, 'Chiuso', 2, 'Chiuso', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_batch_status, 'Closed', 2, 'Closed', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
 
 -- sms_api_type
    (@option_group_id_sms_api_type, 'http', 1, 'http', NULL, NULL, 0, 1, NULL, 0, 1, 1, NULL, NULL),
@@ -5724,7 +5724,7 @@ INSERT INTO civicrm_uf_group
     (2,  'supporter_profile',  'Individual,Contact',  'Supporter Profile',  2,           0,           '<p><strong>The information you provide will NOT be shared with any third party organisations.</strong></p><p>Thank you for getting involved in our campaign!</p>'),
     (3,  'participant_status', 'Participant',         'Stato Partecipante', 0,           1,           NULL),
     (4,  'new_individual',     'Individual,Contact',  'Nuovo Individuo'    , 0,           1,           NULL),
-    (5,  'new_organization',   'Organization,Contact','New Organization'  , 0,           1,           NULL),
+    (5,  'new_organization',   'Organization,Contact','Nuova Organizzazione'  , 0,           1,           NULL),
     (6,  'new_household',      'Household,Contact',   'New Household'     , 0,           1,           NULL),
     (7,  'summary_overlay',    'Contact',   		  'Summary Overlay'   , 0,           1,           NULL),
     (8,  'shared_address',     'Contact',   		  'Shared Address'    , 0,           1,           NULL),
@@ -5800,12 +5800,12 @@ INSERT INTO civicrm_uf_field
        ( 10,     'contribution_status_id',      1, 1, 3, 'User and User Admin Only', 0, 0, NULL, 'Stato', 'Contribution', NULL, NULL ),
        ( 10,     'receive_date',                1, 1, 4, 'User and User Admin Only', 0, 0, NULL, 'Ricevuto', 'Contribution', NULL, NULL ),
        ( 10,     'contribution_source',         0, 0, 5, 'User and User Admin Only', 0, 0, NULL, 'Fonte', 'Contribution', NULL, NULL ),
-       ( 10,     'payment_instrument',          0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'Pagato da', 'Contribution', NULL, NULL ),
-       ( 10,     'check_number',                0, 0, 7, 'User and User Admin Only', 0, 0, NULL, 'Numero dell\'Assegno', 'Contribution', NULL, NULL ),
+       ( 10,     'payment_instrument',          0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'Paid By', 'Contribution', NULL, NULL ),
+       ( 10,     'check_number',                0, 0, 7, 'User and User Admin Only', 0, 0, NULL, 'Check Number', 'Contribution', NULL, NULL ),
        ( 10,     'send_receipt',                0, 0, 8, 'User and User Admin Only', 0, 0, NULL, 'Send Receipt', 'Contribution', NULL, NULL ),
        ( 10,     'invoice_id',                  0, 0, 9, 'User and User Admin Only', 0, 0, NULL, 'ID Fattura', 'Contribution', NULL, NULL ),
        ( 11,     'membership_type',             1, 1, 1, 'User and User Admin Only', 0, 0, NULL, 'Tipo', 'Membership', NULL, NULL ),
-       ( 11,     'join_date',                   1, 1, 2, 'User and User Admin Only', 0, 0, NULL, 'Membro Dal', 'Membership', NULL, NULL ),
+       ( 11,     'join_date',                   1, 1, 2, 'User and User Admin Only', 0, 0, NULL, 'Member Since', 'Membership', NULL, NULL ),
        ( 11,     'membership_start_date',       0, 1, 3, 'User and User Admin Only', 0, 0, NULL, 'Data inizio', 'Membership', NULL, NULL ),
        ( 11,     'membership_end_date',         0, 1, 4, 'User and User Admin Only', 0, 0, NULL, 'Data fine', 'Membership', NULL, NULL ),
        ( 11,     'membership_source',           0, 0, 5, 'User and User Admin Only', 0, 0, NULL, 'Fonte', 'Membership', NULL, NULL ),
@@ -5814,9 +5814,9 @@ INSERT INTO civicrm_uf_field
        ( 11,     'contribution_type',           1, 1, 7, 'User and User Admin Only', 0, 0, NULL, 'Tipo di contributo', 'Membership', NULL, NULL ),
        ( 11,     'total_amount',                1, 1, 8, 'User and User Admin Only', 0, 0, NULL, 'Importo', 'Membership', NULL, NULL ),
        ( 11,     'receive_date',                1, 1, 9, 'User and User Admin Only', 0, 0, NULL, 'Ricevuto', 'Membership', NULL, NULL ),
-       ( 11,     'payment_instrument',          0, 0, 10, 'User and User Admin Only', 0, 0, NULL, 'Pagato da', 'Membership', NULL, NULL ),
-       ( 11,     'check_number',                0, 0, 11, 'User and User Admin Only', 0, 0, NULL, 'Numero dell\'Assegno', 'Membership', NULL, NULL ),
-       ( 11,     'contribution_status_id',      1, 1, 12, 'User and User Admin Only', 0, 0, NULL, 'Stato del pagamento', 'Membership', NULL, NULL ),
+       ( 11,     'payment_instrument',          0, 0, 10, 'User and User Admin Only', 0, 0, NULL, 'Paid By', 'Membership', NULL, NULL ),
+       ( 11,     'check_number',                0, 0, 11, 'User and User Admin Only', 0, 0, NULL, 'Check Number', 'Membership', NULL, NULL ),
+       ( 11,     'contribution_status_id',      1, 1, 12, 'User and User Admin Only', 0, 0, NULL, 'Payment Status', 'Membership', NULL, NULL ),
        ( 12,     'email',                       1, 0, 1, 'User and User Admin Only', 0, 0, NULL, 'Indirizzo email', 'Contact', NULL, NULL);
 
 
@@ -19446,4 +19446,4 @@ INSERT INTO civicrm_navigation
 VALUES
     ( @domainID, CONCAT('civicrm/report/instance/', @instanceID,'&reset=1'), 'Mailing Detail Report', 'Mailing Detail Report', 'administer CiviMail', 'OR', @reportlastID, '1', NULL, @instanceID+2 );
 UPDATE civicrm_report_instance SET navigation_id = LAST_INSERT_ID() WHERE id = @instanceID;
- UPDATE civicrm_domain SET version = '4.2.7';
+ UPDATE civicrm_domain SET version = '4.2.8';

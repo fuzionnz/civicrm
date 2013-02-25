@@ -4367,18 +4367,18 @@ SELECT @domainID := id FROM civicrm_domain where name = 'Default Domain Name';
 -- field is used mainly as an ID, and display_name will be shown to the user, but
 -- we have not yet finished modifying all places where the 'name' is shown.
 INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active, is_default ) VALUES( 'Hem', 'Hem', 'HOME', 'Place of residence', 0, 1, 1 );
-INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Work', 'Work', 'WORK', 'Work location', 0, 1 );
+INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Arbete', 'Arbete', 'WORK', 'Arbetsplats', 0, 1 );
 INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Main', 'Main', NULL, 'Main office location', 0, 1 );
-INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Annan', 'Annan', NULL, 'Other location', 0, 1 );
+INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Annan', 'Annan', NULL, 'Annan plats', 0, 1 );
 -- the following location must stay with the untranslated Billing name, CRM-2064
-INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Billing',  'Billing', NULL, 'Billing Address location', 1, 1 );
+INSERT INTO civicrm_location_type( name, display_name, vcard_name, description, is_reserved, is_active ) VALUES( 'Billing',  'Billing', NULL, 'Plats för fakturaadress', 1, 1 );
 
 -- Sample relationship types
 INSERT INTO civicrm_relationship_type( name_a_b,label_a_b, name_b_a,label_b_a, description, contact_type_a, contact_type_b, is_reserved )
-    VALUES( 'Child of', 'Child of', 'Parent of', 'Parent of', 'Parent/child relationship.', 'Individual', 'Individual', 0 ),
-          ( 'Spouse of', 'Spouse of', 'Spouse of', 'Spouse of', 'Spousal relationship.', 'Individual', 'Individual', 0 ),
-          ( 'Sibling of', 'Sibling of', 'Sibling of', 'Sibling of', 'Sibling relationship.', 'Individual','Individual', 0 ),
-          ( 'Employee of', 'Employee of', 'Employer of', 'Employer of', 'Employment relationship.','Individual','Organization', 1 ),
+    VALUES( 'Child of', 'Barn till', 'Parent of', 'Förälder till', 'Förälder/barn-förhållande', 'Individual', 'Individual', 0 ),
+          ( 'Spouse of', 'Partner till', 'Spouse of', 'Partner till', 'Spousal relationship.', 'Individual', 'Individual', 0 ),
+          ( 'Sibling of', 'Syskon till', 'Sibling of', 'Syskon till', 'syskonförhållande', 'Individual','Individual', 0 ),
+          ( 'Employee of', 'Anställd av', 'Employer of', 'Employer of', 'Employment relationship.','Individual','Organization', 1 ),
           ( 'Volunteer for', 'Volunteer for', 'Volunteer is', 'Volunteer is', 'Volunteer relationship.','Individual','Organization', 0 ),
           ( 'Head of Household for', 'Head of Household for', 'Head of Household is', 'Head of Household is', 'Head of household.','Individual','Household', 1 ),
           ( 'Household Member of', 'Household Member of', 'Household Member is', 'Household Member is', 'Household membership.','Individual','Household', 1 );
@@ -4393,9 +4393,9 @@ INSERT INTO civicrm_relationship_type( name_a_b,label_a_b, name_b_a,label_b_a, d
 -- Sample Tags
 INSERT INTO civicrm_tag( name, description, parent_id,used_for )
     VALUES
-    ( 'Non-profit', 'Any not-for-profit organization.', NULL,'civicrm_contact'),
-    ( 'Company', 'For-profit organization.', NULL,'civicrm_contact'),
-    ( 'Government Entity', 'Any governmental entity.', NULL,'civicrm_contact'),
+    ( 'Icke-vinstdrivande', 'Ideell organisation', NULL,'civicrm_contact'),
+    ( 'Företag', 'Vinstdrivande organisation', NULL,'civicrm_contact'),
+    ( 'Myndighet', 'Any governmental entity.', NULL,'civicrm_contact'),
     ( 'Major Donor', 'High-value supporter of our organization.', NULL,'civicrm_contact'),
     ( 'Volunteer', 'Active volunteers.', NULL,'civicrm_contact' );
 
@@ -4405,13 +4405,13 @@ INSERT INTO civicrm_mailing_component
     (name,component_type,subject,body_html,body_text,is_default,is_active)
 VALUES
     ('Mailing Header','Header','Descriptive Title for this Header','Sample Header for HTML formatted content.','Sample Header for TEXT formatted content.',1,1),
-    ('Mailing Footer','Footer','Descriptive Title for this Footer.','Sample Footer for HTML formatted content<br/><a href=\"{action.optOutUrl}\">Unsubscribe</a>  <br/> {domain.address}','to unsubscribe: {action.optOutUrl}\n{domain.address}',1,1),
-    ('Subscribe Message','Subscribe','Subscription Confirmation Request','You have a pending subscription to the {subscribe.group} mailing list. To confirm this subscription, reply to this email or click <a href=\"{subscribe.url}\">here</a>.','You have a pending subscription to the {subscribe.group} mailing list. To confirm this subscription, reply to this email or click on this link: {subscribe.url}',1,1),
-    ('Välkommen-meddelande','Welcome','Your Subscription has been Activated','Welcome. Your subscription to the {welcome.group} mailing list has been activated.','Welcome. Your subscription to the {welcome.group} mailing list has been activated.',1,1),
-    ('Meddelande vid avslutande av prenumeration','Unsubscribe','Un-subscribe Confirmation','You have been un-subscribed from the following groups: {unsubscribe.group}. You can re-subscribe by mailing {action.resubscribe} or clicking <a href=\"{action.resubscribeUrl}\">here</a>.','You have been un-subscribed from the following groups: {unsubscribe.group}. You can re-subscribe by mailing {action.resubscribe} or clicking %3',1,1),
-    ('Meddelande vid återupptagande av prenumeration','Resubscribe','Re-subscribe Confirmation','You have been re-subscribed to the following groups: {resubscribe.group}. You can un-subscribe by mailing {action.unsubscribe} or clicking <a href=\"{action.unsubscribeUrl}\">here</a>.','You have been re-subscribed to the following groups: {resubscribe.group}. You can un-subscribe by mailing {action.unsubscribe} or clicking {action.unsubscribeUrl}',1,1),
-    ('Utgående meddelande','OptOut','Opt-out Confirmation','Your email address has been removed from {domain.name} mailing lists.','Your email address has been removed from {domain.name} mailing lists.',1,1),
-    ('Auto-responder','Reply','Please Send Inquiries to Our Contact Email Address','This is an automated reply from an un-attended mailbox. Please send any inquiries to the contact email address listed on our web-site.','This is an automated reply from an un-attended mailbox. Please send any inquiries to the contact email address listed on our web-site.',1,1);
+    ('Utskicksfot','Footer','Descriptive Title for this Footer.','Sample Footer for HTML formatted content<br/><a href=\"{action.optOutUrl}\">Unsubscribe</a>  <br/> {domain.address}','to unsubscribe: {action.optOutUrl}\n{domain.address}',1,1),
+    ('Subscribe Message','Subscribe','Begär prenumerationsbekräftelse','You have a pending subscription to the {subscribe.group} mailing list. To confirm this subscription, reply to this email or click <a href=\"{subscribe.url}\">here</a>.','You have a pending subscription to the {subscribe.group} mailing list. To confirm this subscription, reply to this email or click on this link: {subscribe.url}',1,1),
+    ('Välkommen-meddelande','Welcome','Din prenumeration har aktiverats','Welcome. Your subscription to the {welcome.group} mailing list has been activated.','Welcome. Your subscription to the {welcome.group} mailing list has been activated.',1,1),
+    ('Meddelande vid avslutande av prenumeration','Unsubscribe','Bekräfta avsagd prenumeration','Du har avsagt prenumerationen från följande grupper: {unsubscribe.group}. Du kan återuppta prenumerationen genom att skicka epost till {action.resubscribe} eller klicka <a href=\"{action.resubscribeUrl}\">här</a>.','You have been un-subscribed from the following groups: {unsubscribe.group}. You can re-subscribe by mailing {action.resubscribe} or clicking %3',1,1),
+    ('Meddelande vid återupptagande av prenumeration','Resubscribe','Bekräfta återupptagen prenumeration','You have been re-subscribed to the following groups: {resubscribe.group}. You can un-subscribe by mailing {action.unsubscribe} or clicking <a href=\"{action.unsubscribeUrl}\">here</a>.','You have been re-subscribed to the following groups: {resubscribe.group}. You can un-subscribe by mailing {action.unsubscribe} or clicking {action.unsubscribeUrl}',1,1),
+    ('Utgående meddelande','OptOut','Opt-out Confirmation','Din epostadress har tagits bort från epostlistan {domain.name}.','Din epostadress har tagits bort från epostlistan {domain.name}.',1,1),
+    ('Auto-svar','Reply','Please Send Inquiries to Our Contact Email Address','This is an automated reply from an un-attended mailbox. Please send any inquiries to the contact email address listed on our web-site.','This is an automated reply from an un-attended mailbox. Please send any inquiries to the contact email address listed on our web-site.',1,1);
 
 
 
@@ -4422,7 +4422,7 @@ VALUES
   ( 'Donation'             , 0, 1, 1 ),
   ( 'Member Dues'          , 0, 1, 1 ),
   ( 'Campaign Contribution', 0, 1, 0 ),
-  ( 'Event Fee'            , 0, 1, 0 );
+  ( 'Arrangemangsavgift'            , 0, 1, 0 );
 
 -- option groups and values for 'preferred communication methods' , 'activity types', 'gender', etc.
 
@@ -4456,7 +4456,7 @@ VALUES
    ('activity_status'               , 'Status för åtgärden'                    , 1, 1),
    ('case_type'                     , 'Ärendetyp'                          , 1, 1),
    ('case_status'                   , 'Case Status'                        , 1, 1),
-   ('participant_listing'           , 'Participant Listing'                , 1, 1),
+   ('participant_listing'           , 'Deltagarlista'                , 1, 1),
    ('safe_file_extension'           , 'Safe File Extension'                , 1, 1),
    ('from_email_address'            , 'E-postadress för avsändare'                 , 1, 1),
    ('mapping_type'                  , 'Mapping Type'                       , 1, 1),
@@ -4465,7 +4465,7 @@ VALUES
    ('phone_type'                    , 'Typ av telefonnummer'                         , 1, 1),
    ('custom_data_type'              , 'Custom Data Type'                   , 1, 1),
    ('visibility'                    , 'Synlighet'                         , 1, 1),
-   ('mail_protocol'                 , 'Mail Protocol'                      , 1, 1),
+   ('mail_protocol'                 , 'Epost-protokoll'                      , 1, 1),
    ('priority'                      , 'Prioritet'                           , 1, 1),
    ('redaction_rule'                , 'Redaction Rule'                     , 1, 1),
    ('report_template'               , 'Report Template'                    , 1, 1),
@@ -4474,7 +4474,7 @@ VALUES
    ('addressee'                     , 'Mottagartyp'                     , 1, 1),
    ('contact_autocomplete_options'  , 'Autocomplete Contact Search'        , 1, 1),
    ('contact_reference_options'     , 'Contact Reference Autocomplete Options', 1, 1),
-   ('account_type'                  , 'Account type'                       , 1, 1),
+   ('account_type'                  , 'Kontotyp'                       , 1, 1),
    ('website_type'                  , 'Website Type'                       , 1, 1),
    ('tag_used_for'                  , 'Tag Used For'                       , 1, 1),
    ('currencies_enabled'            , 'List of currencies enabled for this site', 1, 1),
@@ -4588,19 +4588,19 @@ VALUES
    (@option_group_id_act, 'Möte(n)',                            1, 'Meeting', NULL, 0, NULL, 1, NULL,                       				                                                0, 1, 1, NULL, NULL),
    (@option_group_id_act, 'Telefonkontakt',                         2, 'Phone Call',          NULL, 0, NULL, 2, NULL,                                                          				0, 1, 1, NULL, NULL),
    (@option_group_id_act, 'E-post',                              3, 'Email',               NULL, 1, NULL, 3, 'Email sent.',                                                          0, 1, 1, NULL, NULL),
-   (@option_group_id_act, 'Text Message (SMS)',                 4, 'SMS',                 NULL, 1, NULL, 4, 'Text message (SMS) sent.',                                             0, 1, 1, NULL, NULL),
-   (@option_group_id_act, 'Event Registration',                 5, 'Event Registration',  NULL, 1, NULL, 5, 'Online or offline event registration.',                                0, 1, 1, @eventCompId, NULL),
+   (@option_group_id_act, 'SMS',                 4, 'SMS',                 NULL, 1, NULL, 4, 'SMS skickat.',                                             0, 1, 1, NULL, NULL),
+   (@option_group_id_act, 'Anmälan till arrangemang',                 5, 'Event Registration',  NULL, 1, NULL, 5, 'Online or offline event registration.',                                0, 1, 1, @eventCompId, NULL),
    (@option_group_id_act, 'Inbetalning',                       6, 'Contribution',        NULL, 1, NULL, 6, 'Online or offline contribution.',                                      0, 1, 1, @contributeCompId, NULL),
    (@option_group_id_act, 'Membership Signup',                  7, 'Membership Signup',   NULL, 1, NULL, 7, 'Online or offline membership signup.',                                 0, 1, 1, @memberCompId, NULL),
-   (@option_group_id_act, 'Membership Renewal',                 8, 'Membership Renewal',  NULL, 1, NULL, 8, 'Online or offline membership renewal.',                                0, 1, 1, @memberCompId, NULL),
+   (@option_group_id_act, 'Förnya medlemskap',                 8, 'Membership Renewal',  NULL, 1, NULL, 8, 'Online or offline membership renewal.',                                0, 1, 1, @memberCompId, NULL),
    (@option_group_id_act, 'Tipsa en vän',                      9, 'Tell a Friend',       NULL, 1, NULL, 9, 'Send information about a contribution campaign or event to a friend.', 0, 1, 1, NULL, NULL),
    (@option_group_id_act, 'Pledge Acknowledgment',              10, 'Pledge Acknowledgment',  NULL, 1, NULL, 10, 'Send Pledge Acknowledgment.',                                     0, 1, 1, @pledgeCompId, NULL),
    (@option_group_id_act, 'Pledge Reminder',                    11, 'Pledge Reminder',    NULL, 1, NULL, 11, 'Send Pledge Reminder.',                                               0, 1, 1, @pledgeCompId, NULL),
    (@option_group_id_act, 'Inbound Email',                      12, 'Inbound Email',      NULL, 1, NULL, 12, 'Inbound Email.',                                                      0, 1, 1, NULL, NULL),
 
 -- Activity Types for case activities
-   (@option_group_id_act, 'Open Case',          13, 'Open Case',          NULL, 0,  0, 13, '', 0, 0, 1, @caseCompId, NULL),
-   (@option_group_id_act, 'Follow up',          14, 'Follow up',          NULL, 0,  0, 14, '', 0, 0, 1, @caseCompId, NULL ),
+   (@option_group_id_act, 'Skapa ärende',          13, 'Open Case',          NULL, 0,  0, 13, '', 0, 0, 1, @caseCompId, NULL),
+   (@option_group_id_act, 'Uppföljning',          14, 'Follow up',          NULL, 0,  0, 14, '', 0, 0, 1, @caseCompId, NULL ),
    (@option_group_id_act, 'Ändra ärendetyp',   15, 'Change Case Type',   NULL, 0,  0, 15, '', 0, 0, 1, @caseCompId, NULL ),
    (@option_group_id_act, 'Change Case Status', 16, 'Change Case Status', NULL, 0,  0, 16, '', 0, 0, 1, @caseCompId, NULL ),
 
@@ -4609,7 +4609,7 @@ VALUES
    (@option_group_id_act, 'Bulk Email',                         19, 'Bulk Email',         NULL, 1, NULL, 19, 'Bulk Email Sent.',                                                    0, 1, 1, NULL, NULL),
    (@option_group_id_act, 'Assign Case Role',                   20, 'Assign Case Role', NULL,0, 0, 20, '', 0, 0, 1, @caseCompId, NULL),
    (@option_group_id_act, 'Remove Case Role',                   21, 'Remove Case Role', NULL,0, 0, 21, '', 0, 0, 1, @caseCompId, NULL),
-   (@option_group_id_act, 'Print PDF Letter',                   22, 'Print PDF Letter',    NULL, 0, NULL, 22, 'Print PDF Letter.',                                                  0, 1, 1, NULL, NULL),
+   (@option_group_id_act, 'Skriv ut PDF-brev',                   22, 'Print PDF Letter',    NULL, 0, NULL, 22, 'Skriv ut PDF-brev.',                                                  0, 1, 1, NULL, NULL),
    (@option_group_id_act, 'Merge Case',                         23, 'Merge Case', NULL, 0,  NULL, 23, '', 0, 1, 1, @caseCompId, NULL ),
    (@option_group_id_act, 'Reassigned Case',                    24, 'Reassigned Case', NULL, 0,  NULL, 24, '', 0, 1, 1, @caseCompId, NULL ),
    (@option_group_id_act, 'Link Cases',                         25, 'Link Cases', NULL, 0,  NULL, 25, '', 0, 1, 1, @caseCompId, NULL ),
@@ -4621,7 +4621,7 @@ VALUES
    (@option_group_id_act, 'Canvass',                            29, 'Canvass', NULL,0, 0, 28, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'PhoneBank',                          30, 'PhoneBank', NULL,0, 0, 29, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'WalkList',                           31, 'WalkList', NULL,0, 0, 30, '', 0, 1, 1, @campaignCompId, NULL),
-   (@option_group_id_act, 'Underskrift',                 32, 'Petition', NULL,0, 0, 31, '', 0, 1, 1, @campaignCompId, NULL),
+   (@option_group_id_act, 'Petition Signature',                 32, 'Petition', NULL,0, 0, 31, '', 0, 1, 1, @campaignCompId, NULL),
    (@option_group_id_act, 'Mass SMS',                           34, 'Mass SMS',         NULL, 1, NULL, 34, 'Mass SMS',                                                    0, 1, 1, NULL, NULL),
 
 -- Activity Types for CiviCampaign CiviCase
@@ -4635,10 +4635,10 @@ VALUES
    (@option_group_id_act, 'Update Recurring Contribution Billing Details',      38, 'Update Recurring Contribution Billing Details', NULL,1, 0, 38, '', 0, 1, 1, NULL, NULL),
    (@option_group_id_act, 'Update Recurring Contribution',      39, 'Update Recurring Contribution', NULL,1, 0, 39, '', 0, 1, 1, NULL, NULL),
 
-   (@option_group_id_act, 'Reminder Sent',      		      40, 'Reminder Sent', NULL, 1, 0, 40, '', 0, 1, 1, NULL, NULL),
+   (@option_group_id_act, 'Påminnelse skickad',      		      40, 'Reminder Sent', NULL, 1, 0, 40, '', 0, 1, 1, NULL, NULL),
 
-   (@option_group_id_gender, 'Female',      1, 'Female',      NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_gender, 'Male',        2, 'Male',        NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_gender, 'Kvinna',      1, 'Female',      NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_gender, 'Man',        2, 'Male',        NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_gender, 'Transgender', 3, 'Transgender', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
 
    (@option_group_id_IMProvider, 'Yahoo', 1, 'Yahoo', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
@@ -4674,15 +4674,15 @@ VALUES
    (@option_group_id_acc, 'Amex'      ,  3, 'Amex'      , NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_acc, 'Discover'  ,  4, 'Discover'  , NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
 
-  (@option_group_id_pi, 'Credit Card',  1, 'Credit Card', NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pi, 'Kreditkort',  1, 'Credit Card', NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_pi, 'Debit Card',   2, 'Debit Card',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_pi, 'Cash',         3, 'Cash',        NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_pi, 'Check',        4, 'Check',       NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_pi, 'Kontant',         3, 'Cash',        NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pi, 'Kontokort (debitkort)',        4, 'Check',       NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_pi, 'EFT',          5, 'EFT',         NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
 
-  (@option_group_id_cs, 'Completed'  , 1, 'Completed'  , NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cs, 'Slutförd'  , 1, 'Completed'  , NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_cs, 'Vilande'    , 2, 'Pending'    , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_cs, 'Cancelled'  , 3, 'Cancelled'  , NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cs, 'Avbruten'  , 3, 'Cancelled'  , NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_cs, 'Failed'     , 4, 'Failed'     , NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_cs, 'In Progress', 5, 'In Progress', NULL, 0, NULL, 5, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_cs, 'Overdue'    , 6, 'Overdue'    , NULL, 0, NULL, 6, NULL, 0, 1, 1, NULL, NULL),
@@ -4691,16 +4691,16 @@ VALUES
   (@option_group_id_pcp, 'Approved'      , 2, 'Approved'      , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_pcp, 'Not Approved'  , 3, 'Not Approved'  , NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
 
-  (@option_group_id_pRole, 'Attendee',  1, 'Attendee',  NULL, 1, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pRole, 'Deltagare',  1, 'Attendee',  NULL, 1, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_pRole, 'Volunteer', 2, 'Volunteer', NULL, 1, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_pRole, 'Host',      3, 'Host',      NULL, 1, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_pRole, 'Speaker',   4, 'Speaker',   NULL, 1, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pRole, 'Värd',      3, 'Host',      NULL, 1, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_pRole, 'Talare',   4, 'Speaker',   NULL, 1, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
 
-  (@option_group_id_etype, 'Conference', 1, 'Conference',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_etype, 'Exhibition', 2, 'Exhibition',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_etype, 'Konferens', 1, 'Conference',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_etype, 'Utställning', 2, 'Exhibition',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_etype, 'Fundraiser', 3, 'Fundraiser',  NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_etype, 'Möte(n)',    4, 'Meeting',     NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_etype, 'Performance',5, 'Performance', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_etype, 'Föreställning',5, 'Performance', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_etype, 'Workshop',   6, 'Workshop',    NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
 
 -- note that these are not ts'ed since they are used for logic in most cases and not display
@@ -4723,7 +4723,7 @@ VALUES
   (@option_group_id_ceOpt, 'Communication Preferences',   3, 'CommunicationPreferences', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Noteringar'                    ,   4, 'Notes', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Demografi'             ,   5, 'Demographics', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_ceOpt, 'Tags and Groups'          ,   6, 'TagsAndGroups', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_ceOpt, 'Etiketter och grupper'          ,   6, 'TagsAndGroups', NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'E-post'                    ,   7, 'Email', NULL, 1, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Telefon'                    ,   8, 'Phone', NULL, 1, NULL, 8, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_ceOpt, 'Direktmeddelande'        ,   9, 'IM', NULL, 1, NULL, 9, NULL, 0, 0, 1, NULL, NULL),
@@ -4735,7 +4735,7 @@ VALUES
   (@option_group_id_asOpt, 'Åtgärder'              ,   3, 'activity', NULL, 0, NULL,  4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Relationer'           ,   4, 'relationship', NULL, 0, NULL,  5, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Noteringar'                   ,   5, 'notes', NULL, 0, NULL,  6, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_asOpt, 'Change Log'              ,   6, 'changeLog', NULL, 0, NULL,  7, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_asOpt, 'Ändra Log'              ,   6, 'changeLog', NULL, 0, NULL,  7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Inbetalningar'           ,   7, 'CiviContribute', NULL, 0, NULL,  8, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Medlemsskap'             ,   8, 'CiviMember', NULL, 0, NULL,  9, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Arrangemang'                  ,   9, 'CiviEvent', NULL, 0, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
@@ -4746,13 +4746,13 @@ VALUES
   (@option_group_id_asOpt, 'Typ av kontakt'            ,  16, 'contactType', NULL, 0, NULL, 18, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Grupper'                  ,  17, 'groups', NULL, 0, NULL, 19, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_asOpt, 'Etikett'                    ,  18, 'tags', NULL, 0, NULL, 20, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_asOpt, 'Mailing'                 ,  19, 'CiviMail', NULL, 0, NULL, 21, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_asOpt, 'Utskick'                 ,  19, 'CiviMail', NULL, 0, NULL, 21, NULL, 0, 0, 1, NULL, NULL),
 
   (@option_group_id_udOpt, 'Grupper'                     , 1, 'Groups', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Inbetalningar'              , 2, 'CiviContribute', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Medlemsskap'                , 3, 'CiviMember', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Arrangemang'                     , 4, 'CiviEvent', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_udOpt, 'My Contacts / Organizations', 5, 'Permissioned Orgs', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_udOpt, 'Mina kontakter / organisationer', 5, 'Permissioned Orgs', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Betalningsutfästelse'                    , 7, 'CiviPledge', NULL, 0, NULL, 7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Personliga kampanjsidor'    , 8, 'PCP', NULL, 0, NULL, 8, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_udOpt, 'Utdelade åtgärder'        , 9, 'Assigned Activities', NULL, 0, NULL, 9, NULL, 0, 0, 1, NULL, NULL),
@@ -4776,8 +4776,8 @@ VALUES
   (@option_group_id_adOpt, 'Extra adress 2'  ,  3, 'supplemental_address_2', NULL, 0, NULL,  3, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Postadress'              ,  4, 'city'          , NULL, 0, NULL,  4, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Postnummer' ,  5, 'postal_code'   , NULL, 0, NULL,  5, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_adOpt, 'Postnummerändelse',  6, 'postal_code_suffix', NULL, 0, NULL,  6, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_adOpt, 'Land'            ,  7, 'county'        , NULL, 0, NULL,  7, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_adOpt, 'Postnummer',  6, 'postal_code_suffix', NULL, 0, NULL,  6, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_adOpt, 'Län'            ,  7, 'county'        , NULL, 0, NULL,  7, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Landskap/Län'  ,  8, 'state_province', NULL, 0, NULL,  8, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Land'           ,  9, 'country'       , NULL, 0, NULL,  9, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_adOpt, 'Latitud'          , 10, 'geo_code_1'    , NULL, 0, NULL, 10, NULL, 0, 0, 1, NULL, NULL),
@@ -4789,10 +4789,10 @@ VALUES
   (@option_group_id_gType, 'Mailing List'    , 2, NULL, NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
 
   (@option_group_id_grantSt, 'Vilande',  1, 'Pending',  NULL, 0, 1,    1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_grantSt, 'Granted',  2, 'Granted',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_grantSt, 'Rejected', 3, 'Rejected', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_honorTyp, 'In Honor of'        , 1, 'In Honor of'       , NULL, 0, 1,    1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_honorTyp, 'In Memory of'       , 2, 'In Memory of'      , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_grantSt, 'Beviljad',  2, 'Granted',  NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_grantSt, 'Avvisad', 3, 'Rejected', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_honorTyp, 'för att hedra'        , 1, 'In Honor of'       , NULL, 0, 1,    1, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_honorTyp, 'Till minne av'       , 2, 'In Memory of'      , NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
 
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_Sample'               , 1, 'CRM_Contact_Form_Search_Custom_Sample'      , NULL, 0, NULL, 1, 'Household Name and State', 0, 0, 1, NULL, NULL),
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_ContributionAggregate', 2, 'CRM_Contact_Form_Search_Custom_ContributionAggregate', NULL, 0, NULL, 2, 'Contribution Aggregate', 0, 0, 1, NULL, NULL),
@@ -4804,7 +4804,7 @@ VALUES
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_ActivitySearch'       , 8, 'CRM_Contact_Form_Search_Custom_ActivitySearch', NULL, 0, NULL, 8, 'Activity Search', 0, 0, 1, NULL, NULL),
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_PriceSet'             , 9, 'CRM_Contact_Form_Search_Custom_PriceSet', NULL, 0, NULL, 9, 'Price Set Details for Event Participants', 0, 0, 1, NULL, NULL),
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_ZipCodeRange'         ,10, 'CRM_Contact_Form_Search_Custom_ZipCodeRange', NULL, 0, NULL, 10, 'Zip Code Range', 0, 0, 1, NULL, NULL),
-  (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_DateAdded'            ,11, 'CRM_Contact_Form_Search_Custom_DateAdded', NULL, 0, NULL, 11, 'Date Added to CiviCRM', 0, 0, 1, NULL, NULL),
+  (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_DateAdded'            ,11, 'CRM_Contact_Form_Search_Custom_DateAdded', NULL, 0, NULL, 11, 'Datum tillagt till CiviCRM', 0, 0, 1, NULL, NULL),
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_MultipleValues'       ,12, 'CRM_Contact_Form_Search_Custom_MultipleValues', NULL, 0, NULL, 12, 'Custom Group Multiple Values Listing', 0, 0, 1, NULL, NULL),
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_ContribSYBNT'         ,13, 'CRM_Contact_Form_Search_Custom_ContribSYBNT', NULL, 0, NULL, 13, 'Contributions made in Year X and not Year Y', 0, 0, 1, NULL, NULL),
   (@option_group_id_csearch , 'CRM_Contact_Form_Search_Custom_TagContributions'     ,14, 'CRM_Contact_Form_Search_Custom_TagContributions', NULL, 0, NULL, 14, 'Find Contribution Amounts by Tag', 0, 0, 1, NULL, NULL),
@@ -4816,7 +4816,7 @@ VALUES
   (@option_group_id_report , 'Activity Report',                         'activity',                       'CRM_Report_Form_Activity',                       NULL, 0, NULL, 3,  'Provides a list of constituent activity including activity statistics for one/all contacts during a given date range(required)', 0, 0, 1, NULL, NULL),
   (@option_group_id_report , 'Walk / Phone List Report',                'walklist',                       'CRM_Report_Form_Walklist_Walklist',                       NULL, 0, NULL, 4,  'Provides a detailed report for your walk/phonelist for targetted contacts', 0, 0, 0, NULL, NULL),
   (@option_group_id_report , 'Current Employer Report',                 'contact/currentEmployer',        'CRM_Report_Form_Contact_CurrentEmployer',        NULL, 0, NULL, 5,  'Provides detail list of employer employee relationships along with employment details Ex Join Date', 0, 0, 1, NULL, NULL),
-  (@option_group_id_report , 'Contribution Summary Report',             'contribute/summary',             'CRM_Report_Form_Contribute_Summary',             NULL, 0, NULL, 6,  'Groups and totals contributions by criteria including contact, time period, contribution type, contributor location, etc.', 0, 0, 1, @contributeCompId, NULL),
+  (@option_group_id_report , 'Contribution Summary Report',             'contribute/summary',             'CRM_Report_Form_Contribute_Summary',             NULL, 0, NULL, 6,  'Grupper och summor av bidrag efter kriterier, bland annat kontakt, tidsperiod, bidragstyp, bidragsgivarens plats, etc.', 0, 0, 1, @contributeCompId, NULL),
   (@option_group_id_report , 'Contribution Detail Report',              'contribute/detail',              'CRM_Report_Form_Contribute_Detail',              NULL, 0, NULL, 7,  'Lists specific contributions by criteria including contact, time period, contribution type, contributor location, etc. Contribution summary report points to this report for contribution details.', 0, 0, 1, @contributeCompId, NULL),
   (@option_group_id_report , 'Repeat Contributions Report',             'contribute/repeat',              'CRM_Report_Form_Contribute_Repeat',              NULL, 0, NULL, 8,  'Given two date ranges, shows contacts who contributed in both the date ranges with the amount contributed in each and the percentage increase / decrease.', 0, 0, 1, @contributeCompId, NULL),
   (@option_group_id_report , 'Contributions by Organization Report',    'contribute/organizationSummary', 'CRM_Report_Form_Contribute_OrganizationSummary', NULL, 0, NULL, 9,  'Displays a detailed list of contributions grouped by organization, which includes contributions made by employees for the organisation.', 0, 0, 1, @contributeCompId, NULL),
@@ -4826,9 +4826,9 @@ VALUES
   (@option_group_id_report , 'LYBUNT Report',                           'contribute/lybunt',              'CRM_Report_Form_Contribute_Lybunt',              NULL, 0, NULL, 13, 'LYBUNT means last year but not this year. Provides a list of constituents who donated last year but did not donate during the time period you specify as the current year.', 0, 0, 1, @contributeCompId, NULL),
   (@option_group_id_report , 'Soft Credit Report',                      'contribute/softcredit',          'CRM_Report_Form_Contribute_SoftCredit',          NULL, 0, NULL, 14, 'Shows contributions made by contacts that have been soft-credited to other contacts.', 0, 0, 1,@contributeCompId, NULL),
   (@option_group_id_report , 'Membership Report (Summary)',             'member/summary',                 'CRM_Report_Form_Member_Summary',                 NULL, 0, NULL, 15, 'Provides a summary of memberships by type and join date.', 0, 0, 1, @memberCompId, NULL),
-  (@option_group_id_report , 'Membership Report (Detail)',              'member/detail',                  'CRM_Report_Form_Member_Detail',                  NULL, 0, NULL, 16, 'Provides a list of members along with their membership status and membership details (Join Date, Start Date, End Date). Can also display contributions (payments) associated with each membership.', 0, 0, 1, @memberCompId, NULL),
-  (@option_group_id_report , 'Membership Report (Lapsed)',              'member/lapse',                   'CRM_Report_Form_Member_Lapse',                   NULL, 0, NULL, 17, 'Provides a list of memberships that lapsed or will lapse before the date you specify.', 0, 0, 1, @memberCompId, NULL),
-  (@option_group_id_report , 'Event Participant Report (List)',         'event/participantListing',       'CRM_Report_Form_Event_ParticipantListing',       NULL, 0, NULL, 18, 'Provides lists of participants for an event.', 0, 0, 1, @eventCompId, NULL),
+  (@option_group_id_report , 'Medlemskapsrapport (detaljerad)',              'member/detail',                  'CRM_Report_Form_Member_Detail',                  NULL, 0, NULL, 16, 'Provides a list of members along with their membership status and membership details (Join Date, Start Date, End Date). Can also display contributions (payments) associated with each membership.', 0, 0, 1, @memberCompId, NULL),
+  (@option_group_id_report , 'Medlemskapsrapport (utlöpna)',              'member/lapse',                   'CRM_Report_Form_Member_Lapse',                   NULL, 0, NULL, 17, 'Provides a list of memberships that lapsed or will lapse before the date you specify.', 0, 0, 1, @memberCompId, NULL),
+  (@option_group_id_report , 'Arrangemangsdeltagarrapport (Lista)',         'event/participantListing',       'CRM_Report_Form_Event_ParticipantListing',       NULL, 0, NULL, 18, 'Tillhandhåller lista på deltagare på ett arrangemang.', 0, 0, 1, @eventCompId, NULL),
   (@option_group_id_report , 'Event Income Report (Summary)',           'event/summary',                  'CRM_Report_Form_Event_Summary',                  NULL, 0, NULL, 19, 'Provides an overview of event income. You can include key information such as event ID, registration, attendance, and income generated to help you determine the success of an event.', 0, 0, 1, @eventCompId, NULL),
   (@option_group_id_report , 'Event Income Report (Detail)',            'event/income',                   'CRM_Report_Form_Event_Income',                   NULL, 0, NULL, 20, 'Helps you to analyze the income generated by an event. The report can include details by participant type, status and payment method.', 0, 0, 1, @eventCompId, NULL),
   (@option_group_id_report , 'Pledge Report',                           'pledge/detail',                 'CRM_Report_Form_Pledge_Detail',                 NULL, 0, NULL, 21,   'Pledge Report', 0, 0, 1, @pledgeCompId, NULL),
@@ -4838,10 +4838,10 @@ VALUES
   (@option_group_id_report , 'Case Time Spent Report',                  'case/timespent',                 'CRM_Report_Form_Case_TimeSpent',                 NULL, 0, NULL, 25, 'Aggregates time spent on case and / or or non-case activities by activity type and contact.', 0, 0, 1, @caseCompId, NULL),
   (@option_group_id_report , 'Contact Demographics Report',             'case/demographics',              'CRM_Report_Form_Case_Demographics',              NULL, 0, NULL, 26, 'Demographic breakdown for case clients (and or non-case contacts) in your database. Includes custom contact fields.', 0, 0, 1, @caseCompId, NULL),
   (@option_group_id_report , 'Database Log Report',                     'contact/log',                    'CRM_Report_Form_Contact_Log',                    NULL, 0, NULL, 27, 'Log of contact and activity records created or updated in a given date range.', 0, 0, 1, NULL, NULL),
-  (@option_group_id_report , 'Activity Report (Summary)',               'activitySummary',                'CRM_Report_Form_ActivitySummary',                NULL, 0, NULL, 28, 'Visar åtgärdsstatistik per typ/datum.', 0, 0, 1, NULL, NULL),
+  (@option_group_id_report , 'Aktivitetsrapport (summering)',               'activitySummary',                'CRM_Report_Form_ActivitySummary',                NULL, 0, NULL, 28, 'Visar åtgärdsstatistik per typ/datum.', 0, 0, 1, NULL, NULL),
   (@option_group_id_report, 'Bookkeeping Transactions Report',          'contribute/bookkeeping',         'CRM_Report_Form_Contribute_Bookkeeping',         NULL, 0, 0, 29,    'Shows Bookkeeping Transactions Report', 0, 0, 1, 2, NULL),
   (@option_group_id_report , 'Grant Report (Detail)', 'grant/detail', 'CRM_Report_Form_Grant_Detail', NULL, 0, 0, 30, 'Grant Report Detail', 0, 0, 1, @grantCompId, NULL),
-  (@option_group_id_report, 'Participant list Count Report', 'event/participantlist', 'CRM_Report_Form_Event_ParticipantListCount', NULL, 0, 0, 31, 'Shows the Participant list with Participant Count.', 0, 0, 1, @eventCompId, NULL),
+  (@option_group_id_report, 'Deltagarantalsrapport', 'event/participantlist', 'CRM_Report_Form_Event_ParticipantListCount', NULL, 0, 0, 31, 'Visar deltagarlista med deltagarantal.', 0, 0, 1, @eventCompId, NULL),
   (@option_group_id_report, 'Income Count Summary Report', 'event/incomesummary', 'CRM_Report_Form_Event_IncomeCountSummary', NULL, 0, 0, 32, 'Shows the Income Summary of events with Count.', 0, 0, 1, @eventCompId, NULL),
   (@option_group_id_report, 'Case Detail Report', 'case/detail', 'CRM_Report_Form_Case_Detail', NULL, 0, 0, 33, 'Case Details', 0, 0, 1, @caseCompId, NULL),
   (@option_group_id_report, 'Mail Bounce Report', 'Mailing/bounce', 'CRM_Report_Form_Mailing_Bounce', NULL, 0, NULL, 34, 'Bounce Report for mailings', 0, 0, 1, @mailCompId, NULL),
@@ -4861,18 +4861,18 @@ VALUES
   (@option_group_id_report, 'Contribution and Membership Details', 'member/contributionDetail', 'CRM_Report_Form_Member_ContributionDetail', NULL, 0, NULL, 48, 'Contribution details for any type of contribution, plus associated membership information for contributions which are in payment for memberships.', 0, 0, 1, @memberCompId, NULL),
 
   (@option_group_id_acs, 'Scheduled',  1, 'Scheduled',  NULL, 0, 1,    1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_acs, 'Completed',  2, 'Completed',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_acs, 'Cancelled',  3, 'Cancelled',  NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_acs, 'Slutförd',  2, 'Completed',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_acs, 'Avbruten',  3, 'Cancelled',  NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_acs, 'Left Message', 4, 'Left Message', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_acs, 'Unreachable', 5, 'Unreachable', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_acs, 'Not Required',  6, 'Not Required',  NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acs, 'Inte nåbar', 5, 'Unreachable', NULL, 0, NULL, 5, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_acs, 'Inte obligatoriskt',  6, 'Not Required',  NULL, 0, NULL, 6, NULL, 0, 0, 1, NULL, NULL),
 
   (@option_group_id_cas, 'Ongoing' , 1, 'Open'  ,  'Opened', 0, 1,    1, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_cas, 'Resolved', 2, 'Closed',  'Closed', 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_cas, 'Urgent'  , 3, 'Urgent',  'Opened', 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_cas, 'Brådskande'  , 3, 'Urgent',  'Opened', 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
 
-  (@option_group_id_pl, 'Name Only'     , 1, 'Name Only'      ,  NULL, 0, 0, 1, 'CRM_Event_Page_ParticipantListing_Name', 0, 1, 1, NULL, NULL),
-  (@option_group_id_pl, 'Name and Email', 2, 'Name and Email' ,  NULL, 0, 0, 2, 'CRM_Event_Page_ParticipantListing_NameAndEmail', 0, 1, 1, NULL, NULL),
+  (@option_group_id_pl, 'Endast namn'     , 1, 'Name Only'      ,  NULL, 0, 0, 1, 'CRM_Event_Page_ParticipantListing_Name', 0, 1, 1, NULL, NULL),
+  (@option_group_id_pl, 'Namn och epost', 2, 'Name and Email' ,  NULL, 0, 0, 2, 'CRM_Event_Page_ParticipantListing_NameAndEmail', 0, 1, 1, NULL, NULL),
   (@option_group_id_pl, 'Name, Status and Register Date' , 3, 'Name, Status and Register Date',  NULL, 0, 0, 3, 'CRM_Event_Page_ParticipantListing_NameStatusAndDate', 0, 1, 1, NULL, NULL),
 
   (@option_group_id_sfe, 'jpg'      ,  1, NULL   ,  NULL, 0, 0,  1, NULL, 0, 0, 1, NULL, NULL),
@@ -4896,22 +4896,22 @@ VALUES
   (@option_group_id_we, 'Drupal Default Editor',  4, NULL, NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
 
   (@option_group_id_mt, 'Sökbyggare',      1, 'Search Builder',      NULL, 0, 0,    1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_mt, 'Import Contact',      2, 'Import Contact',      NULL, 0, 0,    2, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_mt, 'Import Activity',     3, 'Import Activity',     NULL, 0, 0,    3, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_mt, 'Importera kontakt',      2, 'Import Contact',      NULL, 0, 0,    2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_mt, 'Importera aktivitet',     3, 'Import Activity',     NULL, 0, 0,    3, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_mt, 'Import Contribution', 4, 'Import Contribution', NULL, 0, 0,    4, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_mt, 'Import Membership',   5, 'Import Membership',   NULL, 0, 0,    5, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_mt, 'Import Participant',  6, 'Import Participant',  NULL, 0, 0,    6, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_mt, 'Export Contact',      7, 'Export Contact',      NULL, 0, 0,    7, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_mt, 'Importera medlemskap',   5, 'Import Membership',   NULL, 0, 0,    5, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_mt, 'Importera deltagare',  6, 'Import Participant',  NULL, 0, 0,    6, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_mt, 'Exportera kontakt',      7, 'Export Contact',      NULL, 0, 0,    7, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_mt, 'Export Contribution', 8, 'Export Contribution', NULL, 0, 0,    8, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_mt, 'Export Membership',   9, 'Export Membership',   NULL, 0, 0,    9, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_mt, 'Export Participant', 10, 'Export Participant',  NULL, 0, 0,   10, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_mt, 'Exportera medlemskap',   9, 'Export Membership',   NULL, 0, 0,    9, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_mt, 'Exportera deltagare', 10, 'Export Participant',  NULL, 0, 0,   10, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_mt, 'Export Pledge',      11, 'Export Pledge',       NULL, 0, 0,   11, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_mt, 'Export Case',        12, 'Export Case',         NULL, 0, 0,   12, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_mt, 'Export Grant',       13, 'Export Grant',        NULL, 0, 0,   13, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_mt, 'Export Activity',    14, 'Export Activity',     NULL, 0, 0,   14, NULL, 0, 1, 1, NULL, NULL),
 
   (@option_group_id_fu, 'dag'    , 'day'  ,    'day',  NULL, 0, NULL, 1, NULL, 0, 1, 1, NULL, NULL),
-  (@option_group_id_fu, 'week'   , 'week' ,   'week',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
+  (@option_group_id_fu, 'vecka'   , 'week' ,   'week',  NULL, 0, NULL, 2, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_fu, 'månad'  , 'month',  'month',  NULL, 0, NULL, 3, NULL, 0, 1, 1, NULL, NULL),
   (@option_group_id_fu, 'år'   , 'year' ,   'year',  NULL, 0, NULL, 4, NULL, 0, 1, 1, NULL, NULL),
 
@@ -4938,9 +4938,9 @@ VALUES
   (@option_group_id_mp, 'Localdir', 4, 'Localdir', NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, NULL ),
 
 -- priority
-  (@option_group_id_priority, 'Urgent', 1, 'Urgent', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_priority, 'Normal', 2, 'Normal', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_priority, 'Low',    3, 'Low',    NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_priority, 'Brådskande', 1, 'Urgent', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_priority, 'Normalt', 2, 'Normal', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_priority, 'Låg',    3, 'Low',    NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, NULL),
 
 -- redaction rule
   (@option_group_id_rr, 'Vancouver', 'city_', NULL, NULL, 0, NULL, 1, NULL, 0, 0, 0, NULL, NULL),
@@ -4968,8 +4968,8 @@ VALUES
 -- Account types
    (@option_group_id_accTp, 'Asset', 1, 'Asset',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_accTp, 'Liability', 2, 'Liability',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_accTp, 'Income', 3, 'Income',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-   (@option_group_id_accTp, 'Expense', 4, 'Expense',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_accTp, 'Inkomst', 3, 'Income',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_accTp, 'Utgift', 4, 'Expense',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
 
 -- website type
    (@option_group_id_website, 'Home',     1, 'Home',     NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
@@ -4987,9 +4987,9 @@ VALUES
    (@option_group_id_currency, 'USD ($)',      'USD',     'USD',       NULL, 0, 1, 1, NULL, 0, 0, 1, NULL, NULL),
 
 -- event name badges
-  (@option_group_id_eventBadge,  'Name Only'     , 1, 'CRM_Event_Badge_Simple'  ,  NULL, 0, 0, 1, 'Simple Event Name Badge', 0, 1, 1, NULL, NULL),
+  (@option_group_id_eventBadge,  'Endast namn'     , 1, 'CRM_Event_Badge_Simple'  ,  NULL, 0, 0, 1, 'Simple Event Name Badge', 0, 1, 1, NULL, NULL),
   (@option_group_id_eventBadge,  'Name Tent'     , 2, 'CRM_Event_Badge_NameTent',  NULL, 0, 0, 2, 'Name Tent', 0, 1, 1, NULL, NULL),
-  (@option_group_id_eventBadge , 'With Logo'     , 3, 'CRM_Event_Badge_Logo'    ,  NULL, 0, 0, 3, 'You can set your own background image',                               0, 1, 1, NULL, NULL ),
+  (@option_group_id_eventBadge , 'Med logotyp'     , 3, 'CRM_Event_Badge_Logo'    ,  NULL, 0, 0, 3, 'You can set your own background image',                               0, 1, 1, NULL, NULL ),
   (@option_group_id_eventBadge , '5395 with Logo', 4, 'CRM_Event_Badge_Logo5395',  NULL, 0, 0, 4, 'Avery 5395 compatible labels with logo (4 up by 2, 59.2mm x 85.7mm)', 0, 1, 1, NULL, NULL ),
 
 -- note privacy levels
@@ -5002,10 +5002,10 @@ VALUES
   (@option_group_id_campaignType, 'Constituent Engagement', 3, 'Constituent Engagement',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
 
 -- Campaign Status
-  (@option_group_id_campaignStatus, 'Planned', 1, 'Planned',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_campaignStatus, 'Planerad', 1, 'Planned',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
   (@option_group_id_campaignStatus, 'In Progress', 2, 'In Progress',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_campaignStatus, 'Completed', 3, 'Completed',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
-  (@option_group_id_campaignStatus, 'Cancelled', 4, 'Cancelled',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_campaignStatus, 'Slutförd', 3, 'Completed',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+  (@option_group_id_campaignStatus, 'Avbruten', 4, 'Cancelled',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
 
 -- Engagement Level
   (@option_group_id_engagement_index, '1', 1, '1',  NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL ),
@@ -5095,7 +5095,7 @@ VALUES
    (@option_group_id_batch_type, 'Medlemskap', 2, 'Medlemskap', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
 
 -- default batch statues
-   (@option_group_id_batch_status, 'Open', 1, 'Open', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
+   (@option_group_id_batch_status, 'Öppen', 1, 'Öppen', NULL, 0, NULL, 1, NULL, 0, 0, 1, NULL, NULL),
    (@option_group_id_batch_status, 'Stängd', 2, 'Stängd', NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, NULL),
 
 -- sms_api_type
@@ -5134,14 +5134,14 @@ VALUES
   (@option_group_id_fma, '"FIXME" <info@FIXME.ORG>', '1', '"FIXME" <info@FIXME.ORG>', NULL, 0, 1, 1, 'Default domain email address and from name.', 0, 0, 1, NULL, @domainID, NULL ),
 
 -- grant types
-  (@option_group_id_grantTyp, 'Emergency'          , 1, 'Emergency'         , NULL, 0, 1,    1, NULL, 0, 0, 1, NULL, @domainID, NULL),
+  (@option_group_id_grantTyp, 'Akut'          , 1, 'Emergency'         , NULL, 0, 1,    1, NULL, 0, 0, 1, NULL, @domainID, NULL),
   (@option_group_id_grantTyp, 'Family Support'     , 2, 'Family Support'    , NULL, 0, NULL, 2, NULL, 0, 0, 1, NULL, @domainID, NULL),
   (@option_group_id_grantTyp, 'General Protection' , 3, 'General Protection', NULL, 0, NULL, 3, NULL, 0, 0, 1, NULL, @domainID, NULL),
   (@option_group_id_grantTyp, 'Impunity'           , 4, 'Impunity'          , NULL, 0, NULL, 4, NULL, 0, 0, 1, NULL, @domainID, NULL),
 
 -- Mail Approval Status Preferences
   (@option_group_id_mail_approval_status, 'Approved' , 1, 'Approved', NULL, 0, 1, 1, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
-  (@option_group_id_mail_approval_status, 'Rejected' , 2, 'Rejected', NULL, 0, 0, 2, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
+  (@option_group_id_mail_approval_status, 'Avvisad' , 2, 'Rejected', NULL, 0, 0, 2, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
   (@option_group_id_mail_approval_status, 'Ingen' , 3, 'None', NULL, 0, 0, 3, NULL, 0, 1, 1, @mailCompId, @domainID, NULL),
 
 -- custom group objects
@@ -5378,12 +5378,12 @@ VALUES
 INSERT INTO
     civicrm_membership_status(name, label, start_event, start_event_adjust_unit, start_event_adjust_interval, end_event, end_event_adjust_unit, end_event_adjust_interval, is_current_member, is_admin, weight, is_default, is_active, is_reserved)
 VALUES
-    ('New',       'New', 'join_date', null, null,'join_date','month',3, 1, 0, 1, 0, 1, 0),
-    ('Current',   'Current', 'start_date', null, null,'end_date', null, null, 1, 0, 2, 1, 1, 0),
-    ('Grace',     'Grace', 'end_date', null, null,'end_date','month', 1, 1, 0, 3, 0, 1, 0),
-    ('Expired',   'Expired', 'end_date', 'month', 1, null, null, null, 0, 0, 4, 0, 1, 0),
+    ('New',       'Ny', 'join_date', null, null,'join_date','month',3, 1, 0, 1, 0, 1, 0),
+    ('Current',   'Aktuell', 'start_date', null, null,'end_date', null, null, 1, 0, 2, 1, 1, 0),
+    ('Grace',     'Under respit', 'end_date', null, null,'end_date','month', 1, 1, 0, 3, 0, 1, 0),
+    ('Expired',   'Utgången', 'end_date', 'month', 1, null, null, null, 0, 0, 4, 0, 1, 0),
     ('Pending',   'Vilande', 'join_date', null, null,'join_date',null,null, 0, 0, 5, 0, 1, 1),
-    ('Cancelled', 'Cancelled', 'join_date', null, null,'join_date',null,null, 0, 0, 6, 0, 1, 0),
+    ('Cancelled', 'Avbruten', 'join_date', null, null,'join_date',null,null, 0, 0, 6, 0, 1, 0),
     ('Deceased',  'Avliden', null, null, null, null, null, null, 0, 1, 7, 0, 1, 1);
 
 
@@ -5577,7 +5577,7 @@ INSERT INTO civicrm_mailing_bounce_pattern
 
 INSERT INTO civicrm_mailing_bounce_type
         (name, description, hold_threshold)
-        VALUES ('Invalid', 'Email address is not valid', 1);
+        VALUES ('Invalid', 'Epostadressen är inte giltig', 1);
 
 SELECT @bounceTypeID := max(id) FROM civicrm_mailing_bounce_type WHERE name = 'Invalid';
 INSERT INTO civicrm_mailing_bounce_pattern
@@ -5720,7 +5720,7 @@ INSERT INTO civicrm_mailing_bounce_pattern
 
 INSERT INTO civicrm_uf_group
     (id, name,                 group_type,           title,                                      is_cms_user, is_reserved, help_post) VALUES
-    (1,  'name_and_address',   'Individual,Contact',  'Name and Address',   0,           0,           NULL),
+    (1,  'name_and_address',   'Individual,Contact',  'Namn och adress',   0,           0,           NULL),
     (2,  'supporter_profile',  'Individual,Contact',  'Supporter Profile',  2,           0,           '<p><strong>The information you provide will NOT be shared with any third party organisations.</strong></p><p>Thank you for getting involved in our campaign!</p>'),
     (3,  'participant_status', 'Participant',         'Deltagarens status', 0,           1,           NULL),
     (4,  'new_individual',     'Individual,Contact',  'Ny person'    , 0,           1,           NULL),
@@ -5732,7 +5732,7 @@ INSERT INTO civicrm_uf_group
     'On Behalf Of Organization'    , 0,           1,           NULL),
     (10,  'contribution_batch_entry', 'Contribution', 'Contribution Bulk Entry' , 0,      1,           NULL),
     (11,  'membership_batch_entry', 'Membership', 'Membership Bulk Entry' , 0,      1,           NULL),
-    (12, 'event_registration', 'Individual, Contact', 'Your Registration Info',        0,      0,           NULL);
+    (12, 'event_registration', 'Individual, Contact', 'Dina anmälningsuppgifter',        0,      0,           NULL);
 
 INSERT INTO civicrm_uf_join
    (is_active,module,entity_table,entity_id,weight,uf_group_id)
@@ -5800,22 +5800,22 @@ INSERT INTO civicrm_uf_field
        ( 10,     'contribution_status_id',      1, 1, 3, 'User and User Admin Only', 0, 0, NULL, 'Status', 'Contribution', NULL, NULL ),
        ( 10,     'receive_date',                1, 1, 4, 'User and User Admin Only', 0, 0, NULL, 'Mottaget', 'Contribution', NULL, NULL ),
        ( 10,     'contribution_source',         0, 0, 5, 'User and User Admin Only', 0, 0, NULL, 'Källa', 'Contribution', NULL, NULL ),
-       ( 10,     'payment_instrument',          0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'Betalad med', 'Contribution', NULL, NULL ),
-       ( 10,     'check_number',                0, 0, 7, 'User and User Admin Only', 0, 0, NULL, 'Checknummer', 'Contribution', NULL, NULL ),
-       ( 10,     'send_receipt',                0, 0, 8, 'User and User Admin Only', 0, 0, NULL, 'Send Receipt', 'Contribution', NULL, NULL ),
-       ( 10,     'invoice_id',                  0, 0, 9, 'User and User Admin Only', 0, 0, NULL, 'Faktura ID', 'Contribution', NULL, NULL ),
+       ( 10,     'payment_instrument',          0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'Betalad av', 'Contribution', NULL, NULL ),
+       ( 10,     'check_number',                0, 0, 7, 'User and User Admin Only', 0, 0, NULL, 'Check Number', 'Contribution', NULL, NULL ),
+       ( 10,     'send_receipt',                0, 0, 8, 'User and User Admin Only', 0, 0, NULL, 'Skicka kvittens', 'Contribution', NULL, NULL ),
+       ( 10,     'invoice_id',                  0, 0, 9, 'User and User Admin Only', 0, 0, NULL, 'Faktura-ID', 'Contribution', NULL, NULL ),
        ( 11,     'membership_type',             1, 1, 1, 'User and User Admin Only', 0, 0, NULL, 'Typ', 'Membership', NULL, NULL ),
        ( 11,     'join_date',                   1, 1, 2, 'User and User Admin Only', 0, 0, NULL, 'Medlem sedan', 'Membership', NULL, NULL ),
        ( 11,     'membership_start_date',       0, 1, 3, 'User and User Admin Only', 0, 0, NULL, 'Startdatum', 'Membership', NULL, NULL ),
        ( 11,     'membership_end_date',         0, 1, 4, 'User and User Admin Only', 0, 0, NULL, 'Slutdatum', 'Membership', NULL, NULL ),
        ( 11,     'membership_source',           0, 0, 5, 'User and User Admin Only', 0, 0, NULL, 'Källa', 'Membership', NULL, NULL ),
 
-       ( 11,     'send_receipt',                0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'Send Receipt', 'Membership', NULL, NULL ),
+       ( 11,     'send_receipt',                0, 0, 6, 'User and User Admin Only', 0, 0, NULL, 'Skicka kvittens', 'Membership', NULL, NULL ),
        ( 11,     'contribution_type',           1, 1, 7, 'User and User Admin Only', 0, 0, NULL, 'Inbetalningstyp', 'Membership', NULL, NULL ),
        ( 11,     'total_amount',                1, 1, 8, 'User and User Admin Only', 0, 0, NULL, 'Belopp', 'Membership', NULL, NULL ),
        ( 11,     'receive_date',                1, 1, 9, 'User and User Admin Only', 0, 0, NULL, 'Mottaget', 'Membership', NULL, NULL ),
-       ( 11,     'payment_instrument',          0, 0, 10, 'User and User Admin Only', 0, 0, NULL, 'Betalad med', 'Membership', NULL, NULL ),
-       ( 11,     'check_number',                0, 0, 11, 'User and User Admin Only', 0, 0, NULL, 'Checknummer', 'Membership', NULL, NULL ),
+       ( 11,     'payment_instrument',          0, 0, 10, 'User and User Admin Only', 0, 0, NULL, 'Betalad av', 'Membership', NULL, NULL ),
+       ( 11,     'check_number',                0, 0, 11, 'User and User Admin Only', 0, 0, NULL, 'Check Number', 'Membership', NULL, NULL ),
        ( 11,     'contribution_status_id',      1, 1, 12, 'User and User Admin Only', 0, 0, NULL, 'Betalningsstatus', 'Membership', NULL, NULL ),
        ( 12,     'email',                       1, 0, 1, 'User and User Admin Only', 0, 0, NULL, 'E-postadress', 'Contact', NULL, NULL);
 
@@ -5825,15 +5825,15 @@ INSERT INTO civicrm_participant_status_type
   (1,  'Registered',                          'Registered',                          'Positive', 1,           1,         1,          1,      1            ),
   (2,  'Attended',                            'Attended',                            'Positive', 0,           1,         1,          2,      2            ),
   (3,  'No-show',                             'No-show',                             'Negative', 0,           1,         0,          3,      2            ),
-  (4,  'Cancelled',                           'Cancelled',                           'Negative', 1,           1,         0,          4,      2            ),
+  (4,  'Cancelled',                           'Avbruten',                           'Negative', 1,           1,         0,          4,      2            ),
   (5,  'Pending from pay later',              'Avvaktar senare inbetalning',              'Pending',  1,           1,         1,          5,      2            ),
   (6,  'Pending from incomplete transaction', 'Avvaktar avbruten anmälan', 'Pending',  1,           1,         0,          6,      2            ),
   (7,  'On waitlist',                         'On waitlist',                         'Waiting',  1,           0,         0,          7,      2            ),
   (8,  'Awaiting approval',                   'Awaiting approval',                   'Waiting',  1,           0,         1,          8,      2            ),
   (9,  'Pending from waitlist',               'Avvaktar på väntelista',               'Pending',  1,           0,         1,          9,      2            ),
   (10, 'Pending from approval',               'Avvaktar godkännande',               'Pending',  1,           0,         1,          10,     2            ),
-  (11, 'Rejected',                            'Rejected',                            'Negative', 1,           0,         0,          11,     2            ),
-  (12, 'Expired',                             'Expired',                             'Negative', 1,           1,         0,          12,     2            ),
+  (11, 'Rejected',                            'Avvisad',                            'Negative', 1,           0,         0,          11,     2            ),
+  (12, 'Expired',                             'Utgången',                             'Negative', 1,           1,         0,          12,     2            ),
   (13, 'Pending in cart',                     'Pending in cart',                     'Pending',  1,           1,         0,          13,     2            );
 
 
@@ -19446,4 +19446,4 @@ INSERT INTO civicrm_navigation
 VALUES
     ( @domainID, CONCAT('civicrm/report/instance/', @instanceID,'&reset=1'), 'Mailing Detail Report', 'Mailing Detail Report', 'administer CiviMail', 'OR', @reportlastID, '1', NULL, @instanceID+2 );
 UPDATE civicrm_report_instance SET navigation_id = LAST_INSERT_ID() WHERE id = @instanceID;
- UPDATE civicrm_domain SET version = '4.2.7';
+ UPDATE civicrm_domain SET version = '4.2.8';

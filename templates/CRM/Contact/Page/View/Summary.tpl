@@ -153,6 +153,7 @@
 
                 {if !empty($contact_type_label) OR !empty($current_employer_id) OR !empty($job_title) OR !empty($legal_name) OR $sic_code OR !empty($nick_name) OR !empty($contactTag) OR !empty($source)}
                 <div id="contactTopBar">
+                 {crmRegion name="contact-basic-info-left"}
                     <table>
                         {if !empty($contact_type_label) OR !empty($userRecordUrl) OR !empty($current_employer_id) OR !empty($job_title) OR !empty($legal_name) OR $sic_code OR !empty($nick_name)}
                         <tr>
@@ -192,7 +193,7 @@
                             {/if}
                         </tr>
                     </table>
-
+                 {/crmRegion}
                     <div class="clear"></div>
                 </div><!-- #contactTopBar -->
                 {/if}
@@ -275,10 +276,10 @@
                   </div>
                 </div>
                 {/foreach} {* end of address foreach *}
-              
+
                 {assign var='locationIndex' value=$locationIndex+1}
               {/if}
-              
+
               {if $permission EQ 'edit'}
                 {if $locationIndex eq 1 or $locationIndex is odd}
                   <div class="contactCardLeft crm-address_{$locationIndex} crm-address-block appendAddLink">
@@ -324,7 +325,7 @@
           </div> <!-- contact panel -->
      </div><!--contact_details-->
 
-     {if $showCustomData}         
+     {if $showCustomData}
         <div id="customFields">
             <div class="contact_panel">
                 <div class="contactCardLeft">
@@ -353,8 +354,8 @@
             });
         </script>
         {/literal}
-     {/if}         
-     
+     {/if}
+
      {if !empty($hookContent) and isset($hookContentPlacement) and $hookContentPlacement eq 1}
         {include file="CRM/Contact/Page/View/SummaryHook.tpl"}
      {/if}
@@ -415,7 +416,7 @@ cj(function(){
     var cgId   = cj(this).attr('cgId');
     var dataUrl = {/literal}"{crmURL p='civicrm/ajax/inline' h=0 q='snippet=5&reset=1&cid='}{$contactId}"{literal} + '&groupID=' + cgId;
 
-    addCiviOverlay('.crm-custom-set-block-' + cgId);   
+    addCiviOverlay('.crm-custom-set-block-' + cgId);
     cj.ajax({
       data: {'class_name':'CRM_Contact_Form_Inline_CustomData'},
       url: dataUrl,
@@ -424,7 +425,7 @@ cj(function(){
       cj('#custom-set-block-'+ cgId).html( response );
     });
 
-    removeCiviOverlay('.crm-custom-set-block-' + cgId);   
+    removeCiviOverlay('.crm-custom-set-block-' + cgId);
   });
   /* end of js for inline custom data */
 
@@ -439,7 +440,7 @@ cj(function(){
   addressBlock.on( 'mouseleave', 'div[id^="address-block-"]', function() {
     var locno   = cj(this).attr('locno');
     cj(this).removeClass('crm-inline-edit-hover');
-    if ( !cj('a[id^="edit-address-block-' + locno +'"]').hasClass('empty-address-block-' + locno) ) { 
+    if ( !cj('a[id^="edit-address-block-' + locno +'"]').hasClass('empty-address-block-' + locno) ) {
       cj('a[id^="edit-address-block-'+ locno +'"]').hide();
     }
   });
@@ -448,17 +449,17 @@ cj(function(){
     var locno = cj(this).attr('locno');
     var aid   = cj(this).attr('aid');
     var dataUrl = {/literal}"{crmURL p='civicrm/ajax/inline' h=0 q='snippet=5&reset=1&cid='}{$contactId}"{literal} + '&locno=' + locno + '&aid=' + aid ;
-   
-    addCiviOverlay('div.crm-address_' + locno);   
-    cj.ajax({ 
+
+    addCiviOverlay('div.crm-address_' + locno);
+    cj.ajax({
       data: {'class_name':'CRM_Contact_Form_Inline_Address'},
       url: dataUrl,
       async: false
     }).done( function(response) {
       cj('#address-block-'+ locno).html(response);
     });
-    
-    removeCiviOverlay('div.crm-address_' + locno);   
+
+    removeCiviOverlay('div.crm-address_' + locno);
   });
   /* end of js for inline address data */
 });

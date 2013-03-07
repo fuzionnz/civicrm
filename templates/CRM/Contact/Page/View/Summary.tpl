@@ -153,7 +153,7 @@
 
                 {if !empty($contact_type_label) OR !empty($current_employer_id) OR !empty($job_title) OR !empty($legal_name) OR $sic_code OR !empty($nick_name) OR !empty($contactTag) OR !empty($source)}
                 <div id="contactTopBar">
-                 {crmRegion name="contact-details-left"}
+                 {crmRegion name="contact-basic-info-left"}
                     <table>
                         {if !empty($contact_type_label) OR !empty($userRecordUrl) OR !empty($current_employer_id) OR !empty($job_title) OR !empty($legal_name) OR $sic_code OR !empty($nick_name)}
                         <tr>

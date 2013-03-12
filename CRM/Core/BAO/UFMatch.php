@@ -357,7 +357,7 @@ AND    domain_id    = %4
       $conflict = CRM_Core_DAO::singleValueQuery($sql, $params);
 
       if (!$conflict) {
-        CRM_Core_BAO_UFMatch::create((array) $ufmatch);
+        $ufmatch = CRM_Core_BAO_UFMatch::create((array) $ufmatch);
         $ufmatch->free();
         $newContact = TRUE;
 
@@ -463,7 +463,7 @@ AND    domain_id    = %4
     if ($ufmatch->find(TRUE)) {
       // Save the email in UF Match table
       $ufmatch->uf_name = $emailAddress;
-      CRM_Core_BAO_UFMatch::create((array) $ufmatch);
+      $ufmatch = CRM_Core_BAO_UFMatch::create((array) $ufmatch);
 
       //check if the primary email for the contact exists
       //$contactDetails[1] - email

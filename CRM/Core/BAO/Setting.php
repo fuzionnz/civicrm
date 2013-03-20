@@ -524,11 +524,12 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     if ($settingsMetadata === NULL) {
       $settingsMetadata = CRM_Core_BAO_Cache::getItem('CiviCRM setting Spec', 'All');
       if (empty($settingsMetadata)) {
+        $settingsMetadata = array();
         global $civicrm_root;
         $metaDataFolders = array($civicrm_root. '/settings');
         CRM_Utils_Hook::alterSettingsFolders($metaDataFolders);
         foreach ($metaDataFolders as $metaDataFolder) {
-          $settingsMetadata = self::loadSettingsMetaData($metaDataFolder);
+          $settingsMetadata = array_merge($settingsMetadata, self::loadSettingsMetaData($metaDataFolder));
         }
       }
     }

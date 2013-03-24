@@ -555,6 +555,21 @@ function _civicrm_core_data(&$data, $enabled) {
      ),
   );
 
+  // Preferred communication method
+  $data['civicrm_contact']['preferred_communication_method'] = array(
+    'title' => t('Preferred communication method'),
+    'help' => t('Preferred communication method'),
+    'field' => array(
+      'handler' => 'civicrm_handler_field_pseudo_constant',
+      'click sortable' => TRUE,
+      'pseudo class' => t('CRM_Core_PseudoConstant'),
+      'pseudo method' => t('pcm'),
+    ),
+    // No filter, argument or sort defined, since this field is a
+    // 0x01 separated list of values, and civicrm views cannot yet
+    // handle this special case.
+  );
+
   // add the other generic fields
   $objType = 'Individual';
   $fields = CRM_Contact_BAO_Contact::exportableFields($objType);

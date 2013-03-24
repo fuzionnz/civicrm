@@ -57,13 +57,17 @@ class civicrm_handler_field_pseudo_constant extends views_handler_field {
   }
 
   function render($values) {
-    $sid = $values->{$this->field_alias};
-    if (empty($sid) ||
-      (int ) $sid <= 0
-    ) {
-      return NULL;
+    // Values are potentially separated by 0x01 characters.
+    $sids = explode(CRM_Core_DAO::VALUE_SEPARATOR, $values->{$this->field_alias});
+
+    $output = array();
+    foreach ($sids as $sid) {
+      if (empty($sid) || empty($this->_pseudo_constant[$sid])) {
+        continue;
+      }
+      $output[] = $this->_pseudo_constant[$sid];
     }
-    return $this->_pseudo_constant[$values->{$this->field_alias}];
+    return empty($output) ? NULL : implode($output, ', ');
   }
 }
 

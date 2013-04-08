@@ -798,18 +798,14 @@ SELECT name, mail
    * Wrapper for og_membership creation
   */
   function og_membership_create($ogID, $drupalID){
-    og_group($ogID, array('entity' => user_load($drupalID)));
+    og_save_subscription( $ogID, $drupalID, array( 'is_active' => 1 ) );
   }
 
   /**
    * Wrapper for og_membership deletion
    */
   function og_membership_delete($ogID, $drupalID) {
-    $membership = og_get_group_membership($ogID, 'user', $drupalID);
-    if ($membership) {
-      og_ungroup($ogID, 'user', user_load($drupalID));
-    }
+      og_delete_subscription( $ogID, $drupalID );
   }
-
 }
 

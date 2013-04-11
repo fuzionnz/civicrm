@@ -267,7 +267,8 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
    * @static
    * @access public
    */
-  static function setItem($value,
+  static function setItem(
+    $value,
     $group,
     $name,
     $componentID = NULL,
@@ -275,6 +276,10 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     $createdID   = NULL,
     $domainID    = NULL
   ) {
+
+    if (empty($domainID)) {
+      $domainID = CRM_Core_Config::domainID();
+    }
 
     $dao = self::dao($group, $name, $componentID, $contactID, $domainID);
     $dao->find(TRUE);
@@ -394,6 +399,13 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
       'component_id',
       'contact_id',
       'filters',
+      'entity_id',
+      'entity_table',
+      'sequential',
+      'api.has_parent',
+      'IDS_request_uri',
+      'IDS_user_agent',
+      'check_permissions',
     );
     $settingParams = array_diff_key($params, array_fill_keys($ignoredParams, TRUE));
     $getFieldsParams = array('version' => 3);
@@ -492,6 +504,9 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
    * it via the API or other mechanisms. In order to keep this consistent it is important the form layer
    * also leverages it.
    *
+   * Note that this function should never be called when using the runtime getvalue function. Caching works
+   * around the expectation it will be called during setting administration
+   *
    * Function is intended for configuration rather than runtime access to settings
    *
    * The following params will filter the result. If none are passed all settings will be returns
@@ -509,36 +524,44 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
    * - description
    * - help_text
    */
-  static
-  function getSettingSpecification(
+  static function getSettingSpecification(
     $componentID = null,
     $filters = array(),
     $domainID = null,
-    $profile = null) {
-
+    $profile = null
+  ) {
     $cacheString = 'settingsMetadata_' . $domainID . '_' . $profile;
     foreach ($filters as $filterField => $filterString) {
       $cacheString .= "_{$filterField}_{$filterString}";
     }
+    $cached = 1;
     $settingsMetadata = CRM_Core_BAO_Cache::getItem('CiviCRM setting Specs', $cacheString, $componentID);
     if ($settingsMetadata === NULL) {
-      $settingsMetadata = CRM_Core_BAO_Cache::getItem('CiviCRM setting Spec', 'All');
+      $settingsMetadata = CRM_Core_BAO_Cache::getItem('CiviCRM setting Spec', 'All', $componentID);
       if (empty($settingsMetadata)) {
         $settingsMetadata = array();
         global $civicrm_root;
         $metaDataFolders = array($civicrm_root. '/settings');
         CRM_Utils_Hook::alterSettingsFolders($metaDataFolders);
         foreach ($metaDataFolders as $metaDataFolder) {
-          $settingsMetadata = array_merge($settingsMetadata, self::loadSettingsMetaData($metaDataFolder));
+          $settingsMetadata = $settingsMetadata + self::loadSettingsMetaData($metaDataFolder);
         }
+        CRM_Core_BAO_Cache::setItem($settingsMetadata,'CiviCRM setting Spec', 'All', $componentID);
       }
+      $cached = 0;
     }
+
     $hookCacheString = CRM_Utils_Hook::alterSettingsMetaData($settingsMetadata, $domainID, $profile);
     self::_filterSettingsSpecification($filters, $settingsMetadata);
-    CRM_Core_BAO_Cache::setItem($settingsMetadata,'CiviCRM setting Specs', $cacheString . $hookCacheString, $componentID);
+    if(!$cached || !empty($hookCacheString)){
+      // this is a bit 'heavy' if you are using hooks but this function is expected to only be called during setting administration
+      // it should not be called by 'getvalue' or 'getitem
+      CRM_Core_BAO_Cache::setItem($settingsMetadata,'CiviCRM setting Specs', $cacheString . $hookCacheString, $componentID);
+    }
     return $settingsMetadata;
 
   }
+
   /**
    * Load up settings metadata from files
    */
@@ -620,12 +643,14 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     $domain->find(TRUE);
     if ($domain->config_backend) {
       $values = unserialize($domain->config_backend);
+    } else {
+      $values = array();
     }
     $spec = self::getSettingSpecification(null, array('name' => $name), $domainID);
     $configKey = CRM_Utils_Array::value('config_key', $spec[$name], CRM_Utils_Array::value('legacy_key', $spec[$name], $name));
     //if the key is set to config_only we don't need to do anything
     if(empty($spec[$name]['config_only'])){
-      if ($values[$configKey]) {
+      if (!empty($values[$configKey])) {
         civicrm_api('setting', 'create', array('version' => 3, $name => $values[$configKey], 'domain_id' => $domainID));
       }
       else {

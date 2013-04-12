@@ -51,7 +51,7 @@ class CRM_Core_BAO_ConfigSetting {
   static function create($params) {
     self::add($params);
     $cache = CRM_Utils_Cache::singleton();
-    $cache->delete('CRM_Core_Config');
+    $cache->delete('CRM_Core_Config' . CRM_Core_Config::domainID());
     $config = CRM_Core_Config::singleton(TRUE, TRUE);
   }
 

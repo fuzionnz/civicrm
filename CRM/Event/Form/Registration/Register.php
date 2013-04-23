@@ -154,7 +154,7 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration {
       return;
     }
 
-    $contactID = parent::getContactID();        
+    $contactID = parent::getContactID();
     if ($contactID) {
       $names = array(
         'first_name', 'middle_name', 'last_name',
@@ -190,14 +190,14 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration {
     if (!CRM_Utils_Array::value("billing_country_id-{$this->_bltID}", $this->_defaults)) {
       $this->_defaults["billing_country_id-{$this->_bltID}"] = $config->defaultContactCountry;
     }
-    
+
     // now fix all state country selectors
     CRM_Core_BAO_Address::fixAllStateSelects($this, $this->_defaults);
-    
+
     if ($this->_ppType) {
       return $this->_defaults;
     }
-    
+
     if ($contactID) {
       $options = array();
       $fields = array();
@@ -221,6 +221,11 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration {
         }
       }
     }
+
+    if (!empty($fields)) {
+      CRM_Core_BAO_UFGroup::setProfileDefaults($contactID, $fields, $this->_defaults);
+    }
+
     //if event is monetary and pay later is enabled and payment
     //processor is not available then freeze the pay later checkbox with
     //default check
@@ -319,7 +324,7 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration {
     if (!empty($getDefaults)) {
       $this->_defaults = array_merge($this->_defaults, $getDefaults);
     }
-     
+
     return $this->_defaults;
   }
 
@@ -1012,10 +1017,11 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration {
       $this->assign('pay_later_text', $this->_values['event']['pay_later_text']);
       $this->assign('pay_later_receipt', $this->_values['event']['pay_later_receipt']);
     }
+
     if (!$this->_allowConfirmation) {
       // check if the participant is already registered
       if (!$this->_skipDupeRegistrationCheck) {
-        $params['contact_id'] = self::checkRegistration($params, $this, FALSE, TRUE);
+        $params['contact_id'] = self::checkRegistration($params, $this, FALSE, TRUE, TRUE);
       }
     }
 
@@ -1400,7 +1406,7 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration {
    * @return void
    * @access public
    */
-  function checkRegistration($fields, &$self, $isAdditional = FALSE, $returnContactId = FALSE) {
+  function checkRegistration($fields, &$self, $isAdditional = FALSE, $returnContactId = FALSE, $useDedupeRules = FALSE) {
     // CRM-3907, skip check for preview registrations
     // CRM-4320 participant need to walk wizard
     if (!$returnContactId &&
@@ -1419,11 +1425,10 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration {
       is_array($fields) &&
       !empty($fields)
     ) {
-
       //CRM-6996
       //as we are allowing w/ same email address,
       //lets check w/ other contact params.
-      if ($self->_values['event']['allow_same_participant_emails']) {
+      if ($self->_values['event']['allow_same_participant_emails'] || $useDedupeRules) {
         $params = $fields;
         $level = ($isAdditional) ? 'Fuzzy' : 'Strict';
 

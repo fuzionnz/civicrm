@@ -53,7 +53,7 @@ class CRM_Core_Session {
    *
    * @var object
    */
-  protected $_session;
+  protected $_session = NULL;
 
   /**
    * We only need one instance of this object. So we use the singleton
@@ -109,7 +109,26 @@ class CRM_Core_Session {
    *
    * @return void
    */
-  function create() {
+    function initialize() {
+    // lets initialize the _session variable just before we need it
+    // hopefully any bootstrapping code will actually load the session from the CMS
+    if (!isset($this->_session)) {
+      // CRM-9483
+      if (!isset($_SESSION) && PHP_SAPI !== 'cli') {
+        if ($isRead) {
+          return;
+        }
+        $config =& CRM_Core_Config::singleton();
+        if ($config->userSystem->is_drupal && function_exists('drupal_session_start')) {
+          drupal_session_start();
+        }
+        else {
+          session_start();
+        }
+      }
+      $this->_session =& $_SESSION;
+    }
+
     if (!isset($this->_session[$this->_key]) ||
       !is_array($this->_session[$this->_key])
     ) {
@@ -127,6 +146,8 @@ class CRM_Core_Session {
    */
   function reset($all = 1) {
     if ($all != 1) {
+      $this->initialize();
+
       // to make certain we clear it, first initialize it to empty
       $this->_session[$this->_key] = array();
       unset($this->_session[$this->_key]);
@@ -146,8 +167,10 @@ class CRM_Core_Session {
    *
    * @return void
    */
-  function createScope($prefix) {
-    if (empty($prefix)) {
+  function createScope($prefix, $isRead = FALSE) {
+    $this->initialize($isRead);
+
+    if ($isRead || empty($prefix)) {
       return;
     }
 
@@ -165,6 +188,8 @@ class CRM_Core_Session {
    * @return void
    */
   function resetScope($prefix) {
+    $this->initialize();
+
     if (empty($prefix)) {
       return;
     }
@@ -193,7 +218,6 @@ class CRM_Core_Session {
    */
   function set($name, $value = NULL, $prefix = NULL) {
     // create session scope
-    $this->create();
     $this->createScope($prefix);
 
     if (empty($prefix)) {
@@ -229,14 +253,20 @@ class CRM_Core_Session {
    */
   function get($name, $prefix = NULL) {
     // create session scope
-    $this->create();
-    $this->createScope($prefix);
+    $this->createScope($prefix, TRUE);
+
+    if (empty($this->_session) || empty($this->_session[$this->_key])) {
+      return null;
+    }
 
     if (empty($prefix)) {
-      $session = &$this->_session[$this->_key];
+      $session =& $this->_session[$this->_key];
     }
     else {
-      $session = &$this->_session[$this->_key][$prefix];
+      if (empty($this->_session[$this->_key][$prefix])) {
+        return null;
+      }
+      $session =& $this->_session[$this->_key][$prefix];
     }
 
     return CRM_Utils_Array::value($name, $session);
@@ -256,8 +286,7 @@ class CRM_Core_Session {
    */
   function getVars(&$vars, $prefix = '') {
     // create session scope
-    $this->create();
-    $this->createScope($prefix);
+    $this->createScope($prefix, TRUE);
 
     if (empty($prefix)) {
       $values = &$this->_session[$this->_key];
@@ -369,6 +398,7 @@ class CRM_Core_Session {
    * dumps the session to the log
    */
   function debug($all = 1) {
+    $this->initialize();
     if ($all != 1) {
       CRM_Core_Error::debug('CRM Session', $this->_session);
     }
@@ -385,7 +415,7 @@ class CRM_Core_Session {
    * @return string        the status message if any
    */
   function getStatus($reset = FALSE) {
-    $this->create();
+    $this->initialize();
 
     $status = NULL;
     if (array_key_exists('status', $this->_session[$this->_key])) {
@@ -411,6 +441,7 @@ class CRM_Core_Session {
   static function setStatus($status, $append = TRUE) {
     // make sure session is initialized, CRM-8120
     $session = self::singleton();
+    $session->initialize();
 
     if (isset(self::$_singleton->_session[self::$_singleton->_key]['status'])) {
       if ($append) {

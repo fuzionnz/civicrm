@@ -82,7 +82,7 @@ class CRM_Core_Session {
    * @return void
    */
   function __construct() {
-    if (!$_SESSION) {
+    if (!isset($_SESSION)) {
       session_start();
     }
     $this->_session = &$_SESSION;

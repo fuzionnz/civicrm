@@ -92,4 +92,3 @@ DELIMITER ;
 
 SET max_sp_recursion_depth = 15 ;
 call buildNavigation();
- TABLE aaa_nav_2 SELECT * FROM civicrm_navigation;

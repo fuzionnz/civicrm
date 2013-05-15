@@ -36,7 +36,7 @@
                 <div class="description font-italic">
                     {ts}Complete OR partial contact name.{/ts}
                 </div>
-              
+
               {$form.relation_target_group.label} {help id="id-relationship-target-group" file="CRM/Contact/Form/Search/Advanced.hlp"}<br />
               {$form.relation_target_group.html|crmReplace:class:huge}
               <div class="description font-italic">
@@ -53,12 +53,24 @@
                 });
                 </script>
               {/literal}
-              
+
             </td>
             <td>
                {$form.relation_status.label}<span class="crm-clear-link">(<a href="#" title="unselect" onclick="unselectRadio('relation_status', 'Advanced'); return false;" >{ts}clear{/ts}</a>)</span><br />
                {$form.relation_status.html}
             </td>
+         </tr>
+         <tr class="relation-type-dependent">
+           <td colspan="2"><label>{ts}Start Date{/ts}</label></td>
+         </tr>
+         <tr class="relation-type-dependent">
+           {include file="CRM/Core/DateRange.tpl" fieldName="relation_start_date" from='_low' to='_high'}
+         </tr>
+         <tr class="relation-type-dependent">
+           <td colspan="2"><label>{ts}End Date{/ts}</label></td>
+         </tr>
+         <tr class="relation-type-dependent">
+           {include file="CRM/Core/DateRange.tpl" fieldName="relation_end_date" from='_low' to='_high'}
          </tr>
          {if $relationshipGroupTree}
          <tr>
@@ -67,5 +79,5 @@
             </td>
          </tr>
          {/if}
-    </table>         
+    </table>
 </div>

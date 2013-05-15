@@ -23,7 +23,7 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
-<tr>	
+<tr>
 	<tr><td><label>{ts}Contribution Dates{/ts}</label></td></tr>
 	{include file="CRM/Core/DateRange.tpl" fieldName="contribution_date" from='_low' to='_high'}
 </tr>
@@ -85,7 +85,7 @@
 </tr>
 
 {* campaign in contribution search *}
-{include file="CRM/Campaign/Form/addCampaignToComponent.tpl" campaignContext="componentSearch" 
+{include file="CRM/Campaign/Form/addCampaignToComponent.tpl" campaignContext="componentSearch"
 	 campaignTrClass='' campaignTdClass=''}
 
 {if $contributeGroupTree}

@@ -23,19 +23,20 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
-{*this is included inside the table*}
+{*this is included inside a table row*}
 {assign var=relativeName   value=$fieldName|cat:"_relative"}
 <td>{$form.$relativeName.html}</td>
-<td>   
-    <span id="absolute_{$relativeName}"> 
-        {assign var=fromName   value=$fieldName|cat:$from}
-        {$form.$fromName.label}
-        {include file="CRM/common/jcalendar.tpl" elementName=$fromName} 
-        {assign var=toName   value=$fieldName|cat:$to}
-        {$form.$toName.label}
-        {include file="CRM/common/jcalendar.tpl" elementName=$toName} 
-    </span>   
-            
+<td>
+  <span id="absolute_{$relativeName}" class="crm-absolute-date-range">
+    {assign var=fromName   value=$fieldName|cat:$from}
+    {$form.$fromName.label}
+    {include file="CRM/common/jcalendar.tpl" elementName=$fromName}
+    &nbsp;&nbsp;
+    {assign var=toName   value=$fieldName|cat:$to}
+    {$form.$toName.label}
+    {include file="CRM/common/jcalendar.tpl" elementName=$toName}
+  </span>
+
 </td>
 {literal}
 <script type="text/javascript">
@@ -51,4 +52,4 @@
         }
     }
 </script>
-{/literal}        
+{/literal}

@@ -239,7 +239,7 @@ class CRM_Contact_Form_Search_Criteria {
     // Build location criteria based on _submitValues if
     // available; otherwise, use $form->_formValues.
     $formValues = $form->_submitValues;
-    
+
     if (empty($formValues) && !empty($form->_formValues)) {
       $formValues = $form->_formValues;
     }
@@ -436,6 +436,8 @@ class CRM_Contact_Form_Search_Criteria {
         array('id' => 'relation_target_group', 'multiple' => 'multiple', 'title' => ts('- select -'))
       );
     }
+    CRM_Core_Form_Date::buildDateRange($form, 'relation_start_date', 1, '_low', '_high', ts('From:'), FALSE, FALSE);
+    CRM_Core_Form_Date::buildDateRange($form, 'relation_end_date', 1, '_low', '_high', ts('From:'), FALSE, FALSE);
 
     // add all the custom  searchable fields
     $relationship = array('Relationship');

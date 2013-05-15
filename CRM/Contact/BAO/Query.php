@@ -353,7 +353,11 @@ class CRM_Contact_BAO_Query {
    * so we can skip the other
    */
   protected $_rangeCache = array();
-
+/**
+ * Set to true when $this->relationship is run to avoid adding twice
+ * @var Boolean
+ */
+  protected $_relationshipValuesAdded = FALSE;
   /**
    * class constructor which also does all the work
    *
@@ -1456,7 +1460,12 @@ class CRM_Contact_BAO_Query {
         return;
 
       case 'relation_type_id':
+      case 'relation_start_date_high':
+      case 'relation_start_date_low':
+      case 'relation_end_date_high':
+      case 'relation_end_date_low':
         $this->relationship($values);
+        $this->_relationshipValuesAdded = TRUE;
         return;
 
       case 'relation_target_name':
@@ -3435,7 +3444,9 @@ WHERE  id IN ( $groupIDs )
    */
   function relationship(&$values) {
     list($name, $op, $value, $grouping, $wildcard) = $values;
-
+    if($this->_relationshipValuesAdded){
+       return;
+    }
     // also get values array for relation_target_name
     // for relatinship search we always do wildcard
     $targetName  = $this->getWhereValues('relation_target_name', $grouping);
@@ -3465,9 +3476,6 @@ WHERE  id IN ( $groupIDs )
     $params = array('id' => $rel[0]);
     $rTypeValues = array();
     $rType = CRM_Contact_BAO_RelationshipType::retrieve($params, $rTypeValues);
-    if (!$rType) {
-      return;
-    }
 
     if ($rTypeValues['name_a_b'] == $rTypeValues['name_b_a']) {
       self::$_relType = 'reciprocal';
@@ -3520,13 +3528,13 @@ WHERE  id IN ( $groupIDs )
 
     //check for active, inactive and all relation status
     $today = date('Ymd');
-    if ($relStatus[2] == 0) {
+    if ($relStatus[2] === 0) {
       $this->_where[$grouping][] = "(
 civicrm_relationship.is_active = 1 AND
 ( civicrm_relationship.end_date IS NULL OR civicrm_relationship.end_date >= {$today} ) AND
 ( civicrm_relationship.start_date IS NULL OR civicrm_relationship.start_date <= {$today} )
 )";
-      $this->_qill[$grouping][] = ts('Relationship - Active');
+      $this->_qill[$grouping][] = ts('Relationship - Active and Current');
     }
     elseif ($relStatus[2] == 1) {
       $this->_where[$grouping][] = "(
@@ -3534,14 +3542,43 @@ civicrm_relationship.is_active = 0 OR
 civicrm_relationship.end_date < {$today} OR
 civicrm_relationship.start_date > {$today}
 )";
-      $this->_qill[$grouping][] = ts('Relationship - Inactive');
+      $this->_qill[$grouping][] = ts('Relationship - Inactive or not Current');
     }
 
-    $this->_where[$grouping][] = 'civicrm_relationship.relationship_type_id = ' . $rel[0];
+    $this->addRelationshipDateClauses($grouping);
+    if(!empty($rType) && isset($rType->id)){
+      $this->_where[$grouping][] = 'civicrm_relationship.relationship_type_id = ' . $rType->id;
+    }
     $this->_tables['civicrm_relationship'] = $this->_whereTables['civicrm_relationship'] = 1;
     $this->_useDistinct = TRUE;
+    $this->_relationshipValuesAdded = TRUE;
   }
+/**
+ * Add start & end date criteria in
+ * @param string $grouping
+ */
+  function addRelationshipDateClauses($grouping){
+    $dateValues = array();
+    $dateTypes = array(
+        'start_date',
+        'end_date',
+    );
 
+    foreach ($dateTypes as $dateField){
+      $dateValueLow = $this->getWhereValues('relation_'. $dateField .'_low', $grouping);
+      $dateValueHigh= $this->getWhereValues('relation_'. $dateField .'_high', $grouping);
+      if(!empty($dateValueLow)){
+        $date = date('Ymd', strtotime($dateValueLow[2]));
+        $this->_where[$grouping][] = "civicrm_relationship.$dateField >= $date";
+        $this->_qill[$grouping][] = ($dateField == 'end_date' ? ts('Relationship Ended on or After') : ts('Relationship Recorded Start Date On or Before')) . " " . CRM_Utils_Date::customFormat($date);
+      }
+      if(!empty($dateValueHigh)){
+        $date = date('Ymd', strtotime($dateValueHigh[2]));
+        $this->_where[$grouping][] = "civicrm_relationship.$dateField <= $date";
+        $this->_qill[$grouping][] = ( $dateField == 'end_date' ? ts('Relationship Ended on or Before') : ts('Relationship Recorded Start Date On or After')) . " " . CRM_Utils_Date::customFormat($date);
+      }
+    }
+  }
   /**
    * default set of return properties
    *

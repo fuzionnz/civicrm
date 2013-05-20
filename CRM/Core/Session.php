@@ -82,16 +82,13 @@ class CRM_Core_Session {
    * @return void
    */
   function __construct() {
-    if (!isset($_SESSION)) {
-      session_start();
-    }
-    $this->_session = &$_SESSION;
+    $this->_session = null;
   }
 
   /**
    * singleton function used to manage this object
    *
-   * @return object
+   * @return CRM_CoreSession
    * @static
    */
   static function &singleton() {
@@ -105,11 +102,13 @@ class CRM_Core_Session {
    * Creates an array in the session. All variables now will be stored
    * under this array
    *
+   * @param boolean isRead is this a read operation, in this case, the session will not be touched
+   *
    * @access private
    *
    * @return void
    */
-    function initialize() {
+    function initialize($isRead = FALSE) {
     // lets initialize the _session variable just before we need it
     // hopefully any bootstrapping code will actually load the session from the CMS
     if (!isset($this->_session)) {
@@ -127,6 +126,9 @@ class CRM_Core_Session {
         }
       }
       $this->_session =& $_SESSION;
+    }
+    if ($isRead) {
+      return;
     }
 
     if (!isset($this->_session[$this->_key]) ||
@@ -162,7 +164,9 @@ class CRM_Core_Session {
   /**
    * creates a session local scope
    *
-   * @param string local scope name
+   * @param string  prefix local scope name
+   * @param boolean isRead is this a read operation, in this case, the session will not be touched
+   *
    * @access public
    *
    * @return void

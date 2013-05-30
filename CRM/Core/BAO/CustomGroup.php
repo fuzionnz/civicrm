@@ -260,7 +260,8 @@ class CRM_Core_BAO_CustomGroup extends CRM_Core_DAO_CustomGroup {
     $entityID = NULL,
     $groupID  = NULL,
     $subType  = NULL,
-    $subName  = NULL
+    $subName  = NULL,
+    $fromCache = TRUE
   ) {
     if ($entityID) {
       $entityID = CRM_Utils_Type::escape($entityID, 'Integer');
@@ -413,13 +414,18 @@ ORDER BY civicrm_custom_group.weight,
     }
 
     $cacheKey = "CRM_Core_DAO_CustomGroup_Query " . md5($cacheString);
-
+    $multipleFieldGroupCacheKey = "CRM_Core_DAO_CustomGroup_QueryMultipleFields " . md5($cacheString);
     $cache = CRM_Utils_Cache::singleton();
-    $groupTree = $cache->get($cacheKey);
-    if (empty($groupTree)) {
-      $groupTree = array();
-      $crmDAO = CRM_Core_DAO::executeQuery($queryString, $params);
 
+    $tablesWithEntityData = array();
+    if ($fromCache) {
+      $groupTree = $cache->get($cacheKey);
+      $multipleFieldGroups = $cache->get($multipleFieldGroupCacheKey);
+    }
+
+    if (empty($groupTree)) {
+      $groupTree = $multipleFieldGroups =array();
+      $crmDAO = CRM_Core_DAO::executeQuery($queryString, $params);
       $customValueTables = array();
 
       // process records
@@ -427,7 +433,9 @@ ORDER BY civicrm_custom_group.weight,
         // get the id's
         $groupID = $crmDAO->civicrm_custom_group_id;
         $fieldId = $crmDAO->civicrm_custom_field_id;
-
+        if($crmDAO->civicrm_custom_group_is_multiple){
+          $multipleFieldGroups[$groupID] = $crmDAO->civicrm_custom_group_table_name;
+        }
         // create an array for groups if it does not exist
         if (!array_key_exists($groupID, $groupTree)) {
           $groupTree[$groupID] = array();
@@ -477,81 +485,177 @@ ORDER BY civicrm_custom_group.weight,
       }
 
       $cache->set($cacheKey, $groupTree);
+      $cache->set($multipleFieldGroupCacheKey, $multipleFieldGroups);
     }
+    //entitySelectClauses is an array of select clauses for custom value tables which are not multiple
+    // and have data for the given entities. $entityMultipleSelectClauses is the same for ones with multiple
+    $entitySingleSelectClauses = $entityMultipleSelectClauses = $groupTree['info']['select'] = array();
 
     // now that we have all the groups and fields, lets get the values
     // since we need to know the table and field names
 
     // add info to groupTree
-    if (isset($groupTree['info']) && !empty($groupTree['info'])) {
-      $select = $from = $where = array();
-      foreach ($groupTree['info']['tables'] as $table => $fields) {
-        $from[]   = $table;
-        $select[] = "{$table}.id as {$table}_id";
-        $select[] = "{$table}.entity_id as {$table}_entity_id";
 
+    if (isset($groupTree['info']) && !empty($groupTree['info']) && !empty($groupTree['info']['tables'])) {
+      $select = $from = $where = array();
+      $groupTree['info']['where'] = NULL;
+
+      foreach ($groupTree['info']['tables'] as $table => $fields) {
+        $groupTree['info']['from'][]   = $table;
+        $select = array("{$table}.id as {$table}_id",
+          "{$table}.entity_id as {$table}_entity_id");
         foreach ($fields as $column => $dontCare) {
           $select[] = "{$table}.{$column} as {$table}_{$column}";
         }
-
+        $groupTree['info']['select'] = array_merge($groupTree['info']['select'], $select);
         if ($entityID) {
-          $where[] = "{$table}.entity_id = $entityID";
-        }
-      }
-
-      $groupTree['info']['select'] = $select;
-      $groupTree['info']['from'] = $from;
-      $groupTree['info']['where'] = NULL;
-
-      if ($entityID) {
-        $groupTree['info']['where'] = $where;
-        $select = implode(', ', $select);
-
-        // this is a hack to find a table that has some values for this
-        // entityID to make the below LEFT JOIN work (CRM-2518)
-        $firstTable = NULL;
-        foreach ($from as $table) {
-          $query = "
-SELECT id
-FROM   $table
-WHERE  entity_id = $entityID
-";
-          $recordExists = CRM_Core_DAO::singleValueQuery($query);
-          if ($recordExists) {
-            $firstTable = $table;
-            break;
-          }
-        }
-
-        if ($firstTable) {
-          $fromSQL = $firstTable;
-          foreach ($from as $table) {
-            if ($table != $firstTable) {
-              $fromSQL .= "\nLEFT JOIN $table USING (entity_id)";
+          /*
+          * Checking each table does create many little queries but saves left joins later. An alternative would be
+          * to do this as a union query to reduce the number. Probably if the retrieval of entity specific custom data
+          * were separated from the retrieval of the 'info' array it would be easier to restructure in a more query-efficient way
+          * (see comment block at top)
+          */
+          if(self::customGroupDataExistsForEntity($entityID, $table)){
+            $tablesWithEntityData[] = $table;
+            $groupTree['info']['where'][] = "{$table}.entity_id = $entityID";
+            if(!in_array($table, $multipleFieldGroups)){
+              $entitySingleSelectClauses = array_merge($entitySingleSelectClauses, $select);
+            }
+            else{
+              $entityMultipleSelectClauses[$table] = $select;
             }
           }
+        }
+      }
+      if ($entityID && !empty($tablesWithEntityData)) {
+        $singleFieldTablesWithEntityData = array_diff($tablesWithEntityData, $multipleFieldGroups);
+        if(!empty($singleFieldTablesWithEntityData)){
+          self::buildEntityTreeSingleFields(&$groupTree, $entityID, $entitySingleSelectClauses, $singleFieldTablesWithEntityData);
+        }
+        $multipleFieldTablesWithEntityData = array_intersect($tablesWithEntityData, $multipleFieldGroups);
+        if(!empty($singleFieldTablesWithEntityData)){
+          self::buildEntityTreeMultipleFields(&$groupTree, $entityID, $entityMultipleSelectClauses, $multipleFieldTablesWithEntityData);
+        }
+     }
+   }
+    return $groupTree;
+  }
 
-          $query = "
-SELECT $select
-  FROM $fromSQL
- WHERE {$firstTable}.entity_id = $entityID
-";
+  /**
+   * Check whether the custom group has any data for the given entity.
+   *
+   *
+   * @param integer $entityID id of entity for whom we are checking data for
+   * @param string $table table that we are checking
+   *
+   * @return boolean does this entity have data in this custom table
+   */
+  static public function customGroupDataExistsForEntity($entityID, $table){
+    $query = "
+      SELECT count(id)
+      FROM   $table
+      WHERE  entity_id = $entityID
+    ";
+    $recordExists = CRM_Core_DAO::singleValueQuery($query);
+    return $recordExists ? TRUE : FALSE;
+  }
 
-          $dao = CRM_Core_DAO::executeQuery($query);
+/**
+ * Build the group tree for Custom fields which are not 'is_multiple'
+ *
+ * The combination of all these fields in one query with a 'using' join was not working for
+ * multiple fields. These now have a new behaviour (one at a time) but the single fields still use this
+ * mechanism as it seemed to be acceptable in this context
+ *
+ * @param array $groupTree (reference) group tree array which is being built
+ * @param integer $entityID id of entity for whom the tree is being build up.
+ * @param array $entitySingleSelectClauses array of select clauses relevant to the entity
+ * @param array $singleFieldTablesWithEntityData array of tables in which this entity has data
+ */
+  static public function buildEntityTreeSingleFields(&$groupTree, $entityID, $entitySingleSelectClauses, $singleFieldTablesWithEntityData){
+    $select = implode(', ', $entitySingleSelectClauses);
+    $fromSQL = $firstTable = array_pop($singleFieldTablesWithEntityData);
+    foreach ($singleFieldTablesWithEntityData as $table) {
+      $fromSQL .= "\nLEFT JOIN $table USING (entity_id)";
+    }
 
-          while ($dao->fetch()) {
-            foreach ($groupTree as $groupID => $group) {
-              if ($groupID === 'info') {
-                continue;
-              }
-              $table = $groupTree[$groupID]['table_name'];
-              foreach ($group['fields'] as $fieldID => $dontCare) {
-                $column    = $groupTree[$groupID]['fields'][$fieldID]['column_name'];
-                $idName    = "{$table}_id";
-                $fieldName = "{$table}_{$column}";
+    $query = "
+      SELECT $select
+      FROM $fromSQL
+      WHERE {$firstTable}.entity_id = $entityID
+    ";
+    self::buildTreeEntityDataFromQuery(&$groupTree, $query, $singleFieldTablesWithEntityData);
+  }
 
-                $dataType = $groupTree[$groupID]['fields'][$fieldID]['data_type'];
-                if ($dataType == 'File') {
+  /**
+ * Build the group tree for Custom fields which are  'is_multiple'
+ *
+ * This is done one table at a time to avoid Cross-Joins resulting in too many rows being returned
+ *
+ * @param array $groupTree (reference) group tree array which is being built
+ * @param integer $entityID id of entity for whom the tree is being build up.
+ * @param array $entityMultipleSelectClauses array of select clauses relevant to the entity
+ * @param array $multipleFieldTablesWithEntityData array of tables in which this entity has data
+ */
+  static public function buildEntityTreeMultipleFields(&$groupTree, $entityID, $entityMultipleSelectClauses, $multipleFieldTablesWithEntityData){
+    foreach ($entityMultipleSelectClauses as $table => $selectClauses) {
+      $select = implode(',', $selectClauses);
+      $query = "
+        SELECT $select
+        FROM $table
+        WHERE entity_id = $entityID
+      ";
+      self::buildTreeEntityDataFromQuery(&$groupTree, $query, array($table));
+    }
+  }
+
+  /**
+   * Build the tree entity data - starting from a query retrieving the custom fields build the group
+   * tree data for the relevant entity (entity is included in the query).
+   *
+   * This function represents shared code between the buildEntityTreeMultipleFields & the buildEntityTreeSingleFields function
+   *
+   * @param array $groupTree (reference) group tree array which is being built
+   * @param string $query
+   * @param array $includedTables tables to include - required because the function (for historical reasons)
+   * iterates through the group tree
+   */
+   static public function buildTreeEntityDataFromQuery(&$groupTree, $query, $includedTables){
+    $dao = CRM_Core_DAO::executeQuery($query);
+    while ($dao->fetch()) {
+      foreach ($groupTree as $groupID => $group) {
+        if ($groupID === 'info') {
+          continue;
+        }
+        $table = $groupTree[$groupID]['table_name'];
+        //working from the groupTree instead of the table list means we have to iterate & exclude.
+        // this could possibly be re-written as other parts of the function have been refactored
+        // for now we just check if the given table is to be included in this function
+        if( !in_array($table, $includedTables)){
+          continue;
+        }
+        foreach ($group['fields'] as $fieldID => $dontCare) {
+          self::buildCustomFieldData($dao, $groupTree, $table, $groupID, $fieldID);
+        }
+      }
+    }
+  }
+
+  /**
+   * Build the entity-specific custom data into the group tree on a per-field basis
+   *
+   * @param object $dao object representing the custom field to be populated into the groupTree
+   * @param array $groupTree (reference) the group tree being build
+   * @param string $table table name
+   * @param unknown_type $groupID custom group ID
+   * @param unknown_type $fieldID custom field ID
+   */
+  static public function buildCustomFieldData($dao, &$groupTree, $table, $groupID, $fieldID){
+    $column    = $groupTree[$groupID]['fields'][$fieldID]['column_name'];
+    $idName    = "{$table}_id";
+    $fieldName = "{$table}_{$column}";
+    $dataType = $groupTree[$groupID]['fields'][$fieldID]['data_type'];
+                  if ($dataType == 'File') {
                   if (isset($dao->$fieldName)) {
                     $config      = CRM_Core_Config::singleton();
                     $fileDAO     = new CRM_Core_DAO_File();
@@ -613,14 +717,15 @@ SELECT $select
                       'data' => '',
                     );
                   }
-                }
-                else {
-                  $customValue = array(
-                    'id' => $dao->$idName,
-                    'data' => $dao->$fieldName,
-                  );
-                }
-                if (!array_key_exists('customValue', $groupTree[$groupID]['fields'][$fieldID])) {
+                  }
+                  else {
+                    $customValue = array(
+                      'id' => $dao->$idName,
+                      'data' => $dao->$fieldName,
+                    );
+                  }
+
+                  if (!array_key_exists('customValue', $groupTree[$groupID]['fields'][$fieldID])) {
                   $groupTree[$groupID]['fields'][$fieldID]['customValue'] = array();
                 }
                 if (empty($groupTree[$groupID]['fields'][$fieldID]['customValue'])) {
@@ -629,14 +734,6 @@ SELECT $select
                 else {
                   $groupTree[$groupID]['fields'][$fieldID]['customValue'][] = $customValue;
                 }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    return $groupTree;
   }
 
   /**

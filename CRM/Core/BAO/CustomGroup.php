@@ -238,24 +238,78 @@ class CRM_Core_BAO_CustomGroup extends CRM_Core_DAO_CustomGroup {
   }
 
   /**
-   * Get custom groups/fields for type of entity.
+   * Determine if given entity (sub)type has any custom groups
+   *
+   * @param string $extends e.g. "Individual", "Activity"
+   * @param int $columnId e.g. custom-group matching mechanism (usu NULL for matching on sub type-id); see extends_entity_column_id
+   * @param string $columnValue e.g. "Student" or "3" or "3\05"; see extends_entity_column_value
+   */
+  public static function hasCustomGroup($extends, $columnId, $columnValue) {
+    $dao = new CRM_Core_DAO_CustomGroup();
+    $dao->extends  = $extends;
+    $dao->extends_entity_column_id = $columnId;
+    $escapedValue = CRM_Core_DAO::VALUE_SEPARATOR . CRM_Core_DAO::escapeString($columnValue) . CRM_Core_DAO::VALUE_SEPARATOR;
+    $dao->whereAdd("extends_entity_column_value LIKE \"%$escapedValue%\"");
+    //$dao->extends_entity_column_value = $columnValue;
+    return $dao->find() ? TRUE : FALSE;
+  }
+
+  /**
+   * Determine if there are any CustomGroups for the given $activityTypeId.
+   * If none found, create one.
+   *
+   * @param int $activityTypeId
+   * @return bool TRUE if a group is found or created; FALSE on error
+   */
+  public static function autoCreateByActivityType($activityTypeId) {
+    if (self::hasCustomGroup('Activity', NULL, $activityTypeId)) {
+      return TRUE;
+    }
+    $activityTypes = CRM_Core_PseudoConstant::activityType(TRUE, TRUE, FALSE, 'label', TRUE, FALSE); // everything
+    $params = array(
+      'version' => 3,
+      'extends' => 'Activity',
+      'extends_entity_column_id' => NULL,
+      'extends_entity_column_value' => CRM_Utils_Array::implodePadded(array($activityTypeId)),
+      'title' => ts('%1 Questions', array(1 => $activityTypes[$activityTypeId])),
+      'style' => 'Inline',
+      'is_active' => 1,
+    );
+    $result = civicrm_api('CustomGroup', 'create', $params);
+    return ! $result['is_error'];
+  }
+
+  /**
+   * Get custom groups/fields data for type of entity in a tree structure representing group->field hierarchy
+   * This may also include entity specific data values.
    *
    * An array containing all custom groups and their custom fields is returned.
    *
    * @param string $entityType - of the contact whose contact type is needed
+   * @param object $form - not used but required
    * @param int    $entityId   - optional - id of entity if we need to populate the tree with custom values.
    * @param int    $groupId    - optional group id (if we need it for a single group only)
    *                           - if groupId is 0 it gets for inline groups only
    *                           - if groupId is -1 we get for all groups
+   * @param string $subType
+   * @param string $subName
+   * @param boolean $fromCache
    *
-   * @return array $groupTree  - array consisting of all groups and fields and optionally populated with custom data values.
+   * @return array $groupTree  - array  The returned array is keyed by group id and has the custom group table fields
+   * and a subkey 'fields' holding the specific custom fields.
+   * If entityId is passed in the fields keys have a subkey 'customValue' which holds custom data
+   * if set for the given entity. This is structured as an array of values with each one having the keys 'id', 'data'
+   *
+   * @todo - review this  - It also returns an array called 'info' with tables, select, from, where keys
+   * The reason for the info array in unclear and it could be determined from parsing the group tree after creation
+   * With caching the performance impact would be small & the function would be cleaner
    *
    * @access public
    *
    * @static
    *
    */
-  public static function &getTree($entityType,
+  public static function getTree($entityType,
     &$form,
     $entityID = NULL,
     $groupID  = NULL,
@@ -493,7 +547,6 @@ ORDER BY civicrm_custom_group.weight,
 
     // now that we have all the groups and fields, lets get the values
     // since we need to know the table and field names
-
     // add info to groupTree
 
     if (isset($groupTree['info']) && !empty($groupTree['info']) && !empty($groupTree['info']['tables'])) {
@@ -574,7 +627,7 @@ ORDER BY civicrm_custom_group.weight,
  */
   static public function buildEntityTreeSingleFields(&$groupTree, $entityID, $entitySingleSelectClauses, $singleFieldTablesWithEntityData){
     $select = implode(', ', $entitySingleSelectClauses);
-    $fromSQL = $firstTable = array_pop($singleFieldTablesWithEntityData);
+    $fromSQL = " (SELECT $entityID as entity_id ) as first ";
     foreach ($singleFieldTablesWithEntityData as $table) {
       $fromSQL .= "\nLEFT JOIN $table USING (entity_id)";
     }
@@ -582,8 +635,9 @@ ORDER BY civicrm_custom_group.weight,
     $query = "
       SELECT $select
       FROM $fromSQL
-      WHERE {$firstTable}.entity_id = $entityID
+      WHERE first.entity_id = $entityID
     ";
+
     self::buildTreeEntityDataFromQuery(&$groupTree, $query, $singleFieldTablesWithEntityData);
   }
 
@@ -655,85 +709,86 @@ ORDER BY civicrm_custom_group.weight,
     $idName    = "{$table}_id";
     $fieldName = "{$table}_{$column}";
     $dataType = $groupTree[$groupID]['fields'][$fieldID]['data_type'];
-                  if ($dataType == 'File') {
-                  if (isset($dao->$fieldName)) {
-                    $config      = CRM_Core_Config::singleton();
-                    $fileDAO     = new CRM_Core_DAO_File();
-                    $fileDAO->id = $dao->$fieldName;
+    if ($dataType == 'File') {
+      if (isset($dao->$fieldName)) {
+        $config      = CRM_Core_Config::singleton();
+        $fileDAO     = new CRM_Core_DAO_File();
+        $fileDAO->id = $dao->$fieldName;
 
-                    if ($fileDAO->find(TRUE)) {
-                      $entityIDName = "{$table}_entity_id";
-                      $customValue['id'] = $dao->$idName;
-                      $customValue['data'] = $fileDAO->uri;
-                      $customValue['fid'] = $fileDAO->id;
-                      $customValue['fileURL'] = CRM_Utils_System::url('civicrm/file', "reset=1&id={$fileDAO->id}&eid={$dao->$entityIDName}");
-                      $customValue['displayURL'] = NULL;
-                      $deleteExtra = ts('Are you sure you want to delete attached file.');
-                      $deleteURL = array(
-                        CRM_Core_Action::DELETE =>
-                        array(
-                          'name' => ts('Delete Attached File'),
-                          'url' => 'civicrm/file',
-                          'qs' => 'reset=1&id=%%id%%&eid=%%eid%%&fid=%%fid%%&action=delete',
-                          'extra' =>
-                          'onclick = "if (confirm( \'' . $deleteExtra . '\' ) ) this.href+=\'&amp;confirmed=1\'; else return false;"',
-                        ),
-                      );
-                      $customValue['deleteURL'] = CRM_Core_Action::formLink($deleteURL,
-                        CRM_Core_Action::DELETE,
-                        array(
-                          'id' => $fileDAO->id,
-                          'eid' => $dao->$entityIDName,
-                          'fid' => $fieldID,
-                        )
-                      );
-                      $customValue['fileName'] = CRM_Utils_File::cleanFileName(basename($fileDAO->uri));
-                      if ($fileDAO->mime_type == "image/jpeg" ||
-                        $fileDAO->mime_type == "image/pjpeg" ||
-                        $fileDAO->mime_type == "image/gif" ||
-                        $fileDAO->mime_type == "image/x-png" ||
-                        $fileDAO->mime_type == "image/png"
-                      ) {
-                        $customValue['displayURL'] = $customValue['fileURL'];
-                        $entityId = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_EntityFile',
-                          $fileDAO->id,
-                          'entity_id',
-                          'file_id'
-                        );
-                        $customValue['imageURL'] = str_replace('persist/contribute', 'custom', $config->imageUploadURL) . $fileDAO->uri;
-                        list($path) = CRM_Core_BAO_File::path($fileDAO->id, $entityId,
-                          NULL, NULL
-                        );
-                        list($imageWidth, $imageHeight) = getimagesize($path);
-                        list($imageThumbWidth, $imageThumbHeight) = CRM_Contact_BAO_Contact::getThumbSize($imageWidth, $imageHeight);
-                        $customValue['imageThumbWidth'] = $imageThumbWidth;
-                        $customValue['imageThumbHeight'] = $imageThumbHeight;
-                      }
-                    }
-                  }
-                  else {
-                    $customValue = array(
-                      'id' => $dao->$idName,
-                      'data' => '',
-                    );
-                  }
-                  }
-                  else {
-                    $customValue = array(
-                      'id' => $dao->$idName,
-                      'data' => $dao->$fieldName,
-                    );
-                  }
+        if ($fileDAO->find(TRUE)) {
+          $entityIDName = "{$table}_entity_id";
+          $customValue['id'] = $dao->$idName;
+          $customValue['data'] = $fileDAO->uri;
+          $customValue['fid'] = $fileDAO->id;
+          $customValue['fileURL'] = CRM_Utils_System::url('civicrm/file', "reset=1&id={$fileDAO->id}&eid={$dao->$entityIDName}");
+          $customValue['displayURL'] = NULL;
+          $deleteExtra = ts('Are you sure you want to delete attached file.');
+          $deleteURL = array(
+            CRM_Core_Action::DELETE =>
+            array(
+              'name' => ts('Delete Attached File'),
+              'url' => 'civicrm/file',
+              'qs' => 'reset=1&id=%%id%%&eid=%%eid%%&fid=%%fid%%&action=delete',
+              'extra' =>
+              'onclick = "if (confirm( \'' . $deleteExtra . '\' ) ) this.href+=\'&amp;confirmed=1\'; else return false;"',
+            ),
+          );
+          $customValue['deleteURL'] = CRM_Core_Action::formLink($deleteURL,
+            CRM_Core_Action::DELETE,
+            array(
+              'id' => $fileDAO->id,
+              'eid' => $dao->$entityIDName,
+              'fid' => $fieldID,
+            )
+          );
+          $customValue['deleteURLArgs'] = CRM_Core_BAO_File::deleteURLArgs($table, $dao->$entityIDName, $fileDAO->id);
+          $customValue['fileName'] = CRM_Utils_File::cleanFileName(basename($fileDAO->uri));
+          if ($fileDAO->mime_type == "image/jpeg" ||
+            $fileDAO->mime_type == "image/pjpeg" ||
+            $fileDAO->mime_type == "image/gif" ||
+            $fileDAO->mime_type == "image/x-png" ||
+            $fileDAO->mime_type == "image/png"
+          ) {
+            $customValue['displayURL'] = $customValue['fileURL'];
+            $entityId = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_EntityFile',
+              $fileDAO->id,
+              'entity_id',
+              'file_id'
+            );
+            $customValue['imageURL'] = str_replace('persist/contribute', 'custom', $config->imageUploadURL) . $fileDAO->uri;
+            list($path) = CRM_Core_BAO_File::path($fileDAO->id, $entityId,
+              NULL, NULL
+            );
+            list($imageWidth, $imageHeight) = getimagesize($path);
+            list($imageThumbWidth, $imageThumbHeight) = CRM_Contact_BAO_Contact::getThumbSize($imageWidth, $imageHeight);
+            $customValue['imageThumbWidth'] = $imageThumbWidth;
+            $customValue['imageThumbHeight'] = $imageThumbHeight;
+          }
+        }
+      }
+      else {
+        $customValue = array(
+          'id' => $dao->$idName,
+          'data' => '',
+        );
+      }
+    }
+    else {
+      $customValue = array(
+        'id' => $dao->$idName,
+        'data' => $dao->$fieldName,
+      );
+    }
 
-                  if (!array_key_exists('customValue', $groupTree[$groupID]['fields'][$fieldID])) {
-                  $groupTree[$groupID]['fields'][$fieldID]['customValue'] = array();
-                }
-                if (empty($groupTree[$groupID]['fields'][$fieldID]['customValue'])) {
-                  $groupTree[$groupID]['fields'][$fieldID]['customValue'] = array(1 => $customValue);
-                }
-                else {
-                  $groupTree[$groupID]['fields'][$fieldID]['customValue'][] = $customValue;
-                }
+    if (!array_key_exists('customValue', $groupTree[$groupID]['fields'][$fieldID])) {
+      $groupTree[$groupID]['fields'][$fieldID]['customValue'] = array();
+    }
+    if (empty($groupTree[$groupID]['fields'][$fieldID]['customValue'])) {
+      $groupTree[$groupID]['fields'][$fieldID]['customValue'] = array(1 => $customValue);
+    }
+    else {
+      $groupTree[$groupID]['fields'][$fieldID]['customValue'][] = $customValue;
+    }
   }
 
   /**

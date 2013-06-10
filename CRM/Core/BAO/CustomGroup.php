@@ -627,7 +627,7 @@ ORDER BY civicrm_custom_group.weight,
  */
   static public function buildEntityTreeSingleFields(&$groupTree, $entityID, $entitySingleSelectClauses, $singleFieldTablesWithEntityData){
     $select = implode(', ', $entitySingleSelectClauses);
-    $fromSQL = $firstTable = array_pop($singleFieldTablesWithEntityData);
+    $fromSQL = " (SELECT $entityID as entity_id ) as first ";
     foreach ($singleFieldTablesWithEntityData as $table) {
       $fromSQL .= "\nLEFT JOIN $table USING (entity_id)";
     }
@@ -635,8 +635,9 @@ ORDER BY civicrm_custom_group.weight,
     $query = "
       SELECT $select
       FROM $fromSQL
-      WHERE {$firstTable}.entity_id = $entityID
+      WHERE first.entity_id = $entityID
     ";
+
     self::buildTreeEntityDataFromQuery(&$groupTree, $query, $singleFieldTablesWithEntityData);
   }
 

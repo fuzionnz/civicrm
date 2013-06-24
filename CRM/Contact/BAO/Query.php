@@ -1474,16 +1474,9 @@ class CRM_Contact_BAO_Query {
       case 'relation_start_date_low':
       case 'relation_end_date_high':
       case 'relation_end_date_low':
-        $this->relationship($values);
-        $this->_relationshipValuesAdded = TRUE;
-        return;
-
-      case 'relation_target_name':
-        // since this case is handled with the above
-        return;
-
       case 'relation_status':
-        // since this case is handled with the above
+      case 'relation_target_name':
+        $this->relationship($values);
         return;
 
       case 'task_status_id':
@@ -3506,7 +3499,6 @@ WHERE  id IN ( $groupIDs )
       $this->_qill[$grouping][] = "$allRelationshipType[$value]  $name";
     }
 
-
     //check to see if the target contact is in specified group
     if ($targetGroup) {
       //add contacts from static groups
@@ -3538,7 +3530,7 @@ WHERE  id IN ( $groupIDs )
 
     //check for active, inactive and all relation status
     $today = date('Ymd');
-    if ($relStatus[2] === 0) {
+    if ($relStatus[2] == 0) {
       $this->_where[$grouping][] = "(
 civicrm_relationship.is_active = 1 AND
 ( civicrm_relationship.end_date IS NULL OR civicrm_relationship.end_date >= {$today} ) AND

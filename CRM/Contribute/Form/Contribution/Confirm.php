@@ -1373,11 +1373,6 @@ class CRM_Contribute_Form_Contribution_Confirm extends CRM_Contribute_Form_Contr
       $contactID = $params['cms_contactID'];
     }
 
-    CRM_Contribute_BAO_Contribution_Utils::createCMSUser($params,
-      $contactID,
-      'email-' . $form->_bltID
-    );
-
     // return if pending
     if ($pending) {
       return $contribution;
@@ -1415,7 +1410,11 @@ class CRM_Contribute_Form_Contribution_Confirm extends CRM_Contribute_Form_Contr
     }
 
     $transaction->commit();
-
+    //keep this out of the transaction so no data is lost in the case of a CMS integration problem
+    CRM_Contribute_BAO_Contribution_Utils::createCMSUser($params,
+      $contactID,
+      'email-' . $form->_bltID
+    );
     return $contribution;
   }
 

@@ -261,14 +261,14 @@ class CRM_Contribute_Form_Contribution_Confirm extends CRM_Contribute_Form_Contr
             }
             if ($locationValue) {
               if ( !$locTypeId ) {
-                $this->_params['onbehalf_location'][$blockName][] = array( 
+                $this->_params['onbehalf_location'][$blockName][] = array(
                   $fieldName    => $value,
                   $locationType => $locationValue,
                   'is_primary'  => $isPrimary
                 );
               }
               else {
-                $this->_params['onbehalf_location'][$blockName][] = array( 
+                $this->_params['onbehalf_location'][$blockName][] = array(
                   $fieldName    => $value,
                   $locationType => $locationValue,
                   'is_primary'  => $isPrimary,

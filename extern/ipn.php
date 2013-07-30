@@ -38,6 +38,14 @@ require_once '../civicrm.config.php';
 /* Cache the real UF, override it with the SOAP environment */
 
 $config = CRM_Core_Config::singleton();
+$logTableExists = FALSE;
+$checkTable = "SHOW TABLES LIKE 'civicrm_notification_log'";
+$dao = CRM_Core_DAO::executeQuery($checkTable);
+if($dao->N) {
+  $dao = CRM_Core_DAO::executeQuery("INSERT INTO civicrm_notification_log (message_raw, message_type) VALUES (%1, 'paypalpro-ipn')",
+    array(1 => array(json_encode($_REQUEST), 'String'))
+  );
+}
 
 if (empty($_GET)) {
   $paypalIPN = new CRM_Core_Payment_PayPalProIPN($_REQUEST);

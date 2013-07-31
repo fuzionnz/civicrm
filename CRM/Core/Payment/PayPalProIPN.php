@@ -275,7 +275,7 @@ class CRM_Core_Payment_PayPalProIPN extends CRM_Core_Payment_BaseIPN {
 
       $objects['contribution'] = &$contribution;
     }
-    
+
     // CRM-13737 - am not aware of any reason why payment_date would not be set - this if is a belt & braces
     $objects['contribution']->receive_date = !empty($input['payment_date']) ? date('YmdHis', strtotime($input['payment_date'])): $now;
     $this->single($input, $ids, $objects,
@@ -461,6 +461,15 @@ INNER JOIN civicrm_membership_payment mp ON m.id = mp.membership_id AND mp.contr
     $input['net_amount'] = self::retrieve('settle_amount', 'Money', 'POST', FALSE);
     $input['trxn_id']    = self::retrieve('txn_id', 'String', 'POST', FALSE);
     $input['payment_date'] = self::retrieve('payment_date', 'String', 'POST', FALSE);
+  }
+
+  /**
+   * Handle payment express IPNs
+   * For one off IPNS no actual response is required
+   * Recurring is more difficult as we have limited confirmation material
+   */
+  function handlePaymentExpress() {
+    throw new CRM_Core_Exception('Payment Express IPNS not currently handled');
   }
 
   /**

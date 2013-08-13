@@ -544,7 +544,7 @@ ORDER BY civicrm_custom_group.weight,
     //entitySelectClauses is an array of select clauses for custom value tables which are not multiple
     // and have data for the given entities. $entityMultipleSelectClauses is the same for ones with multiple
     $entitySingleSelectClauses = $entityMultipleSelectClauses = $groupTree['info']['select'] = array();
-
+    $singleFieldTables = array();
     // now that we have all the groups and fields, lets get the values
     // since we need to know the table and field names
     // add info to groupTree
@@ -562,34 +562,25 @@ ORDER BY civicrm_custom_group.weight,
         }
         $groupTree['info']['select'] = array_merge($groupTree['info']['select'], $select);
         if ($entityID) {
-          /*
-          * Checking each table does create many little queries but saves left joins later. An alternative would be
-          * to do this as a union query to reduce the number. Probably if the retrieval of entity specific custom data
-          * were separated from the retrieval of the 'info' array it would be easier to restructure in a more query-efficient way
-          * (see comment block at top)
-          */
-          if(self::customGroupDataExistsForEntity($entityID, $table)){
-            $tablesWithEntityData[] = $table;
-            $groupTree['info']['where'][] = "{$table}.entity_id = $entityID";
-            if(!in_array($table, $multipleFieldGroups)){
-              $entitySingleSelectClauses = array_merge($entitySingleSelectClauses, $select);
-            }
-            else{
-              $entityMultipleSelectClauses[$table] = $select;
-            }
+          $groupTree['info']['where'][] = "{$table}.entity_id = $entityID";
+          if(in_array($table, $multipleFieldGroups) && self::customGroupDataExistsForEntity($entityID, $table)){
+            $entityMultipleSelectClauses[$table] = $select;
           }
+          else{
+            $singleFieldTables[] = $table;
+            $entitySingleSelectClauses = array_merge($entitySingleSelectClauses, $select);
+          }
+
         }
       }
-      if ($entityID && !empty($tablesWithEntityData)) {
-        $singleFieldTablesWithEntityData = array_diff($tablesWithEntityData, $multipleFieldGroups);
-        if(!empty($singleFieldTablesWithEntityData)){
-          self::buildEntityTreeSingleFields(&$groupTree, $entityID, $entitySingleSelectClauses, $singleFieldTablesWithEntityData);
-        }
-        $multipleFieldTablesWithEntityData = array_intersect($tablesWithEntityData, $multipleFieldGroups);
-        if(!empty($singleFieldTablesWithEntityData)){
-          self::buildEntityTreeMultipleFields(&$groupTree, $entityID, $entityMultipleSelectClauses, $multipleFieldTablesWithEntityData);
-        }
-     }
+      if ($entityID && !empty($singleFieldTables)) {
+        self::buildEntityTreeSingleFields($groupTree, $entityID, $entitySingleSelectClauses, $singleFieldTables);
+      }
+      $multipleFieldTablesWithEntityData = array_keys($entityMultipleSelectClauses);
+      if(!empty($multipleFieldTablesWithEntityData)){
+        self::buildEntityTreeMultipleFields($groupTree, $entityID, $entityMultipleSelectClauses, $multipleFieldTablesWithEntityData);
+      }
+
    }
     return $groupTree;
   }
@@ -637,8 +628,7 @@ ORDER BY civicrm_custom_group.weight,
       FROM $fromSQL
       WHERE first.entity_id = $entityID
     ";
-
-    self::buildTreeEntityDataFromQuery(&$groupTree, $query, $singleFieldTablesWithEntityData);
+    self::buildTreeEntityDataFromQuery($groupTree, $query, $singleFieldTablesWithEntityData);
   }
 
   /**
@@ -659,7 +649,7 @@ ORDER BY civicrm_custom_group.weight,
         FROM $table
         WHERE entity_id = $entityID
       ";
-      self::buildTreeEntityDataFromQuery(&$groupTree, $query, array($table));
+      self::buildTreeEntityDataFromQuery($groupTree, $query, array($table));
     }
   }
 
@@ -2127,10 +2117,7 @@ SELECT IF( EXISTS(SELECT name FROM civicrm_contact_type WHERE name like %1), 1, 
           }
 
           list($className) = explode('::', $callback);
-          require_once (str_replace('_',
-            DIRECTORY_SEPARATOR,
-            $className
-          ) . '.php');
+          require_once (str_replace('_',DIRECTORY_SEPARATOR, $className) . '.php');
 
           $objTypes[$ovValues['value']] = call_user_func_array($callback, $args);
         }
@@ -2141,5 +2128,30 @@ SELECT IF( EXISTS(SELECT name FROM civicrm_contact_type WHERE name like %1), 1, 
     $types = array_merge($types, $objTypes);
     return $objTypes;
   }
-}
+
+  static function hasReachedMaxLimit($customGroupId, $entityId) {
+    //check whether the group is multiple
+    $isMultiple = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_CustomGroup', $customGroupId, 'is_multiple');
+    $isMultiple = ($isMultiple) ? TRUE : FALSE;
+    $hasReachedMax = FALSE;
+    if ($isMultiple &&
+        ($maxMultiple = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_CustomGroup', $customGroupId, 'max_multiple'))) {
+      if (!$maxMultiple) {
+        $hasReachedMax = FALSE;
+      } else {
+        $tableName = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_CustomGroup', $customGroupId, 'table_name');
+        //count the number of entries for a entity
+        $sql = "SELECT COUNT(id) FROM {$tableName} WHERE entity_id = %1";
+        $params = array(1 => array($entityId, 'Integer'));
+        $count = CRM_Core_DAO::singleValueQuery($sql, $params);
+
+        if ($count >= $maxMultiple) {
+          $hasReachedMax = TRUE;
+        }
+      }
+    }
+    return $hasReachedMax;
+  }
+
+ }
 

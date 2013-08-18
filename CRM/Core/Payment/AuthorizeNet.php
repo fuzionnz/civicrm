@@ -73,7 +73,7 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
   static
   function &singleton($mode, &$paymentProcessor) {
     $processorName = $paymentProcessor['name'];
-    if (self::$_singleton[$processorName] === NULL) {
+    if (!isset(self::$_singleton[$processorName]) || self::$_singleton[$processorName] === NULL) {
       self::$_singleton[$processorName] = new CRM_Core_Payment_AuthorizeNet($mode, $paymentProcessor);
     }
     return self::$_singleton[$processorName];
@@ -261,7 +261,12 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
       $startDate = date_create();
     }
     // Format start date in Mountain Time to avoid Authorize.net error E00017
-    $startDate->setTimezone(new DateTimeZone(self::TIMEZONE));
+    $minDate = date_create('now', new DateTimeZone(self::TIMEZONE));
+
+    if(strtotime($startDate->format('Y-m-d')) < strtotime($minDate->format('Y-m-d'))){
+      $startDate->setTimezone(new DateTimeZone(self::TIMEZONE));
+    }
+
     $template->assign( 'startDate', $startDate->format('Y-m-d') );
     // for open ended subscription totalOccurrences has to be 9999
     $installments = $this->_getParam('installments');
@@ -327,7 +332,7 @@ class CRM_Core_Payment_AuthorizeNet extends CRM_Core_Payment {
 
   function _getAuthorizeNetFields() {
     $amount = $this->_getParam('total_amount');//Total amount is from the form contribution field
-    if(empty($amount)){//CRM-9894 would this ever be the case?? 
+    if(empty($amount)){//CRM-9894 would this ever be the case??
       $amount = $this->_getParam('amount');
     }
     $fields = array();

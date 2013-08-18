@@ -149,6 +149,10 @@ function civicrm_api3_contact_create($params) {
 function _civicrm_api3_contact_create_spec(&$params) {
   $params['contact_type']['api.required'] = 1;
   $params['id']['api.aliases'] = array('contact_id');
+  $params['dupe_check'] = array(
+    'title' => 'Check for Duplicates',
+    'description' => 'Throw error if contact create matches dedupe rule',
+  );
 }
 
 /**
@@ -196,6 +200,36 @@ function civicrm_api3_contact_get($params) {
  */
 function _civicrm_api3_contact_get_spec(&$params) {
   $params['contact_is_deleted']['api.default'] = 0;
+
+  //we declare all these pseudofields as there are other undocumented fields accessible
+  // via the api - but if check permissions is set we only allow declared fields
+  $params['address_id']['title'] = 'Primary Address ID';
+  $params['street_address']['title'] = 'Primary Address Street Address';
+  $params['supplemental_address_1']['title'] = 'Primary Address Supplemental Address 1';
+  $params['supplemental_address_2']['title'] = 'Primary Address Supplemental Address 2';
+  $params['city']['title'] = 'Primary Address City';
+  $params['postal_code_suffix']['title'] = 'Primary Address Post Code Suffix';
+  $params['postal_code']['title'] = 'Primary Address Post Code';
+  $params['geo_code_1']['title'] = 'Primary Address Latitude';
+  $params['geo_code_2']['title'] = 'Primary Address Longitude';
+  $params['state_province_id']['title'] = 'Primary Address State Province ID';
+  $params['state_province_name']['title'] = 'Primary Address State Province Name';
+  $params['state_province']['title'] = 'Primary Address State Province';
+  $params['country_id']['title'] = 'Primary Address State Province ID';
+  $params['country']['title'] = 'Primary Address country';
+  $params['worldregion_id']['title'] = 'Primary Address World Region ID';
+  $params['worldregion']['title'] = 'Primary Address World Region';
+  $params['phone_id']['title'] = 'Primary Phone ID';
+  $params['phone_type_id']['title'] = 'Primary Phone Type ID';
+  $params['provider_id']['title'] = 'Primary Phone Provider ID';
+  $params['email_id']['title'] = 'Primary Email ID';
+  $params['email']['title'] = 'Primary Email';
+  $params['on_hold']['title'] = 'Primary Email On Hold';
+  $params['im']['title'] = 'Primary Instant Messanger';
+  $params['im_id']['title'] = 'Primary Instant Messanger ID';
+  $params['group_id']['title'] = 'Group Memberships (filter)';
+  $params['group']['title'] = 'Group Memberships (filter, array)';
+  $params['tag']['title'] = 'Assigned tags (filter, array)';
 }
 
 /*
@@ -313,10 +347,10 @@ function _civicrm_api3_contact_check_params( &$params, $dupeCheck = true, $dupeE
       $dedupeParams['check_permission'] = $params['check_permission'];
     }
 
-    $ids = implode(',', CRM_Dedupe_Finder::dupesByParams($dedupeParams, $params['contact_type'], 'Strict', array()));
+    $ids = CRM_Dedupe_Finder::dupesByParams($dedupeParams, $params['contact_type'], 'Strict', array());
 
-    if ($ids != NULL) {
-      throw new Exception("Found matching contacts: $ids");
+    if (count($ids) >0) {
+      throw new API_Exception("Found matching contacts: ". implode(',',$ids),"duplicate", array("ids"=>$ids));
     }
   }
 
@@ -478,7 +512,7 @@ function _civicrm_api3_greeting_format_params($params) {
     }
 
     $customValue = $params['contact_id'] ? CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact',
-      $params['contact_id'],
+      $params['id'],
       "{$key}{$greeting}_custom"
     ) : FALSE;
 
@@ -526,7 +560,7 @@ function civicrm_api3_contact_quicksearch($params) {
 
 function civicrm_api3_contact_getquick($params) {
   civicrm_api3_verify_mandatory($params, NULL, array('name'));
-  $name = CRM_Utils_Array::value('name', $params);
+  $name = CRM_Utils_Type::escape($params['name'], 'String');
 
   // get the autocomplete options from settings
   require_once 'CRM/Core/BAO/Setting.php';
@@ -603,7 +637,7 @@ function civicrm_api3_contact_getquick($params) {
     $where .= " AND contact_type = \"Organization\"";
     //set default for current_employer
     if ($orgId = CRM_Utils_Array::value('id', $params)) {
-      $where .= " AND cc.id = {$orgId}";
+      $where .= " AND cc.id = "  . (int) $orgId;
     }
 
     // CRM-7157, hack: get current employer details when
@@ -634,8 +668,13 @@ function civicrm_api3_contact_getquick($params) {
     }
   }
 
+  //set default for current_employer or return contact with particular id
+  if (CRM_Utils_Array::value('id', $params)) {
+    $where .= " AND cc.id = " . (int) $params['id'];
+  }
+
   if (CRM_Utils_Array::value('cid', $params)) {
-    $where .= " AND cc.id <> {$params['cid']}";
+    $where .= " AND cc.id <> " . (int) $params['cid'];
   }
 
   //contact's based of relationhip type
@@ -716,7 +755,7 @@ LIMIT    0, {$limit}
   while ($dao->fetch()) {
     $t = array('id' => $dao->id);
     foreach ($as as $k) {
-      $t[$k] = $dao->$k;
+      $t[$k] = isset($dao->$k)? $dao->$k: '';
     }
     $t['data'] = $dao->data;
     $contactList[] = $t;
@@ -727,7 +766,7 @@ LIMIT    0, {$limit}
       $listCurrentEmployer = FALSE;
     }
   }
-  
+
   //return organization name if doesn't exist in db
   if (empty($contactList)) {
     if (CRM_Utils_Array::value('org', $params)) {

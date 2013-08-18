@@ -63,6 +63,7 @@ class CRM_Report_Form extends CRM_Core_Form {
    * @var integer;
    */
   protected $_templateID;
+  protected $_noFields = FALSE;
 
   /**
    * The report title
@@ -1892,6 +1893,7 @@ WHERE cg.extends IN ('" . implode("','", $this->_customGroupExtends) . "') AND
 
   function beginPostProcess() {
     $this->_params = $this->controller->exportValues($this->_name);
+
     if (empty($this->_params) &&
       $this->_force
     ) {
@@ -1901,7 +1903,7 @@ WHERE cg.extends IN ('" . implode("','", $this->_customGroupExtends) . "') AND
     // hack to fix params when submitted from dashboard, CRM-8532
     // fields array is missing because form building etc is skipped
     // in dashboard mode for report
-    if (!CRM_Utils_Array::value('fields', $this->_params)) {
+    if (!CRM_Utils_Array::value('fields', $this->_params) && !$this->_noFields) {
       $this->_params = $this->_formValues;
     }
 
@@ -2754,8 +2756,10 @@ LEFT JOIN civicrm_contact {$field['alias']} ON {$field['alias']}.id = {$this->_a
         foreach (array(
             'value', 'min', 'max', 'relative', 'from', 'to') as $attach) {
           if (isset($this->_params[$fieldAlias . '_' . $attach]) &&
-            (!empty($this->_params[$fieldAlias . '_' . $attach]) || $this->_params[$fieldAlias . '_' . $attach] == '0')
-          ) {
+            (!empty($this->_params[$fieldAlias . '_' . $attach])
+              || ($attach != 'relative' && $this->_params[$fieldAlias . '_' . $attach] == '0')
+            )
+          ){
             return TRUE;
           }
         }

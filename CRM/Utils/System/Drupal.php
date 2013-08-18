@@ -66,11 +66,21 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
             $form_state['input']['pass'] = array('pass1'=>$params['cms_pass'],'pass2'=>$params['cms_pass']);
     }
 
+    if(!empty($params['notify'])){
+      $form_state['input']['notify'] = $params['notify'];
+    }
+
     $form_state['rebuild'] = FALSE;
     $form_state['programmed'] = TRUE;
+    $form_state['complete form'] = FALSE;
     $form_state['method'] = 'post';
     $form_state['build_info']['args'] = array();
-
+    /*
+    * if we want to submit this form more than once in a process (e.g. create more than one user)
+    * we must force it to validate each time for this form. Otherwise it will not validate
+    * subsequent submissions and the manner in which the password is passed in will be invalid
+    * */
+    $form_state['must_validate'] = TRUE;
     $config = CRM_Core_Config::singleton();
 
     // we also need to redirect b
@@ -79,7 +89,8 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
     $form = drupal_retrieve_form('user_register_form', $form_state);
     $form_state['process_input'] = 1;
     $form_state['submitted'] = 1;
-
+    $form['#array_parents'] = array();
+    $form['#tree'] = FALSE;
     drupal_process_form('user_register_form', $form, $form_state);
 
     $config->inCiviCRM = FALSE;
@@ -523,6 +534,16 @@ AND    u.status = 1
   }
 
   /**
+   * Perform any post login activities required by the UF -
+   * e.g. for drupal: records a watchdog message about the new session, saves the login timestamp,
+   * calls hook_user op 'login' and generates a new session.
+   * @param array params Params to be passed to the CMS function. Note there are no require params as drupal instantiates the user global
+   */
+  function userLoginFinalize($params = array()){
+    user_login_finalize($params);
+  }
+
+  /**
    * Set a message in the UF to display to a user
    *
    * @param string $message the message to set
@@ -873,4 +894,37 @@ AND    u.status = 1
     }
     return $result;
   }
+
+  /**
+   * Wrapper for og_membership creation
+   */
+  function og_membership_create($ogID, $drupalID){
+    if (function_exists('og_entity_query_alter')) {
+      // sort-of-randomly chose a function that only exists in the 7.x-2.x branch
+      // TODO: Find a more solid way to make this test
+      // Also, since we don't know how to get the entity type of the group, we'll assume it's 'node'
+      og_group('node', $ogID, array('entity' => user_load($drupalID)));
+    }
+    else {
+      // Works for the OG 7.x-1.x branch
+      og_group($ogID, array('entity' => user_load($drupalID)));
+    }
+  }
+
+  /**
+   * Wrapper for og_membership deletion
+   */
+  function og_membership_delete($ogID, $drupalID) {
+    if (function_exists('og_entity_query_alter')) {
+      // sort-of-randomly chose a function that only exists in the 7.x-2.x branch
+      // TODO: Find a more solid way to make this test
+      // Also, since we don't know how to get the entity type of the group, we'll assume it's 'node'
+      og_ungroup('node', $ogID, 'user', user_load($drupalID));
+    } else {
+      // Works for the OG 7.x-1.x branch
+      og_ungroup($ogID, 'user', user_load($drupalID));
+    }
+  }
+
+
 }

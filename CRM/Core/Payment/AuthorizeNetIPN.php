@@ -119,6 +119,10 @@ class CRM_Core_Payment_AuthorizeNetIPN extends CRM_Core_Payment_BaseIPN {
       $contribution->payment_instrument_id = $objects['contribution']->payment_instrument_id;
       $contribution->amount_level = $objects['contribution']->amount_level;
       $contribution->address_id = $objects['contribution']->address_id;
+      $contribution->honor_contact_id = $objects['contribution']->honor_contact_id;
+      $contribution->honor_type_id = $objects['contribution']->honor_type_id;
+      $contribution->campaign_id = $objects['contribution']->campaign_id;
+
       $objects['contribution'] = &$contribution;
     }
     $objects['contribution']->invoice_id = md5(uniqid(rand(), TRUE));
@@ -239,14 +243,22 @@ class CRM_Core_Payment_AuthorizeNetIPN extends CRM_Core_Payment_BaseIPN {
     $ids['contribution'] = self::retrieve('x_invoice_num', 'Integer');
 
     // joining with contribution table for extra checks
-    $sql = "
-    SELECT cr.id
+      $sql = "
+    SELECT cr.id, cr.contact_id
       FROM civicrm_contribution_recur cr
 INNER JOIN civicrm_contribution co ON co.contribution_recur_id = cr.id
      WHERE cr.processor_id = '{$input['subscription_id']}' AND
            (cr.contact_id = {$ids['contact']} OR co.id = {$ids['contribution']})
      LIMIT 1";
-    $ids['contributionRecur'] = CRM_Core_DAO::singleValueQuery($sql);
+    $contRecur = CRM_Core_DAO::executeQuery($sql);
+    $contRecur->fetch();
+    $ids['contributionRecur'] = $contRecur->id;
+    if($ids['contact'] != $contRecur->contact_id){
+      CRM_Core_Error::debug_log_message("Recurring contribution appears to have been re-assigned from id {$ids['contact']} to {$contRecur->contact_id}
+        Continuing with {$contRecur->contact_id}
+      ");
+      $ids['contact'] = $contRecur->contact_id;
+    }
     if (!$ids['contributionRecur']) {
       CRM_Core_Error::debug_log_message("Could not find contributionRecur id");
       echo "Failure: Missing Parameter<p>";
@@ -288,6 +300,8 @@ INNER JOIN civicrm_membership_payment mp ON m.id = mp.membership_id AND mp.contr
     );
     if ($abort && $value === NULL) {
       CRM_Core_Error::debug_log_message("Could not find an entry for $name in $location");
+      CRM_Core_Error::debug_var('POST', $_POST);
+      CRM_Core_Error::debug_var('REQUEST', $_REQUEST);
       echo "Failure: Missing Parameter<p>";
       exit();
     }

@@ -1176,12 +1176,19 @@ AND civicrm_membership.is_test = %2";
     $form->assign('membership_assign', TRUE);
 
     $form->set('membershipTypeID', $membershipParams['selectMembership']);
-
     $membershipTypeID = $membershipParams['selectMembership'];
-    $membershipDetails = self::buildMembershipTypeValues($form, $membershipTypeID);
 
+    if(!is_array($membershipTypeID) || count($membershipTypeID) ==1){
+      if(!is_array($membershipTypeID)){
+        $singleMembershipTypeID = $membershipTypeID;
+      }
+      else{
+        $singleMembershipTypeID = $membershipTypeID[0];
+      }
+    }
+
+    $membershipDetails = self::buildMembershipTypeValues($form, $singleMembershipTypeID);
     $form->assign('membership_name', CRM_Utils_Array::value('name', $membershipDetails));
-
     $minimumFee = CRM_Utils_Array::value('minimum_fee', $membershipDetails);
 
     $contributionTypeId = NULL;
@@ -2506,6 +2513,18 @@ WHERE      civicrm_membership.is_test = 0";
           $memParams['status_id'] = $statusId;
           $memParams['createActivity'] = TRUE;
           $memParams['version'] = 3;
+          // Unset columns which should remain unchanged from t
+          // values. This avoids race condition in which these
+          // been changed by other processes.
+          unset(
+            $memParams['contact_id'],
+            $memParams['membership_type_id'],
+            $memParams['membership_type'],
+            $memParams['join_date'],
+            $memParams['start_date'],
+            $memParams['end_date'],
+            $memParams['source']
+          );
 
           //since there is change in status.
           $statusChange = array('status_id' => $statusId);

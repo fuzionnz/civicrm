@@ -1,3 +1,27 @@
+The following people and organizations sponsored and/or contributed new and improved features to the project.
+
+************************************************
+Key Maintainers for the 4.2 LTS release
+************************************************
+
+The Long Term Support (LTS) 4.3 release is a community effort:
+http://forum.civicrm.org/index.php/board,81.0.html
+
+The following people have contributed to this LTS release (listed in alphabetical order).
+
+CiviDesk - Nicolas Ganivet
+Emphanos - Allen Shaw, Young-Jin Kim
+Fuzion, NZ - Eileen McNaughton, Peter Davis, Torrance Hodgeson
+JMA Consulting - Joe Murray
+Korlon - Stuart Gaston
+Koumbit - Christopher Gervais
+Mathieu Lutfy
+
+With the support of the CiviCRM Team:
+CiviCRM Team - Coleman Watts, David Greenberg, Deepak Srivastava, Donald Lobo,
+               Kurund Jalmi, Michael McAndrew, Pratik Joshi, Ravish Nair,
+               Tim Otten, Yashodha Chaku, Eileen McNaughton
+
 ************************************************
 Sponsors and key contributors for 4.2
 ************************************************
@@ -28,7 +52,7 @@ Jon Goldberg
 Kasia Wakarecy
 Katie Horn
 Katy Jockelson
-Kellie Brownell
+
 Ken Zalewski
 Lisa Jervis
 Mathieu Lutfy
@@ -143,18 +167,18 @@ Sponsors for 3.4 / 4.0 Make-it-Happen Projects
 ************************************************
 The following people and organizations sponsored new and improved features for the 3.4 / 4.0 release.
 
-ACORN Canada http://acorncanada.org 
+ACORN Canada http://acorncanada.org
 Allora Consulting http://alloraconsulting.com
 American Friends Service Committee http://afsc.org/
 Australian Greens http://greens.org.au
 BREAZE http://breaze.org.au
 Canadian Paramedics http://www.peelparamedics.com
-Community Builders Australia Pty Ltd 
+Community Builders Australia Pty Ltd
 Corvair Society of America (CORSA) http://www.corvair.org/
-Donor Depot http://donordepot.com 
+Donor Depot http://donordepot.com
 Energetica http://energetica.com.au
 Fuzion http://fuzion.co.nz
-Gold Strategy Group http://www.goldstrategygroup.com 
+Gold Strategy Group http://www.goldstrategygroup.com
 JMA Consulting http://jmaconsulting.biz
 Joomkit Ltd http://joomkit.com
 Kabissa - Space for Change in Africa http://kabissa.org
@@ -170,15 +194,14 @@ Burden, Monica
 Calleeuw, Bart
 Cimpian, Casti
 Clarke, Jill
-Cheryl
+Davis, Peter
 Day, Janette
 Gold, Ariel
-Kehilat Hadar 
+Hadar, Kehilat
 Malkoun, Anthony
 Matsushita, Jun
 McNaughton, Eileen
 Murray, Joe
-Peter Davis
 Shaughnessy, Brian
 Spagarino, Andres
 Speleo
@@ -224,6 +247,3 @@ Rayogram: http://www.rayogram.com/
 GingerFeet LLC: http://www.gingerfeet.com/
 Kabissa: http://kabissa.org
 Beth Hynes-Ciernia
-
-More details at:
-http://wiki.civicrm.org/confluence/display/CRMDOC33/Make+it+Happen!

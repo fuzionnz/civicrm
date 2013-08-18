@@ -164,6 +164,11 @@ class CRM_Core_Payment_BaseIPN {
       $this->addrecurLineItems($objects['contributionRecur']->id, $contribution->id);
     }
 
+    //copy initial contribution custom fields for recurring contributions
+    if (CRM_Utils_Array::value('contributionRecur', $objects) && $objects['contributionRecur']->id) {
+      $this->copyCustomValues($objects['contributionRecur']->id, $contribution->id);
+    }
+
     if (!empty($memberships)) {
       foreach ($memberships as $membership) {
         if ($membership) {
@@ -215,6 +220,11 @@ class CRM_Core_Payment_BaseIPN {
     //add lineitems for recurring payments
     if (CRM_Utils_Array::value('contributionRecur', $objects) && $objects['contributionRecur']->id && $addLineItems) {
       $this->addrecurLineItems($objects['contributionRecur']->id, $contribution->id);
+    }
+
+    //copy initial contribution custom fields for recurring contributions
+    if (CRM_Utils_Array::value('contributionRecur', $objects) && $objects['contributionRecur']->id) {
+      $this->copyCustomValues($objects['contributionRecur']->id, $contribution->id);
     }
 
     if (!empty($memberships)) {
@@ -350,7 +360,7 @@ LIMIT 1;";
             $formatedParams['is_override'] = FALSE;
             $membership->copyValues($formatedParams);
             $membership->save();
-               
+
             //updating the membership log
             $membershipLog = array();
             $membershipLog = $formatedParams;
@@ -371,7 +381,7 @@ LIMIT 1;";
 
             //update related Memberships.
             CRM_Member_BAO_Membership::updateRelatedMemberships($membership->id, $formatedParams);
-            
+
             //update the membership type key of membership relatedObjects array
             //if it has changed after membership update
             if ($membershipTypeIdKey != $membership->membership_type_id) {
@@ -458,6 +468,11 @@ LIMIT 1;";
       $this->addrecurLineItems($objects['contributionRecur']->id, $contribution->id);
     }
 
+    //copy initial contribution custom fields for recurring contributions
+    if (CRM_Utils_Array::value('contributionRecur', $objects) && $objects['contributionRecur']->id) {
+      $this->copyCustomValues($objects['contributionRecur']->id, $contribution->id);
+    }
+
     // next create the transaction record
     $paymentProcessor = '';
     if (isset($objects['paymentProcessor'])) {
@@ -502,7 +517,7 @@ LIMIT 1;";
     else {
       CRM_Activity_BAO_Activity::addActivity($participant);
     }
-        
+
     CRM_Core_Error::debug_log_message("Contribution record updated successfully");
     $transaction->commit();
 
@@ -512,9 +527,10 @@ LIMIT 1;";
       $values['is_email_receipt'] == 1
     ) {
       self::sendMail($input, $ids, $objects, $values, $recur, FALSE);
+      CRM_Core_Error::debug_log_message("Receipt mail sent");
     }
 
-    CRM_Core_Error::debug_log_message("Success: Database updated and mail sent");
+    CRM_Core_Error::debug_log_message("Success: Database updated");
   }
 
   function getBillingID(&$ids) {
@@ -655,7 +671,7 @@ LIMIT 1;";
 
     //complete the contribution.
     $baseIPN->completeTransaction($input, $ids, $objects, $transaction, FALSE);
-    
+
     // reset template values before processing next transactions
     $template->clearTemplateVars();
 
@@ -719,7 +735,11 @@ LIMIT 1;";
       $paymentDetails['contribution_id'] = $contribution->id;
       $paymentDetails['status_id'] = $contribution->contribution_status_id;
       $paymentDetails['actual_amount'] = $contribution->total_amount;
-
+      if(empty($paymentDetails['id'])){
+        // we can assume this pledge is now completed
+        // return now so we don't create a core error & roll back
+        return;
+      }
       // put contribution against it
       $payment = CRM_Pledge_BAO_PledgePayment::add($paymentDetails);
       $paymentIDs[] = $payment->id;
@@ -748,6 +768,47 @@ LIMIT 1;";
       }
 
       CRM_Contribute_Form_AdditionalInfo::processPriceSet($contributionId, $lineSets);
+    }
+  }
+
+  // function to copy custom data of the
+  // initial contribution into its recurring contributions
+  function copyCustomValues($recurId, $targetContributionId) {
+    if ($recurId && $targetContributionId) {
+      // get the initial contribution id of recur id
+      $sourceContributionId = CRM_Core_DAO::getFieldValue('CRM_Contribute_DAO_Contribution', $recurId, 'id', 'contribution_recur_id');
+
+      // if the same contribution is being proccessed then return
+      if ($sourceContributionId == $targetContributionId) {
+        return;
+      }
+      // check if proper recurring contribution record is being processed
+      $targetConRecurId = CRM_Core_DAO::getFieldValue('CRM_Contribute_DAO_Contribution', $targetContributionId, 'contribution_recur_id');
+      if ($targetConRecurId != $recurId) {
+        return;
+      }
+
+      // copy custom data
+      $extends = array('Contribution');
+      $groupTree = CRM_Core_BAO_CustomGroup::getGroupDetail(NULL, NULL, $extends);
+      if ($groupTree) {
+        foreach ($groupTree as $groupID => $group) {
+          $table[$groupTree[$groupID]['table_name']] = array('entity_id');
+          foreach ($group['fields'] as $fieldID => $field) {
+            $table[$groupTree[$groupID]['table_name']][] = $groupTree[$groupID]['fields'][$fieldID]['column_name'];
+          }
+        }
+
+        foreach ($table as $tableName => $tableColumns) {
+          $insert          = 'INSERT INTO ' . $tableName . ' (' . implode(', ', $tableColumns) . ') ';
+          $tableColumns[0] = $targetContributionId;
+          $select          = 'SELECT ' . implode(', ', $tableColumns);
+          $from            = ' FROM ' . $tableName;
+          $where           = " WHERE {$tableName}.entity_id = {$sourceContributionId}";
+          $query           = $insert . $select . $from . $where;
+          $dao             = CRM_Core_DAO::executeQuery($query, CRM_Core_DAO::$_nullArray);
+        }
+      }
     }
   }
 }

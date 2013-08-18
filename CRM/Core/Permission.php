@@ -104,10 +104,10 @@ class CRM_Core_Permission {
    * @return string the group where clause for this user
    * @access public
    */
-  public static function whereClause($type, &$tables, &$whereTables) {
+  public static function whereClause($type, &$tables, &$whereTables, $entityTable = 'civicrm_contact') {
     $config = CRM_Core_Config::singleton();
     require_once (str_replace('_', DIRECTORY_SEPARATOR, $config->userPermissionClass) . '.php');
-    return eval('return ' . $config->userPermissionClass . '::whereClause( $type, $tables, $whereTables );');
+    return eval('return ' . $config->userPermissionClass . '::whereClause( $type, $tables, $whereTables, $entityTable );');
   }
 
   /**
@@ -457,7 +457,7 @@ class CRM_Core_Permission {
       'access AJAX API' => $prefix . ts('access AJAX API'),
       'access contact reference fields' => $prefix . ts('access contact reference fields'),
     );
-
+    CRM_Utils_Hook::permissions($permissions);
     return $permissions;
   }
 
@@ -476,15 +476,6 @@ class CRM_Core_Permission {
 
     $session = CRM_Core_Session::singleton();
     $contactID = $session->get('userID');
-
-    if (self::isMultisiteEnabled()) {
-      // For multisite just check if there are contacts in acl_contact_cache table for now.
-      // FixMe: so even if a user in multisite has very limited permission could still
-      // see search / contact navigation options for example.
-      return CRM_Contact_BAO_Contact_Permission::hasContactsInCache(CRM_Core_Permission::VIEW,
-        $contactID
-      );
-    }
 
     //check for acl.
     $aclPermission = self::getPermission();

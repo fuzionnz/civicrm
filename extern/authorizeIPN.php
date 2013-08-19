@@ -48,7 +48,7 @@ if(!$dao->N) {
   )");
 }
 
-$dao = CRM_Core_DAO::executeQuery("INSERT INTO civicrm_notification_log (message_raw, message_type) VALUES (%1, 'paypalpro-ipn')",
+$dao = CRM_Core_DAO::executeQuery("INSERT INTO civicrm_notification_log (message_raw, message_type) VALUES (%1, 'authorize.net')",
   array(1 => array(json_encode($_REQUEST), 'String'))
 );
 

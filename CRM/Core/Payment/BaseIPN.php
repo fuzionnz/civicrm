@@ -564,6 +564,11 @@ LIMIT 1;";
     ) {
       self::sendMail($input, $ids, $objects, $values, $recur, FALSE);
       CRM_Core_Error::debug_log_message("Receipt mail sent");
+      CRM_Core_Error::debug_var('values', $values, TRUE, TRUE);
+      CRM_Core_Error::debug_var('recur', $recur, TRUE, TRUE);
+      CRM_Core_Error::debug_var('objects', $objects, TRUE, TRUE);
+      CRM_Core_Error::debug_var('input', $input, TRUE, TRUE);
+      CRM_Core_Error::debug_var('ids', $ids, TRUE, TRUE);
     }
 
     CRM_Core_Error::debug_log_message("Success: Database updated");

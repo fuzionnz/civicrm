@@ -113,14 +113,19 @@ AND     ( g.cache_date IS NULL OR
     // sort the values so we put group IDs in front and hence optimize
     // mysql storage (or so we think) CRM-9493
     sort($values);
-
+    $tempTable = 'civicrm_temp_group_contact_cache' . rand(0,2000);
     // to avoid long strings, lets do BULK_INSERT_COUNT values at a time
     while (!empty($values)) {
       $processed = TRUE;
       $input     = array_splice($values, 0, CRM_Core_DAO::BULK_INSERT_COUNT);
       $str       = implode(',', $input);
-      $sql       = "INSERT IGNORE INTO civicrm_group_contact_cache (group_id,contact_id) VALUES $str;";
+      $sql       = "CREATE TEMPORARY TABLE $tempTable  $str;";
       CRM_Core_DAO::executeQuery($sql);
+      CRM_Core_DAO::executeQuery(
+      "INSERT IGNORE INTO civicrm_group_contact_cache (contact_id, group_id)
+      SELECT DISTINCT id, group_id FROM $tempTable
+      ");
+      CRM_Core_DAO::executeQuery(" DROP TABLE $tempTable");
     }
     self::updateCacheTime($groupID, $processed);
   }
@@ -336,15 +341,21 @@ WHERE  civicrm_group_contact.status = 'Added'
 
     $groupIDs = array($groupID);
     self::remove($groupIDs);
-
+    $tempTable = 'civicrm_temp_group_contact_cache' . rand(0,2000);
     foreach (array($sql, $sqlB) as $selectSql) {
       if (!$selectSql) {
         continue;
       }
-      $insertSql = "INSERT IGNORE INTO civicrm_group_contact_cache (group_id,contact_id) ($selectSql);";
+      $insertSql = "CREATE TEMPORARY TABLE $tempTable ($selectSql);";
       $processed = TRUE; // FIXME
       $result = CRM_Core_DAO::executeQuery($insertSql);
+      CRM_Core_DAO::executeQuery(
+        "INSERT IGNORE INTO civicrm_group_contact_cache (contact_id, group_id)
+        SELECT DISTINCT id, group_id FROM $tempTable
+      ");
+      CRM_Core_DAO::executeQuery(" DROP TABLE $tempTable");
     }
+
     self::updateCacheTime($groupIDs, $processed);
 
     if ($group->children) {

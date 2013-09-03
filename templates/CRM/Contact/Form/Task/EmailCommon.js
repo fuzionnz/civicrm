@@ -1,6 +1,6 @@
 cj(function ($) {
   'use strict';
-   $().crmAccordions();
+   $().crmaccordions();
    $('.form-submit').on("click", function(event){
      $('.form-submit').attr('value','Processing');
      $('.form-submit').attr('disabled','Disabled');

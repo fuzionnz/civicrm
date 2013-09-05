@@ -522,7 +522,6 @@ function _civicrm_api3_dao_set_filter(&$dao, $params, $unique = TRUE, $entity) {
       }
     }
   }
-
   if (!empty($options['return']) && is_array($options['return']) && empty($options['is_count'])) {
     $dao->selectAdd();
     $options['return']['id'] = TRUE;// ensure 'id' is included

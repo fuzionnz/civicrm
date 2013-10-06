@@ -138,25 +138,25 @@ function _civicrm_core_data(&$data, $enabled) {
 
   $data['civicrm_contact']['relationship_id_a'] = array(
     'real field' => 'id',
-    'title' => t('CiviCRM Relationship (via Contact A)'),
-    'help' => t('Connects a contact (as contact a) to a relationship'),
+    'title' => t('CiviCRM Relationship (starting from contact A)'),
+    'help' => t('Connects a contact (as contact A) to a relationship.'),
     'relationship' => array(
       'base' => 'civicrm_relationship',
       'base field' => 'contact_id_a',
-      'handler' => 'views_handler_relationship',
-      'label' => t('CiviCRM Relationship (via Contact A)'),
+      'handler' => 'civicrm_handler_relationship_relationship',
+      'label' => t('CiviCRM Relationship (starting from contact A)'),
     ),
   );
 
   $data['civicrm_contact']['relationship_id_b'] = array(
     'real field' => 'id',
-    'title' => t('CiviCRM Relationship (via Contact B)'),
-    'help' => t('Connects a contact (as contact b) to a relationship'),
+    'title' => t('CiviCRM Relationship (starting from Contact B)'),
+    'help' => t('Connects a contact (as contact B) to a relationship.'),
     'relationship' => array(
       'base' => 'civicrm_relationship',
       'base field' => 'contact_id_b',
-      'handler' => 'views_handler_relationship',
-      'label' => t('CiviCRM Relationship (via Contact B)'),
+      'handler' => 'civicrm_handler_relationship_relationship',
+      'label' => t('CiviCRM Relationship (starting from contact B)'),
     ),
   );
 
@@ -1852,6 +1852,16 @@ function _civicrm_core_data(&$data, $enabled) {
 
   //TABLE JOINS FOR CIVICRM RELATIONSHIPS GO HERE!
 
+  // NOTE: This join is deprecated, as it hardcodes contact_a
+  // It is left here to not break existing views.
+  $data['civicrm_relationship']['table']['join'] = array(
+    // Directly links to contact table - link A
+    'civicrm_contact' => array(
+      'left_field' => 'id',
+      'field' => 'contact_id_a',
+    ),
+  );
+
   //Display A->B relationships in User Views
   $data['civicrm_relationship']['table']['join']['users'] = array(
     'left_table' => 'civicrm_uf_match',
@@ -1905,7 +1915,7 @@ function _civicrm_core_data(&$data, $enabled) {
     ),
   );
 
-  $data['civicrm_relationship']['contact_id_a'] = array(
+  $data['civicrm_relationship']['contact_id_a_'] = array(
     'title' => t('Contact ID A'),
     'real field' => 'contact_id_a',
     'help' => t('The contact A'),
@@ -1924,7 +1934,7 @@ function _civicrm_core_data(&$data, $enabled) {
     ),
   );
 
-  $data['civicrm_relationship']['contact_id_b'] = array(
+  $data['civicrm_relationship']['contact_id_b_'] = array(
     'title' => t('Contact ID B'),
     'real field' => 'contact_id_b',
     'help' => t('The contact B'),
@@ -1939,6 +1949,50 @@ function _civicrm_core_data(&$data, $enabled) {
       'base' => 'civicrm_contact',
       'base field' => 'id',
       'handler' => 'views_handler_relationship',
+      'label' => t('CiviCRM Contact B'),
+    ),
+  );
+
+  $data['civicrm_relationship']['contact_id_a'] = array(
+    'title' => t('Contact ID A [Deprecated]'),
+    'real field' => 'contact_id_a',
+    'help' => t('The contact A [Deprecated]'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => FALSE,
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument',
+    ),
+    'relationship' => array(
+      'base' => 'civicrm_contact',
+      'field' => 'id',
+      'relationship table' => 'civicrm_relationship',
+      'relationship field' => 'contact_id_a',
+      'other_field' => 'contact_id_b',
+      'handler' => 'civicrm_handler_relationship',
+      'label' => t('CiviCRM Contact A'),
+    ),
+  );
+
+  $data['civicrm_relationship']['contact_id_b'] = array(
+    'title' => t('Contact ID B [Deprecated]'),
+    'real field' => 'contact_id_b',
+    'help' => t('The contact B [Deprecated]'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => FALSE,
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument',
+    ),
+    'relationship' => array(
+      'base' => 'civicrm_contact',
+      'field' => 'id',
+      'relationship table' => 'civicrm_relationship',
+      'relationship field' => 'contact_id_b',
+      'other_field' => 'contact_id_a',
+      'handler' => 'civicrm_handler_relationship',
       'label' => t('CiviCRM Contact B'),
     ),
   );

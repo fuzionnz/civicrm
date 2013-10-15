@@ -287,7 +287,9 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
    * @return void
    *
    */
-  function buildQuickForm() {}
+  function buildQuickForm() {
+    CRM_Core_Resources::singleton()->addScriptFile('civicrm', 'templates/CRM/Core/Form.js');
+  }
 
   /**
    * This virtual function is used to set the default values of

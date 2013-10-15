@@ -607,6 +607,9 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
     }
 
     $this->addFormRule(array('CRM_Contribute_Form_Contribution_Main', 'formRule'), $this);
+    if (empty($this->_values['is_confirm_enabled'])) {
+      parent::buildQuickForm();
+    }
   }
 
   /**

@@ -6,7 +6,7 @@
 function civicrm_api3_notification_log_retry($params) {
   if(!empty($params['id'])) {
     $raw = array(CRM_Core_DAO::singleValueQuery("SELECT message_raw FROM civicrm_notification_log
-      WHERE id = {$params['id']}"));
+      WHERE id = %1", array(1 => array($params['id'], 'Integer'))));
   }
   foreach ($raw as $ipnData) {
     $payPal = new CRM_Core_Payment_PayPalProIPN(json_decode($ipnData, TRUE));
@@ -25,7 +25,7 @@ function _civicrm_api3_notification_log_retry_spec(&$params) {
  */
 function civicrm_api3_notification_log_retrysearch($params) {
     $dao = CRM_Core_DAO::executeQuery("SELECT id FROM civicrm_notification_log
-      WHERE message_raw LIKE '%{$params['search']}%'");
+      WHERE message_raw LIKE '%{}%'", array(1 => array($params['search'], 'String')));
     while ($dao->fetch()) {
       $raw[] = $dao->id;
     }

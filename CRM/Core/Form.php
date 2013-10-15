@@ -287,7 +287,9 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
    * @return void
    *
    */
-  function buildQuickForm() {}
+  function buildQuickForm() {
+    CRM_Core_Resources::singleton()->addScriptFile('civicrm', 'templates/CRM/Core/Form.js');
+  }
 
   /**
    * This virtual function is used to set the default values of
@@ -402,10 +404,10 @@ class CRM_Core_Form extends HTML_QuickForm_Page {
       $js = CRM_Utils_Array::value('js', $button);
       $isDefault = CRM_Utils_Array::value('isDefault', $button, FALSE);
       if ($isDefault) {
-        $attrs = array('class' => 'form-submit default');
+        $attrs = array('class' => 'form-submit default crm-form-button-' . $button['type']);
       }
       else {
-        $attrs = array('class' => 'form-submit');
+        $attrs = array('class' => 'form-submit crm-form-button-' . $button['type']);
       }
 
       if ($js) {

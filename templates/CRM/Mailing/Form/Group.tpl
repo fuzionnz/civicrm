@@ -23,12 +23,7 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
-{if $groupCount == 0 and $mailingCount == 0}
-  <div class="status">
-	<div class="icon inform-icon"></div>
-        {ts}To send a mailing, you must have a valid group of recipients - either at least one group that's a Mailing List or at least one previous mailing.{/ts}
-  </div>
-{else}
+
 <div class="crm-block crm-form-block crm-mailing-group-form-block">
 {include file="CRM/common/WizardHeader.tpl"}
 
@@ -94,4 +89,4 @@ cj(function() {
 {* include jscript to warn if unsaved form field changes *}
 {include file="CRM/common/formNavigate.tpl"}
 </div>
-{/if}
+

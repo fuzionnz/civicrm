@@ -46,7 +46,7 @@
     </tr>
   </table>
 
-
+{if ($groupCount > 0|| $mailingCount > 0)}
 <div id="id-additional" class="form-item">
 <div class="crm-accordion-wrapper crm-accordion_title-accordion crm-accordion-open">
  <div class="crm-accordion-header">
@@ -74,7 +74,7 @@
   {/strip}
  </div><!-- /.crm-accordion-body -->
 </div><!-- /.crm-accordion-wrapper -->
-
+{/if}
   <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl"}</div>
 </div>
 

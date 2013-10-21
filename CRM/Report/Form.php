@@ -658,7 +658,7 @@ class CRM_Report_Form extends CRM_Core_Form {
     foreach ($this->_columns as $tableName => $table) {
       if (array_key_exists('fields', $table)) {
         foreach ($table['fields'] as $fieldName => $field) {
-          if (!array_key_exists('no_display', $field)) {
+          if (empty($field['no_display'])) {
             if (isset($field['grouping'])) {
               $tableName = $field['grouping'];
             }

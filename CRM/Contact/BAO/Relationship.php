@@ -183,13 +183,14 @@ class CRM_Contact_BAO_Relationship extends CRM_Contact_DAO_Relationship {
    * @access public
    * @static
    */
-  static function add(&$params, &$ids, $contactId) {
-    if (CRM_Utils_Array::value('relationship', $ids)) {
-      CRM_Utils_Hook::pre('edit', 'Relationship', $ids['relationship'], $params);
+  static function add(&$params, $ids = array(), $contactId = NULL) {
+    $relationshipId = CRM_Utils_Array::value('relationship', $ids, CRM_Utils_Array::value('id', $params));
+    $hook = 'create';
+    if($relationshipId) {
+      $hook = 'edit';
     }
-    else {
-      CRM_Utils_Hook::pre('create', 'Relationship', NULL, $params);
-    }
+    //@todo hook are called from create and add - remove one
+    CRM_Utils_Hook::pre($hook , 'Relationship', $relationshipId, $params);
 
     $relationshipTypes = CRM_Utils_Array::value('relationship_type_id', $params);
 
@@ -206,10 +207,12 @@ class CRM_Contact_BAO_Relationship extends CRM_Contact_DAO_Relationship {
     }
 
     $relationship = new CRM_Contact_BAO_Relationship();
+    //@todo this code needs to be updated for the possibility that not all fields are set
+    // (update)
     $relationship->contact_id_b = $contact_b;
     $relationship->contact_id_a = $contact_a;
     $relationship->relationship_type_id = $type;
-    $relationship->id = CRM_Utils_Array::value('relationship', $ids);
+    $relationship->id = $relationshipId;
 
     $dateFields = array('end_date', 'start_date');
 
@@ -225,7 +228,7 @@ class CRM_Contact_BAO_Relationship extends CRM_Contact_DAO_Relationship {
           $relationship->$defaultField = $params[$defaultField];
         }
       }
-      elseif(empty($relationship->id)){
+      elseif(!$relationshipId){
         $relationship->$defaultField = $defaultValue;
       }
     }
@@ -239,12 +242,7 @@ class CRM_Contact_BAO_Relationship extends CRM_Contact_DAO_Relationship {
 
     $relationship->free();
 
-    if (CRM_Utils_Array::value('relationship', $ids)) {
-      CRM_Utils_Hook::post('edit', 'Relationship', $relationship->id, $relationship);
-    }
-    else {
-      CRM_Utils_Hook::post('create', 'Relationship', $relationship->id, $relationship);
-    }
+    CRM_Utils_Hook::post($hook, 'Relationship', $relationshipId, $relationship);
 
     return $relationship;
   }
@@ -713,9 +711,15 @@ class CRM_Contact_BAO_Relationship extends CRM_Contact_DAO_Relationship {
    * @static
    */
   static function setIsActive($id, $is_active) {
-    CRM_Core_DAO::setFieldValue('CRM_Contact_DAO_Relationship', $id, 'is_active', $is_active);
+    // as both the create & add functions have a bunch of logic in them that
+    // doesn't seem to cope with a normal update we will call the api which
+    // has tested handling for this
+    // however, a longer term solution would be to simplify the add, create & api functions
+    // to be more standard. It is debatable @ that point whether it's better to call the BAO
+    // direct as the api is more tested.
+    civicrm_api3('relationship', 'create', array('id' => $id, 'is_active' => $is_active));
 
-    // call hook
+    // call (undocumented possibly deprecated) hook
     CRM_Utils_Hook::enableDisable('CRM_Contact_BAO_Relationship', $id, $is_active);
 
     return TRUE;

@@ -1737,7 +1737,7 @@ function _civicrm_core_data(&$data, $enabled) {
       'help' => t('Activity -> Campaign'),
       'relationship' => array(
         'base' => 'civicrm_campaign',
-        'field' => 'id',
+        'base field' => 'id',
         'handler' => 'views_handler_relationship',
         'label' => t('Activity -> Campaign'),
       ),

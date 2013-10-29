@@ -105,15 +105,17 @@ class CRM_Member_Form_Task extends CRM_Core_Form {
     }
     else {
       $queryParams = $form->get('queryParams');
+      $returnProperties = array_fill_keys(array('membership_id', 'contact_id'), 1);
       $query = new CRM_Contact_BAO_Query($queryParams, NULL, NULL, FALSE, FALSE,
         CRM_Contact_BAO_Query::MODE_MEMBER
       );
       $query->_distinctComponentClause = " civicrm_membership.id";
       $query->_groupByComponentClause = " GROUP BY civicrm_membership.id ";
-      $result = $query->searchQuery(0, 0, NULL);
+      $result = $query->searchQuery(0, 0, 'sort_name');
 
       while ($result->fetch()) {
         $ids[] = $result->membership_id;
+        $form->_contactIds[] = $result->contact_id;
       }
     }
 
@@ -149,6 +151,12 @@ class CRM_Member_Form_Task extends CRM_Core_Form {
    * since its used for things like send email
    */
   public function setContactIDs() {
+    // for efficiency & also for sorting we are now setting in preProcessCommon as
+    // we have already retrieved the ids there. But, as we are unsure if there are other uncovered paths
+    // we will still retrieve if not set
+    if(!empty($this->_contactIds)) {
+      return;
+    }
     $this->_contactIds = &CRM_Core_DAO::getContactIDsFromComponent($this->_memberIds,
       'civicrm_membership'
     );

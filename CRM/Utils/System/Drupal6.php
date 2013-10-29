@@ -177,29 +177,39 @@ class CRM_Utils_System_Drupal6 extends CRM_Utils_System_Base {
     }
 
     $sql = "
-SELECT name, mail
-  FROM {users}
- WHERE (LOWER(name) = LOWER('$name')) OR (LOWER(mail) = LOWER('$email'))";
 
+      SELECT name, mail
+      FROM {users}
+      WHERE (LOWER(name) = LOWER('$name')) OR (LOWER(mail) = LOWER('$email'))
+    ";
 
-    $db_cms = DB::connect($config->userFrameworkDSN);
-    if (DB::isError($db_cms)) {
-      die("Cannot connect to UF db via $dsn, " . $db_cms->getMessage());
+    $result = db_query($sql);
+    $row = db_fetch_array($result);
+    if (!$row) {
+      return;
     }
-    $query = $db_cms->query($sql);
-    $row = $query->fetchRow();
+
+    $user = NULL;
+
     if (!empty($row)) {
-      $dbName = CRM_Utils_Array::value(0, $row);
-      $dbEmail = CRM_Utils_Array::value(1, $row);
+      $dbName = CRM_Utils_Array::value('name', $row);
+      $dbEmail = CRM_Utils_Array::value('mail', $row);
       if (strtolower($dbName) == strtolower($name)) {
         $errors['cms_name'] = ts('The username %1 is already taken. Please select another username.',
           array(1 => $name)
         );
       }
       if (strtolower($dbEmail) == strtolower($email)) {
-        $errors[$emailName] = ts('This email %1 is already registered. Please select another email.',
-          array(1 => $email)
-        );
+        if(empty($email)) {
+          $errors[$emailName] = ts('You cannot create an email account for a contact with no email',
+            array(1 => $email)
+          );
+        }
+        else{
+          $errors[$emailName] = ts('This email %1 is already registered. Please select another email.',
+            array(1 => $email)
+          );
+        }
       }
     }
   }

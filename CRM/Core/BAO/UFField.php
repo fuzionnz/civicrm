@@ -673,33 +673,43 @@ SELECT  id
    * profileAddressFields is assigned to the template to tell it
    * what fields are in the profile address
    * that potentially should be copied to the Billing fields
-   * we want to give precedence to 
-   *   1) Billing & 
+   * we want to give precedence to
+   *   1) Billing &
    *   2) then Primary designated as 'Primary
    *   3) location_type is primary
    *   4) if none of these apply then it just uses the first one
-   *   
+   *
    *   as this will be used to
    * transfer profile address data to billing fields
    * http://issues.civicrm.org/jira/browse/CRM-5869
    * @param string $key Field key - e.g. street_address-Primary, first_name
-   * @params array $profileAddressFields array of profile fields that relate to address fields
+   * @param array $profileAddressFields array of profile fields that relate to address fields
+   * @param array $profileFilter filter to apply to profile fields - expected usage is to only fill based on
+   * the bottom profile per CRM-13726
    */
-  static function assignAddressField($key, &$profileAddressFields) {
+  static function assignAddressField($key, &$profileAddressFields, $profileFilter) {
     $billing_id = CRM_Core_BAO_LocationType::getBilling();
     list($prefixName, $index) = CRM_Utils_System::explode('-', $key, 2);
-    
+
+    $profileFields = civicrm_api3('uf_field', 'get', array_merge($profileFilter, array('is_active' => 1, 'return' => 'field_name')));
     //check for valid fields ( fields that are present in billing block )
     $validBillingFields = array(
-      'first_name','middle_name','last_name','street_address',
-      'supplemental_address_1','city','state_province',
-      'postal_code','country'
+        'first_name','middle_name','last_name','street_address',
+        'supplemental_address_1','city','state_province',
+        'postal_code','country'
     );
+    $validProfileFields = array();
 
-    if ( !in_array($prefixName, $validBillingFields) ) {
+    foreach ($profileFields['values'] as $field) {
+      if(in_array($field['field_name'], $validBillingFields)) {
+        $validProfileFields[] = $field['field_name'];
+      }
+    }
+
+    if ( !in_array($prefixName, $validProfileFields) ) {
       return;
     }
-    
+
     if (!empty($index) && (
         // it's empty so we set it OR
         !CRM_Utils_array::value($prefixName, $profileAddressFields)

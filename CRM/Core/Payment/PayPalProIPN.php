@@ -275,7 +275,6 @@ class CRM_Core_Payment_PayPalProIPN extends CRM_Core_Payment_BaseIPN {
       $contribution->honor_contact_id = $objects['contribution']->honor_contact_id;
       $contribution->honor_type_id = $objects['contribution']->honor_type_id;
       $contribution->campaign_id = $objects['contribution']->campaign_id;
-
       $objects['contribution'] = &$contribution;
     }
 
@@ -463,15 +462,6 @@ INNER JOIN civicrm_membership_payment mp ON m.id = mp.membership_id AND mp.contr
     $input['net_amount'] = self::retrieve('settle_amount', 'Money', 'POST', FALSE);
     $input['trxn_id']    = self::retrieve('txn_id', 'String', 'POST', FALSE);
     $input['payment_date'] = self::retrieve('payment_date', 'String', 'POST', FALSE);
-  }
-
-  /**
-   * Handle payment express IPNs
-   * For one off IPNS no actual response is required
-   * Recurring is more difficult as we have limited confirmation material
-   */
-  function handlePaymentExpress() {
-    throw new CRM_Core_Exception('Payment Express IPNS not currently handled');
   }
 
   /**

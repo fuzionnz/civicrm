@@ -36,7 +36,7 @@
 /**
  * Drupal specific stuff goes here
  */
-class CRM_Utils_System_Drupal extends CRM_Utils_System_Base {
+class CRM_Utils_System_Drupal extends CRM_Utils_System_DrupalBase {
   function __construct() {
     $this->is_drupal = TRUE;
     $this->supports_form_extensions = TRUE;

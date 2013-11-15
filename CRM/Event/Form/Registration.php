@@ -710,7 +710,7 @@ class CRM_Event_Form_Registration extends CRM_Core_Form {
             $stateCountryMap[$index][$prefixName] = $key;
           }
           $profileAddressFields = array();
-          CRM_Core_BAO_UFField::assignAddressField($key, $profileAddressFields, array('id' => $this->_values['custom_pre_id']));
+          CRM_Core_BAO_UFField::assignAddressField($key, $profileAddressFields, array('uf_group_id' => $this->_values['custom_pre_id']));
           CRM_Core_BAO_UFGroup::buildProfile($this, $field, CRM_Profile_Form::MODE_CREATE, $contactID, TRUE);
 
           $this->_fields[$key] = $field;

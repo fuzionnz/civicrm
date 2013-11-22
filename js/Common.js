@@ -33,7 +33,7 @@
  */
 
 var CRM = CRM || {};
-var cj = jQuery;
+
 
 /**
  * Short-named function for string translation, defined in global scope so it's available everywhere.

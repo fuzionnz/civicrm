@@ -4172,17 +4172,14 @@ civicrm_relationship.start_date > {$today}
   }
 
   function &summaryContribution($context = NULL) {
-    list($select, $from, $where, $having) = $this->query(TRUE);
+    list($innerselect, $from, $where, $having) = $this->query(TRUE);
 
     // hack $select
     $select = "
-SELECT COUNT( civicrm_contribution.total_amount ) as total_count,
-       SUM(   civicrm_contribution.total_amount ) as total_amount,
-       AVG(   civicrm_contribution.total_amount ) as total_avg,
-       civicrm_contribution.currency              as currency";
-
-    // make sure contribution is completed - CRM-4989
-    $where .= " AND civicrm_contribution.contribution_status_id = 1 ";
+SELECT COUNT( conts.total_amount ) as total_count,
+       SUM(   conts.total_amount ) as total_amount,
+       AVG(   conts.total_amount ) as total_avg,
+       conts.currency              as currency";
     if($this->_wherePermissionClause) {
       $where .= " AND " . $this->_wherePermissionClause;
     }
@@ -4190,14 +4187,21 @@ SELECT COUNT( civicrm_contribution.total_amount ) as total_count,
       $where .= " AND contact_a.is_deleted = 0 ";
     }
 
+    // make sure contribution is completed - CRM-4989
+    $completedWhere =  $where . " AND civicrm_contribution.contribution_status_id = 1 ";
+
+
     $summary = array();
     $summary['total'] = array();
     $summary['total']['count'] = $summary['total']['amount'] = $summary['total']['avg'] = "n/a";
 
-    $query = "$select $from $where GROUP BY currency";
-    $params = array();
+    $query = "$select FROM (
+      SELECT civicrm_contribution.total_amount, civicrm_contribution.currency $from $completedWhere
+      GROUP BY civicrm_contribution.id
+    ) as conts
+    GROUP BY currency";
 
-    $dao = CRM_Core_DAO::executeQuery($query, $params);
+    $dao = CRM_Core_DAO::executeQuery($query);
 
     $summary['total']['count'] = 0;
     $summary['total']['amount'] = $summary['total']['avg'] = array();
@@ -4215,19 +4219,37 @@ SELECT COUNT( civicrm_contribution.total_amount ) as total_count,
     }
 
     // hack $select
+    //@todo  - this could be one query using the IF in mysql - eg
+    //  SELECT sum(total_completed), sum(count_completed), sum(count_cancelled), sum(total_cancelled) FROM (
+    //   SELECT civicrm_contribution.total_amount, civicrm_contribution.currency  ,
+    //  IF(civicrm_contribution.contribution_status_id = 1, 1, 0 ) as count_completed,
+    //  IF(civicrm_contribution.contribution_status_id = 1, total_amount, 0 ) as total_completed,
+    //  IF(civicrm_contribution.cancel_date IS NOT NULL = 1, 1, 0 ) as count_cancelled,
+    //  IF(civicrm_contribution.cancel_date IS NOT NULL = 1, total_amount, 0 ) as total_cancelled
+    // FROM civicrm_contact contact_a
+    //  LEFT JOIN civicrm_contribution ON civicrm_contribution.contact_id = contact_a.id
+    // WHERE  ( ... where clause....
+    // AND (civicrm_contribution.cancel_date IS NOT NULL OR civicrm_contribution.contribution_status_id = 1)
+    //  ) as conts
+
     $select = "
-SELECT COUNT( civicrm_contribution.total_amount ) as cancel_count,
-       SUM(   civicrm_contribution.total_amount ) as cancel_amount,
-       AVG(   civicrm_contribution.total_amount ) as cancel_avg,
-       civicrm_contribution.currency              as currency";
+SELECT COUNT( conts.total_amount ) as cancel_count,
+       SUM(   conts.total_amount ) as cancel_amount,
+       AVG(   conts.total_amount ) as cancel_avg,
+       conts.currency              as currency";
 
     $where .= " AND civicrm_contribution.cancel_date IS NOT NULL ";
     if ($context == 'search') {
       $where .= " AND contact_a.is_deleted = 0 ";
     }
 
-    $query = "$select $from $where GROUP BY currency";
-    $dao = CRM_Core_DAO::executeQuery($query, $params);
+    $query = "$select FROM (
+      SELECT civicrm_contribution.total_amount, civicrm_contribution.currency $from $where
+      GROUP BY civicrm_contribution.id
+    ) as conts
+    GROUP BY currency";
+
+    $dao = CRM_Core_DAO::executeQuery($query);
 
     if ($dao->N <= 1) {
       if ($dao->fetch()) {

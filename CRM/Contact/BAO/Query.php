@@ -124,6 +124,16 @@ class CRM_Contact_BAO_Query {
   public $_whereClause;
 
   /**
+   * where permission clause
+   *
+   * Because the where permission clause are not added in the whereClause function we stash them here so we
+   * can add them as appropriate in other functions
+   * @todo the whereClause() function seems like it should add the permission clause rather than it being
+   * added in various places
+   */
+  public $_wherePermissionClause;
+
+  /**
    * the from string
    *
    * @var string
@@ -3875,6 +3885,7 @@ civicrm_relationship.start_date > {$today}
         if (!$count) {
           $this->_useDistinct = TRUE;
         }
+        $this->_wherePermissionClause = $permission;
         $this->_fromClause = self::fromClause($this->_tables, NULL, NULL, $this->_primaryLocation, $this->_mode);
         $this->_simpleFromClause = self::fromClause($this->_whereTables, NULL, NULL, $this->_primaryLocation, $this->_mode);
       }
@@ -4172,6 +4183,9 @@ SELECT COUNT( civicrm_contribution.total_amount ) as total_count,
 
     // make sure contribution is completed - CRM-4989
     $where .= " AND civicrm_contribution.contribution_status_id = 1 ";
+    if($this->_wherePermissionClause) {
+      $where .= " AND " . $this->_wherePermissionClause;
+    }
     if ($context == 'search') {
       $where .= " AND contact_a.is_deleted = 0 ";
     }

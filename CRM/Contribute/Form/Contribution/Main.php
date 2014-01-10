@@ -824,6 +824,7 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
    * @return true if no errors, else array of errors
    * @access public
    * @static
+   *
    */
   static function formRule($fields, $files, $self) {
     $errors = array();
@@ -856,23 +857,22 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
       $check = array();
       $membershipIsActive = TRUE;
       $previousId = $otherAmount = FALSE;
-      while ($priceField->fetch()) {
-
-         if ($self->_quickConfig && ($priceField->name == 'contribution_amount' || $priceField->name == 'membership_amount')) {
+      while ( $priceField->fetch() ) {
+        if ($self->_quickConfig && ($priceField->name == 'contribution_amount' || $priceField->name == 'membership_amount')) {
           $previousId = $priceField->id;
-          if ($priceField->name == 'membership_amount' && !$priceField->is_active ) {
+          if ($priceField->name == 'membership_amount' && !$priceField->is_active) {
             $membershipIsActive = FALSE;
           }
         }
         if ($priceField->name == 'other_amount') {
-          if ($self->_quickConfig && !CRM_Utils_Array::value("price_{$priceField->id}", $fields) &&
-              array_key_exists("price_{$previousId}", $fields) && isset($fields["price_{$previousId}"]) && $self->_values['fee'][$previousId]['name'] == 'contribution_amount' && empty($fields["price_{$previousId}"])) {
+          if ($self->_quickConfig && !CRM_Utils_Array::value("price_{$priceField->id}", $fields)
+            && array_key_exists("price_{$previousId}", $fields) && isset($fields["price_{$previousId}"]) && $self->_values['fee'][$previousId]['name'] == 'contribution_amount' && empty($fields["price_{$previousId}"])) {
             $otherAmount = $priceField->id;
           }
           elseif (!empty($fields["price_{$priceField->id}"])) {
             $otherAmountVal = $fields["price_{$priceField->id}"];
-            $min            = CRM_Utils_Array::value('min_amount', $self->_values);
-            $max            = CRM_Utils_Array::value('max_amount', $self->_values);
+            $min = CRM_Utils_Array::value('min_amount', $self->_values);
+            $max = CRM_Utils_Array::value('max_amount', $self->_values);
             if ($min && $otherAmountVal < $min) {
               $errors["price_{$priceField->id}"] = ts('Contribution amount must be at least %1',
                 array(1 => $min)
@@ -899,7 +899,7 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
           $errors['_qf_default'] = ts('Select at least one option from Contribution(s).');
         }
       }
-      if($otherAmount && !empty($check)) {
+      if ($otherAmount && !empty($check)) {
         $errors["price_{$otherAmount}"] = ts('Amount is required field.');
       }
 
@@ -965,9 +965,9 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
       if ($self->_separateMembershipPayment == 0 && $self->_quickConfig) {
         foreach ($self->_priceSet['fields'] as $fieldKey => $fieldVal) {
           if ($fieldVal['name'] == 'membership_amount') {
-            $fieldId     = $fieldVal['id'];
+            $fieldId = $fieldVal['id'];
             $fieldOption = $fields['price_' . $fieldId];
-            $memPresent  = TRUE;
+            $memPresent = TRUE;
           }
           else {
             if (CRM_Utils_Array::value('price_' . $fieldKey, $fields) && $memPresent && ($fieldVal['name'] == 'other_amount' || $fieldVal['name'] == 'contribution_amount')) {
@@ -988,9 +988,9 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
       );
       if ($proceFieldAmount) {
         if ($proceFieldAmount < $lineItem[$fieldOption]['line_total']) {
-          $errors["price_$fieldId"] = ts('The Membership you have selected requires a minimum contribution of %1',
-                                         array(1 => CRM_Utils_Money::format($lineItem[$fieldOption]['line_total']))
-                                         );
+          $errors["price_$fieldId"] = ts('The Membership you have selected requires a minimum contribution of %1', array(
+            1 => CRM_Utils_Money::format($lineItem[$fieldOption]['line_total'])
+          ));
         }
         $fields['amount'] = $proceFieldAmount;
       }
@@ -1023,7 +1023,7 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
       }
     }
 
-    if ( CRM_Utils_Array::value( 'is_recur', $fields ) ) {
+    if (CRM_Utils_Array::value('is_recur', $fields)) {
       if ($fields['frequency_interval'] <= 0) {
         $errors['frequency_interval'] = ts('Please enter a number for how often you want to make this recurring contribution (EXAMPLE: Every 3 months).');
       }
@@ -1126,11 +1126,11 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
     // if the user has chosen a free membership or the amount is less than zero
     // i.e. we skip calling the payment processor and hence dont need credit card
     // info
-    if ((float ) $amount <= 0.0) {
+    if (( float ) $amount <= 0.0) {
       return $errors;
     }
 
-    if(isset($self->_paymentFields)) {
+    if (isset($self->_paymentFields)) {
       foreach ($self->_paymentFields as $name => $fld) {
         if ($fld['is_required'] &&
           CRM_Utils_System::isNull(CRM_Utils_Array::value($name, $fields))

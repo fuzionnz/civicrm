@@ -1,0 +1,2 @@
+msgid "This email %1 is already registered. Please select another email."
+msgstr "It looks like you already have an account with us registered with the email address %1. You will have an account if you are a current or recent ABA member or LRC subsciber or have expressed interest in or registered for a Health Professional seminar since 2011. <a href=\"/user/password\">Click here to request a new password</a> and login before proceeding."

@@ -440,6 +440,8 @@ function _civicrm_api3_dao_set_filter(&$dao, $params, $unique = TRUE, $entity) {
     //if entity_id is set then treat it as ID (will be overridden by id if set)
     $dao->id = $params[$entity . "_id"];
   }
+
+  $options = _civicrm_api3_get_options_from_params($params);
   //apply options like sort
   _civicrm_api3_apply_options_to_dao($params, $dao, $entity);
 
@@ -520,25 +522,27 @@ function _civicrm_api3_dao_set_filter(&$dao, $params, $unique = TRUE, $entity) {
       }
     }
   }
-  if (!empty($params['return']) && is_array($params['return'])) {
+  if (!empty($options['return']) && is_array($options['return']) && empty($options['is_count'])) {
     $dao->selectAdd();
+    $options['return']['id'] = TRUE;// ensure 'id' is included
     $allfields =  _civicrm_api3_get_unique_name_array($dao);
-    $returnMatched = array_intersect($params['return'], $allfields);
-    $returnUniqueMatched = array_intersect(
-      array_diff(// not already matched on the field names
-        $params['return'],
-        $returnMatched),
-        array_flip($allfields)// but a match for the field keys
+    $returnMatched = array_intersect(array_keys($options['return']), $allfields);
+    foreach ($returnMatched as $returnValue) {
+      $dao->selectAdd($returnValue);
+    }
+
+    $unmatchedFields = array_diff(// not already matched on the field names
+      array_keys($options['return']),
+      $returnMatched
     );
 
-    foreach ($returnMatched as $returnValue) {
-        $dao->selectAdd($returnValue);
-    }
+    $returnUniqueMatched = array_intersect(
+      $unmatchedFields,
+      array_flip($allfields)// but a match for the field keys
+    );
     foreach ($returnUniqueMatched as $uniqueVal){
       $dao->selectAdd($allfields[$uniqueVal]);
-
     }
-    $dao->selectAdd('id');
   }
 }
 
@@ -599,12 +603,11 @@ function _civicrm_api3_get_options_from_params(&$params, $queryObject = false, $
   // handle the format return =sort_name,display_name...
   if (array_key_exists('return', $params)) {
     if (is_array($params['return'])) {
-      $returnProperties = array_flip($params['return']);
+      $returnProperties = array_fill_keys($params['return'], 1);
     }
     else {
-      $returnProperties = explode(',', $params['return']);
-      $returnProperties = array_flip($returnProperties);
-      $returnProperties[key($returnProperties)] = 1;
+      $returnProperties = explode(',', str_replace(' ', '', $params['return']));
+      $returnProperties = array_fill_keys($returnProperties, 1);
     }
   }
   if($entity && $action =='get' ){
@@ -622,11 +625,15 @@ function _civicrm_api3_get_options_from_params(&$params, $queryObject = false, $
 
 
   $options = array(
-    'offset' => $offset,
-    'sort' => $sort,
-    'limit' => $limit,
+    'offset' => CRM_Utils_Rule::integer($offset) ? $offset : NULL,
+    'sort' => CRM_Utils_Rule::string($sort) ? $sort : NULL,
+    'limit' => CRM_Utils_Rule::integer($limit) ? $limit : NULL,
     'return' => !empty($returnProperties) ? $returnProperties : NULL,
   );
+
+  if($options['sort'] && stristr($options['sort'], 'SELECT')) {
+    throw new API_Exception('invalid string in sort options');
+  }
   if (!$queryObject) {
     return $options;
   }
@@ -647,6 +654,9 @@ function _civicrm_api3_get_options_from_params(&$params, $queryObject = false, $
     elseif (in_array($n, $otherVars)) {}
     else{
       $inputParams[$n] = $v;
+      if($v && !is_array($v) && stristr($v, 'SELECT')) {
+        throw new API_Exception('invalid string');
+      }
     }
   }
   $options['return'] = array_merge($returnProperties, $legacyreturnProperties);
@@ -675,11 +685,11 @@ function _civicrm_api3_apply_options_to_dao(&$params, &$dao, $entity) {
 function _civicrm_api3_build_fields_array(&$bao, $unique = TRUE) {
   $fields = $bao->fields();
   if ($unique) {
-  	if(!CRM_Utils_Array::value('id', $fields)){
+    if(!CRM_Utils_Array::value('id', $fields)){
      $entity = _civicrm_api_get_entity_name_from_dao($bao);
      $fields['id'] = $fields[$entity . '_id'];
      unset($fields[$entity . '_id']);
-  	}
+    }
     return $fields;
   }
 

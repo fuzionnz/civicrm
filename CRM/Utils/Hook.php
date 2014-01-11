@@ -1019,6 +1019,23 @@ abstract class CRM_Utils_Hook {
   }
 
   /**
+   * This hooks allows alteration of the tpl file used to generate content. It differs from the
+   * altercontent hook as the content has already been rendered through the tpl at that point
+   *
+   * @param $formName  previously generated content
+   * @param $form reference to the form object
+   * @param $context  context of content - page or form
+   * @param $tplName reference the file name of the tpl
+   *
+   * @access public
+   */
+  static function alterTemplateFile($formName, &$form, $context, &$tplName) {
+    return self::singleton()->invoke(4, $formName, $form, $context, $tplName,
+      self::$_nullObject,
+      'civicrm_alterTemplateFile'
+    );
+  }
+  /**
    * This hook collects the trigger definition from all components
    *
    * @param $triggerInfo reference to an array of trigger information
@@ -1165,4 +1182,19 @@ abstract class CRM_Utils_Hook {
     );
   }
 
+  /**
+   * Modify or replace the Mailer object used for outgoing mail.
+   *
+   * @param object $mailer
+   *   The default mailer produced by normal configuration; a PEAR "Mail" class (like those returned by Mail::factory)
+   * @param string $driver
+   *   The type of the default mailer (eg "smtp", "sendmail", "mock", "CRM_Mailing_BAO_Spool")
+   * @param array $params
+   *   The default mailer config options
+   * @see Mail::factory
+   */
+  static function alterMailer(&$mailer, $driver, $params) {
+    return self::singleton()
+      ->invoke(3, $mailer, $driver, $params, self::$_nullObject, self::$_nullObject, 'civicrm_alterMailer');
+  } 
 }

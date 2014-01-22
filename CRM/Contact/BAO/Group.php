@@ -897,14 +897,6 @@ class CRM_Contact_BAO_Group extends CRM_Contact_DAO_Group {
       }
     */
 
-
-    if (empty($clauses)) {
-      $clauses[] = 'groups.is_active = 1';
-    }
-
-    if ($excludeHidden) {
-      $clauses[] = 'groups.is_hidden = 0';
-    }
     if (!CRM_Core_Permission::check('view all contacts')) {
       //get the allowed groups for the current user
       $groups = CRM_ACL_API::group(CRM_ACL_API::VIEW);
@@ -918,6 +910,13 @@ class CRM_Contact_BAO_Group extends CRM_Contact_DAO_Group {
       }
     }
 
+    if (empty($clauses)) {
+      $clauses[] = 'groups.is_active = 1';
+    }
+
+    if ($excludeHidden) {
+      $clauses[] = 'groups.is_hidden = 0';
+    }
     return implode(' AND ', $clauses);
   }
 

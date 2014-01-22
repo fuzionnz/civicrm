@@ -116,8 +116,13 @@ function _civicrm_api3_contact_geocode_spec(&$params) {
  *
  */
 function civicrm_api3_job_send_reminder($params) {
-  require_once 'CRM/Core/BAO/ActionSchedule.php';
-  $result = CRM_Core_BAO_ActionSchedule::processQueue(CRM_Utils_Array::value('now', $params));
+  $lock = new CRM_Core_Lock('civimail.job.EmailProcessor');
+  if (!$lock->isAcquired()) {
+    return civicrm_api3_create_error('Could not acquire lock, another EmailProcessor process is running');
+  }
+
+  $result = CRM_Core_BAO_ActionSchedule::processQueue(CRM_Utils_Array::value('now', $params), $params);
+  $lock->release();
 
   if ($result['is_error'] == 0) {
     return civicrm_api3_create_success();
@@ -126,7 +131,18 @@ function civicrm_api3_job_send_reminder($params) {
     return civicrm_api3_create_error($result['messages']);
   }
 }
-
+/**
+ * Adjust metadata for "Create" action
+ *
+ * The metadata is used for setting defaults, documentation & validation
+ * @param array $params array or parameters determined by getfields
+ */
+function _civicrm_api3_job_send_reminder(&$params) {
+  $params['id'] = array(
+    'type' => CRM_Utils_Type::T_INT,
+    'title' => 'Action Schedule ID'
+  );
+}
 /**
  * Execute a specific report instance and send the output via email
  *

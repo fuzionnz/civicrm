@@ -24,25 +24,25 @@ function _civicrm_api3_notification_log_retry_spec(&$params) {
  * @param unknown_type $params
  */
 function civicrm_api3_notification_log_retrysearch($params) {
-    $dao = CRM_Core_DAO::executeQuery("SELECT id FROM civicrm_notification_log
-      WHERE message_raw LIKE '%{}%'", array(1 => array($params['search'], 'String')));
-    while ($dao->fetch()) {
-      $raw[] = $dao->id;
-    }
-
+  $dao = CRM_Core_DAO::executeQuery("
+    SELECT id FROM civicrm_notification_log
+    WHERE message_raw LIKE %1", array(1 => array('%'  . $params['search'] . '%', 'String')));
+  while ($dao->fetch()) {
+    $raw[] = $dao->id;
+  }
+  $result = array();
   foreach ($raw as $id) {
     try{
       civicrm_api3('notification_log', 'retry', array('id' => $id));
       $resut['success'][] = $id;
     }
-    catch(Exception $e) {
-      throw new EXCEPTION( $e->getMessage() . $id);
+    catch (Exception $e) {
+      throw new Exception( $e->getMessage() . $id);
       $errors[]= $e->getMessage() . "  on  id " . $id;
       $resut['errors'][] = $id;
     }
   }
   return civicrm_api3_create_success($result, $params);
-
 }
 
 function _civicrm_api3_notification_log_retrysearch_spec(&$params) {

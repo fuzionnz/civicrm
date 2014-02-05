@@ -738,7 +738,6 @@ class CRM_Contact_BAO_Group extends CRM_Contact_DAO_Group {
 
     while ($object->fetch()) {
       $permission = CRM_Contact_BAO_Group::checkPermission($object->id, $object->title);
-      if ($permission) {
         $newLinks = $links;
         $values[$object->id] = array();
         CRM_Core_DAO::storeValues($object, $values[$object->id]);
@@ -816,7 +815,6 @@ class CRM_Contact_BAO_Group extends CRM_Contact_DAO_Group {
         else {
           $values[$object->id]['org_info'] = NULL; // Collapsed column if all cells are NULL
         }
-      }
     }
 
     return $values;
@@ -913,6 +911,10 @@ class CRM_Contact_BAO_Group extends CRM_Contact_DAO_Group {
       if (!empty( $groups)) {
         $groupList = implode( ', ', array_values( $groups ) );
         $clauses[] = "groups.id IN ( $groupList ) ";
+      }
+      else {
+        // they don't have view all contacts & they don't have permission to view any group
+        $clauses[] = " 0 = 1 ";
       }
     }
 

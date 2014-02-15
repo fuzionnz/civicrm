@@ -51,7 +51,7 @@ class CRM_Utils_System_Drupal extends CRM_Utils_System_DrupalBase {
    */
   function createUser(&$params, $mail) {
     $form_state = form_state_defaults();
-    
+
     $form_state['input'] = array(
       'name' => $params['cms_name'],
       'mail' => $params[$mail],
@@ -982,7 +982,7 @@ AND    u.status = 1
       return false;
     }
 
-    $timeZoneOffset = sprintf("%02d:%02d", $tz / 3600, ($tz/60)%60 );
+    $timeZoneOffset = sprintf("%02d:%02d", $tz / 3600, abs(($tz/60)%60));
 
     if($timeZoneOffset > 0){
       $timeZoneOffset = '+' . $timeZoneOffset;

@@ -46,6 +46,23 @@ class CRM_Core_BAO_Job extends CRM_Core_DAO_Job {
   }
 
   /**
+   * Function to add the payment-processor type in the db
+   *
+   * @param array $params (reference ) an assoc array of name/value pairs
+   * @param array $ids    the array that holds all the db ids
+   *
+   * @return object CRM_Financial_DAO_PaymentProcessorType
+   * @access public
+   * @static
+   *
+   */
+  static function create($params) {
+    $job = new CRM_Core_DAO_Job();
+    $job->copyValues($params);
+    return $job->save();
+  }
+
+  /**
    * Takes a bunch of params that are needed to match certain criteria and
    * retrieves the relevant objects. It also stores all the retrieved
    * values in the default array

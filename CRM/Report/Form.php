@@ -1005,7 +1005,10 @@ class CRM_Report_Form extends CRM_Core_Form {
       case CRM_Report_FORM::OP_MULTISELECT_SEPARATOR:
         // use this operator for the values, concatenated with separator. For e.g if
         // multiple options for a column is stored as ^A{val1}^A{val2}^A
-        return array('mhas' => ts('Is one of'));
+        return array(
+          'mhas' => ts('Is one of'),
+          'mnot' => ts('Is not one of'),
+        );
 
       default:
         // type is string
@@ -1194,6 +1197,14 @@ class CRM_Report_Form extends CRM_Core_Form {
         if ($value !== NULL && count($value) > 0) {
           $sqlOP = self::getSQLOperator($op);
           $clause = "{$field['dbAlias']} REGEXP '[[:<:]]" . implode('|', $value) . "[[:>:]]'";
+        }
+        break;
+
+      case 'mnot':
+        // mnot == multiple is not one of
+        if ($value !== NULL && count($value) > 0) {
+          $sqlOP = $this->getSQLOperator($op);
+          $clause = "( {$field['dbAlias']} NOT REGEXP '[[:<:]]" . implode('|', $value) . "[[:>:]]' OR {$field['dbAlias']} IS NULL )";
         }
         break;
 
@@ -2263,7 +2274,7 @@ WHERE cg.extends IN ('" . implode("','", $this->_customGroupExtends) . "') AND
                     $val[$key] = $options[$valIds];
                   }
                 }
-                $pair[$op] = (count($val) == 1) ? (($op == 'notin') ? ts('Is Not') : ts('Is')) : $pair[$op];
+                $pair[$op] = (count($val) == 1) ? (($op == 'notin' || $op == 'mnot') ? ts('Is Not') : ts('Is')) : CRM_Utils_Array::value($op, $pair);
                 $val       = implode(', ', $val);
                 $value     = "{$pair[$op]} " . $val;
               }

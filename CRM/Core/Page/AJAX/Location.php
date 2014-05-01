@@ -46,14 +46,17 @@ class CRM_Core_Page_AJAX_Location {
    * This method is used by on-behalf-of form to dynamically generate poulate the
    * location field values for selected permissioned contact.
    */
-  function getPermissionedLocation() {
+  static function getPermissionedLocation() {
     $cid = CRM_Utils_Request::retrieve('cid', 'Integer', CRM_Core_DAO::$_nullObject, TRUE);
     $ufId = CRM_Utils_Request::retrieve('ufId', 'Integer', CRM_Core_DAO::$_nullObject, TRUE);
 
     // Verify user id
-    $user = CRM_Utils_Request::retrieve('uid', 'Integer', CRM_Core_DAO::$_nullObject, FALSE, CRM_Core_Session::singleton()->get('userID'));
-    if (!$user || !CRM_Contact_BAO_Contact_Permission::validateChecksumContact($user, CRM_Core_DAO::$_nullObject, FALSE)) {
-      CRM_Utils_System::civiExit();
+    $user = CRM_Core_Session::singleton()->get('userID');
+    if (!$user) {
+      $user = CRM_Utils_Request::retrieve('uid', 'Integer', CRM_Core_DAO::$_nullObject, TRUE);
+      if (!CRM_Contact_BAO_Contact_Permission::validateOnlyChecksum($user, CRM_Core_DAO::$_nullObject)) {
+        CRM_Utils_System::civiExit();
+      }
     }
 
     // Verify user permission on related contact
@@ -74,35 +77,41 @@ class CRM_Core_Page_AJAX_Location {
     );
     $website = CRM_Core_BAO_Website::getValues($entityBlock, $values);
 
-    foreach ($location as $fld => $values) {
-      if (is_array($values) && !empty($values)) {
-        $locType = $values[1]['location_type_id'];
-        if ($fld == 'email') {
-          $elements["onbehalf_{$fld}-{$locType}"] = array(
-            'type' => 'Text',
-            'value' => $location[$fld][1][$fld],
-          );
-          unset($profileFields["{$fld}-{$locType}"]);
-        }
-        elseif ($fld == 'phone') {
-          $phoneTypeId = $values[1]['phone_type_id'];
-          $elements["onbehalf_{$fld}-{$locType}-{$phoneTypeId}"] = array(
-            'type' => 'Text',
-            'value' => $location[$fld][1][$fld],
-          );
-          unset($profileFields["{$fld}-{$locType}-{$phoneTypeId}"]);
-        }
-        elseif ($fld == 'im') {
-          $providerId = $values[1]['provider_id'];
-          $elements["onbehalf_{$fld}-{$locType}"] = array(
-            'type' => 'Text',
-            'value' => $location[$fld][1][$fld],
-          );
-          $elements["onbehalf_{$fld}-{$locType}provider_id"] = array(
-            'type' => 'Select',
-            'value' => $location[$fld][1]['provider_id'],
-          );
-          unset($profileFields["{$fld}-{$locType}-{$providerId}"]);
+      $profileFields = CRM_Core_BAO_UFGroup::getFields($ufId, FALSE, CRM_Core_Action::VIEW, NULL, NULL, FALSE,
+        NULL, FALSE, NULL, CRM_Core_Permission::CREATE, NULL
+      );
+      $website = CRM_Core_BAO_Website::getValues($entityBlock, $values);
+
+      foreach ($location as $fld => $values) {
+        if (is_array($values) && !empty($values)) {
+          $locType = $values[1]['location_type_id'];
+          if ($fld == 'email') {
+            $elements["onbehalf_{$fld}-{$locType}"] = array(
+              'type' => 'Text',
+              'value' => $location[$fld][1][$fld],
+            );
+            unset($profileFields["{$fld}-{$locType}"]);
+          }
+          elseif ($fld == 'phone') {
+            $phoneTypeId = $values[1]['phone_type_id'];
+            $elements["onbehalf_{$fld}-{$locType}-{$phoneTypeId}"] = array(
+              'type' => 'Text',
+              'value' => $location[$fld][1][$fld],
+            );
+            unset($profileFields["{$fld}-{$locType}-{$phoneTypeId}"]);
+          }
+          elseif ($fld == 'im') {
+            $providerId = $values[1]['provider_id'];
+            $elements["onbehalf_{$fld}-{$locType}"] = array(
+              'type' => 'Text',
+              'value' => $location[$fld][1][$fld],
+            );
+            $elements["onbehalf_{$fld}-{$locType}provider_id"] = array(
+              'type' => 'Select',
+              'value' => $location[$fld][1]['provider_id'],
+            );
+            unset($profileFields["{$fld}-{$locType}-{$providerId}"]);
+          }
         }
       }
 
@@ -187,7 +196,6 @@ class CRM_Core_Page_AJAX_Location {
           }
         }
       }
-    }
 
     echo json_encode($elements);
     CRM_Utils_System::civiExit();

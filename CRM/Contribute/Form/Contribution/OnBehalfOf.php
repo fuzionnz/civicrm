@@ -72,6 +72,7 @@ class CRM_Contribute_Form_Contribution_OnBehalfOf {
       if (!empty($form->_employers)) {
         $form->_relatedOrganizationFound = TRUE;
 
+      if ($form->_relatedOrganizationFound) {
         // Related org url - pass checksum if needed
         $args = array('cid' => '');
         if (!empty($_GET['cs'])) {
@@ -79,8 +80,8 @@ class CRM_Contribute_Form_Contribution_OnBehalfOf {
             'uid' => $form->_contactID,
             'cs' => $_GET['cs'],
             'cid' => '',
-            );
-          }
+          );
+        }
         $locDataURL = CRM_Utils_System::url('civicrm/ajax/permlocation', $args, FALSE, NULL, FALSE);
         $form->assign('locDataURL', $locDataURL);
       }
@@ -101,7 +102,7 @@ class CRM_Contribute_Form_Contribution_OnBehalfOf {
         $form->assign('organizationName', $form->_organizationName);
       }
     }
-  }
+
 
   /**
    * Function to build form for related contacts / on behalf of organization.
@@ -112,7 +113,7 @@ class CRM_Contribute_Form_Contribution_OnBehalfOf {
    *
    * @static
    */
-  static function buildQuickForm(&$form) {
+  function buildQuickForm(&$form) {
     $form->assign('fieldSetTitle', ts('Organization Details'));
     $form->assign('buildOnBehalfForm', TRUE);
 

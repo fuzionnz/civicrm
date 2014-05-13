@@ -202,17 +202,14 @@ class CRM_Member_BAO_MembershipStatus extends CRM_Member_DAO_MembershipStatus {
    * @param  date    $joinDate       join date of the member whose membership status is to be calculated.
    * @param  date    $statusDate     status date of the member whose membership status is to be calculated.
    * @param  boolean $excludeIsAdmin exclude the statuses those having is_admin = 1
-   * @param integer $membershipType membership type id - passed to the hook
-   * @param array $membership membership params as available to calling function - passed to the hook
    *
    * @return
    * @static
    */
   static function getMembershipStatusByDate($startDate, $endDate, $joinDate,
-    $statusDate = 'today', $excludeIsAdmin = FALSE, $membershipTypeID = NULL, $membership = array()
+    $statusDate = 'today', $excludeIsAdmin = FALSE
   ) {
     $membershipDetails = array();
-
     if (!$statusDate || $statusDate == 'today') {
       $statusDate = getDate();
       $statusDate = date('Ymd',
@@ -329,26 +326,13 @@ class CRM_Member_BAO_MembershipStatus extends CRM_Member_DAO_MembershipStatus {
 
       // returns FIRST status record for which status_date is in range.
       if ($membershipDetails) {
-        break;
+        $membershipStatus->free();
+        return $membershipDetails;
       }
     }
     //end fetch
 
     $membershipStatus->free();
-
-    //we bundle the arguments into an array as we can't pass 8 variables to the hook otherwise
-    // the membership array might contain the pre-altered settings so we don't want to merge this
-    $arguments = array(
-      'start_date' => $startDate,
-      'end_date' => $endDate,
-      'join_date' => $joinDate,
-      'status_date' => $statusDate,
-      'exclude_is_admin' => $endDate,
-      'membership_type_id' => $membershipTypeID,
-      'start_event' => $startEvent,
-      'end_event' => $endEvent,
-    );
-    CRM_Utils_Hook::alterCalculatedMembershipStatus($membershipDetails, $arguments, $membership);
     return $membershipDetails;
   }
 

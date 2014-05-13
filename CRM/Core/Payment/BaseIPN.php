@@ -386,9 +386,7 @@ LIMIT 1;";
               $dates['end_date'],
               $dates['join_date'],
               'today',
-              TRUE,
-              $membership->membership_type_id,
-              (array) $membership
+              TRUE
             );
 
             $formatedParams = array('status_id' => CRM_Utils_Array::value('id', $calcStatus, 2),

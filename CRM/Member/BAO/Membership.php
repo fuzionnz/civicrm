@@ -269,8 +269,8 @@ class CRM_Member_BAO_Membership extends CRM_Member_DAO_Membership {
         $excludeIsAdmin = TRUE;
       }
 
-      $calcStatus = CRM_Member_BAO_MembershipStatus::getMembershipStatusByDate($start_date, $end_date, $join_date,
-        'today', $excludeIsAdmin, CRM_Utils_Array::value('membership_type_id', $params), $params
+      $calcStatus = CRM_Member_BAO_MembershipStatus::getMembershipStatusByDate($startDate, $endDate, $joinDate,
+        'today', $excludeIsAdmin
       );
       if (empty($calcStatus)) {
         if (!$skipRedirect) {
@@ -1667,10 +1667,7 @@ AND civicrm_membership.is_test = %2";
           CRM_Utils_Date::customFormat($dates['join_date'],
             $statusFormat
           ),
-          'today',
-          TRUE,
-          $membershipTypeID,
-          $memParams
+          'today', TRUE
         );
         $updateStatusId = CRM_Utils_Array::value('id', $status);
       }
@@ -1767,9 +1764,7 @@ AND civicrm_membership.is_test = %2";
       CRM_Utils_Array::value('end_date', $currentMembership),
       CRM_Utils_Array::value('join_date', $currentMembership),
       $today,
-      TRUE,
-      $currentMembership['membership_type_id'],
-      $currentMembership
+      TRUE
     );
 
     if (empty($status) ||

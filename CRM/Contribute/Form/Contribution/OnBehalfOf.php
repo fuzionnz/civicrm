@@ -102,7 +102,8 @@ class CRM_Contribute_Form_Contribution_OnBehalfOf {
         $form->assign('organizationName', $form->_organizationName);
       }
     }
-
+  }
+}
 
   /**
    * Function to build form for related contacts / on behalf of organization.
@@ -186,4 +187,3 @@ class CRM_Contribute_Form_Contribution_OnBehalfOf {
     $form->addElement('hidden', 'hidden_onbehalf_profile', 1);
   }
 }
-

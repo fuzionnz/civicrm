@@ -571,6 +571,9 @@ function civicrm_group_roles_add_rule_form_submit($form, &$form_state) {
  * $op either add or remove
  */
 function civicrm_group_roles_add_remove_groups($roles, $user, $op) {
+  if (!civicrm_initialize()) {
+    return;
+  }
   if ($op == 'add') {
     $txt = 'added';
   }
